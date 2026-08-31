@@ -1,0 +1,18 @@
+{
+  "name": "@lukitas/mobile",
+  "private": true,
+  "main": "expo/AppEntry",
+  "scripts": {
+    "start": "expo start --web --non-interactive --port 19006",
+    "smoke": "node test/smoke.mjs"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "57.0.14",
+    "expo": "57.0.17",
+    "expo-status-bar": "57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.8",
+    "react-native": "0.86.3",
+    "react-native-web": "0.21.2"
+  }
+}

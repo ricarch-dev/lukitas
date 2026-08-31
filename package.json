@@ -1,0 +1,18 @@
+{
+  "name": "lukitas",
+  "private": true,
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": "24.20.0",
+    "pnpm": "11.24.0"
+  },
+  "scripts": {
+    "check:workspace": "node scripts/check-workspace.mjs",
+    "gate": "node scripts/run-gate.mjs",
+    "tdd:readiness": "node scripts/tdd-readiness.mjs",
+    "test:smoke": "pnpm --dir apps/mobile smoke && pnpm --dir apps/api smoke"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}

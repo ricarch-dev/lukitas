@@ -1,0 +1,24 @@
+{
+  "name": "@lukitas/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "prisma generate --schema prisma/schema.prisma",
+    "start": "node --import tsx src/main.ts",
+    "smoke": "node test/smoke.mjs"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.0.1",
+    "@nestjs/core": "12.0.1",
+    "@nestjs/platform-express": "12.0.1",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "reflect-metadata": "0.2.2",
+    "pg": "8.23.0",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "prisma": "7.10.0",
+    "tsx": "4.23.12"
+  }
+}

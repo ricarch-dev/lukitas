@@ -1,0 +1,7 @@
+{
+  "expo": {
+    "name": "lukitas-mobile",
+    "slug": "lukitas-mobile",
+    "platforms": ["ios", "android", "web"]
+  }
+}

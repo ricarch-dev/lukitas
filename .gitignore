@@ -1,0 +1,9 @@
+# Agent-generated local indexes
+.atl/
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+.expo/
+.expo-shared/
+web-build/
