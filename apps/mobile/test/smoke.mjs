@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const pnpm = process.env.npm_execpath ? [process.execPath, process.env.npm_execpath] : ['pnpm'];
+const pnpm = process.env.npm_execpath
+  ? [process.execPath, process.env.npm_execpath]
+  : process.platform === 'win32'
+    ? ['pnpm.cmd']
+    : ['pnpm'];
 const outDir = mkdtempSync(join(tmpdir(), 'lukitas-mobile-smoke-'));
 
 try {

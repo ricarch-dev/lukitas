@@ -2,9 +2,9 @@ packages:
   - apps/*
   - packages/*
 allowBuilds:
-  '@prisma/engines': set this to true or false
-  esbuild: set this to true or false
-  prisma: set this to true or false
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
 minimumReleaseAgeExclude:
   - '@expo/cli@57.0.19'
   - '@expo/inline-modules@0.1.7'

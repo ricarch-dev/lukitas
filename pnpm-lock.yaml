@@ -70,6 +70,27 @@ importers:
         specifier: 0.21.2
         version: 0.21.2(react-dom@19.2.8(react@19.2.3))(react@19.2.3)
 
+  packages/config:
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/contracts:
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/domain:
+    devDependencies:
+      '@types/node':
+        specifier: 26.4.0
+        version: 26.4.0
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
 packages:
 
   '@babel/code-frame@7.29.7':
@@ -1095,8 +1116,8 @@ packages:
   '@types/lodash@4.17.25':
     resolution: {integrity: sha512-+K1NIO8I+F9/wNulfVvu23QYd0Pe9/OCqRrim4NoYIf1VoEDL90Ve4ClzpyqBLc7NpGGWRvYNCKZ1BE/Jpf8dQ==}
 
-  '@types/node@26.3.0':
-    resolution: {integrity: sha512-L3fgrnchriRC2ExBflb8j4uZZURHZfQsmQeyVzhjcHW4kkwVyo8/0h1B2MVzMTrYUJYu6G7EWs14hW/L9putqw==}
+  '@types/node@26.4.0':
+    resolution: {integrity: sha512-faiGnoIrLH/V8cibOMEAZ8pMw6oXqSukl29ra4mN8GdaB2ZewzeaLj+INpV5N+Z1eKWzY+IzaIZH2EIR6YZRNQ==}
 
   '@types/pg@8.23.1':
     resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
@@ -4221,7 +4242,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 26.3.0
+      '@types/node': 26.4.0
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -4586,13 +4607,13 @@ snapshots:
 
   '@types/lodash@4.17.25': {}
 
-  '@types/node@26.3.0':
+  '@types/node@26.4.0':
     dependencies:
       undici-types: 8.3.0
 
   '@types/pg@8.23.1':
     dependencies:
-      '@types/node': 26.3.0
+      '@types/node': 26.4.0
       pg-protocol: 1.16.0
       pg-types: 2.2.0
 
@@ -5012,7 +5033,7 @@ snapshots:
 
   chrome-launcher@0.15.2(supports-color@8.1.1):
     dependencies:
-      '@types/node': 26.3.0
+      '@types/node': 26.4.0
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2(supports-color@8.1.1)
@@ -5021,7 +5042,7 @@ snapshots:
 
   chromium-edge-launcher@0.3.0(supports-color@8.1.1):
     dependencies:
-      '@types/node': 26.3.0
+      '@types/node': 26.4.0
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2(supports-color@8.1.1)
@@ -5707,7 +5728,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 26.3.0
+      '@types/node': 26.4.0
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -5724,7 +5745,7 @@ snapshots:
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 26.3.0
+      '@types/node': 26.4.0
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1

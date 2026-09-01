@@ -10,7 +10,8 @@
     "check:workspace": "node scripts/check-workspace.mjs",
     "gate": "node scripts/run-gate.mjs",
     "tdd:readiness": "node scripts/tdd-readiness.mjs",
-    "test:smoke": "pnpm --dir apps/mobile smoke && pnpm --dir apps/api smoke"
+    "test:smoke": "pnpm --dir apps/mobile smoke && pnpm --dir apps/api smoke",
+    "test:domain": "pnpm --dir packages/domain test"
   },
   "devDependencies": {
     "typescript": "7.0.2"

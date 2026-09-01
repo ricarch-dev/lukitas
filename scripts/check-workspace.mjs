@@ -24,12 +24,11 @@ expect('workspace.reproducible-checkout', read('pnpm-workspace.yaml').includes('
 expect('workspace.reproducible-checkout', read('.gitignore').includes('.atl/'), '.atl/ must stay ignored');
 expect('quality.clean-parity', read('.github/workflows/ci.yml').includes('pnpm install --frozen-lockfile') && read('.github/workflows/ci.yml').includes('pnpm gate') && read('.github/workflows/ci.yml').includes('node-version-file: .node-version'), 'CI must run the same pinned install and gate commands');
 
-const forbidden = ['apps', 'packages', 'infra'];
-for (const entry of forbidden) {
-  expect('workspace.scope-boundary', !existsSync(join(root, entry)), `${entry} must not exist in PR1`);
+for (const entry of ['apps/mobile', 'apps/api', 'apps/api/prisma', 'infra/docker']) {
+  expect('workspace.scope-boundary', existsSync(join(root, entry)), `${entry} is required by Phase 0`);
 }
-for (const entry of ['apps/mobile', 'apps/api', 'apps/api/prisma', 'packages/contracts', 'packages/domain', 'packages/config', 'infra/docker']) {
-  expect('workspace.scope-boundary', !existsSync(join(root, entry)), `${entry} must not exist in PR1`);
+for (const entry of ['apps/api/prisma/migrations', 'packages/ui', 'supabase']) {
+  expect('workspace.scope-boundary', !existsSync(join(root, entry)), `${entry} is outside the Phase 0 scope`);
 }
 
 const nestedGit = [];
@@ -49,6 +48,6 @@ const tdd = spawnSync(process.execPath, [join(root, 'scripts', 'tdd-readiness.mj
 expect('quality.aggregated-failure', tdd.status === 0, tdd.stderr || tdd.stdout || 'tdd readiness must resolve cleanly');
 
 const status = JSON.parse(tdd.stdout || '{}');
-expect('quality.tdd-redetection', status.status === 'disabled', `strict TDD must stay disabled until deterministic targets exist (${status.reason ?? 'no reason'})`);
+expect('quality.tdd-redetection', status.status === 'disabled' || status.status === 'ready', `strict TDD readiness returned an unexpected status (${status.reason ?? 'no reason'})`);
 
 console.log(checks.join('\n'));

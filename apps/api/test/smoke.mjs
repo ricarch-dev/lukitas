@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const pnpm = process.env.npm_execpath ? [process.execPath, process.env.npm_execpath] : ['pnpm'];
+const pnpm = process.env.npm_execpath
+  ? [process.execPath, process.env.npm_execpath]
+  : process.platform === 'win32'
+    ? ['pnpm.cmd']
+    : ['pnpm'];
 const schemaPath = join(root, 'prisma', 'schema.prisma');
 const schema = readFileSync(schemaPath, 'utf8');
 
@@ -20,15 +24,15 @@ for (const args of [
   ['exec', 'prisma', 'validate', '--schema', 'prisma/schema.prisma'],
   ['exec', 'prisma', 'generate', '--schema', 'prisma/schema.prisma'],
 ]) {
-  const result = spawnSync(pnpm[0], [...pnpm.slice(1), ...args], { cwd: root, encoding: 'utf8', env: { ...process.env, CI: '1' } });
+  const result = spawnSync(pnpm[0], [...pnpm.slice(1), ...args], { cwd: root, encoding: 'utf8', env: { ...process.env, CI: '1' }, });
   if (result.status !== 0) {
     throw new Error(result.stderr || result.stdout || `command failed: ${args.join(' ')}`);
   }
 }
 
 const port = 3217;
-const databaseUrl = process.env.DATABASE_URL ?? 'postgresql://lukitas:lukitas@127.0.0.1:5432/lukitas?schema=public';
-const child = spawn(pnpm[0], [...pnpm.slice(1), 'start'], {
+const databaseUrl = process.env.DATABASE_URL ?? 'postgresql://lukitas:lukitas@127.0.0.1:5433/lukitas?schema=public';
+const child = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
   cwd: root,
   encoding: 'utf8',
   env: { ...process.env, CI: '1', PORT: String(port), DATABASE_URL: databaseUrl },
@@ -45,6 +49,14 @@ child.stderr.on('data', (chunk) => {
 
 const healthUrl = `http://127.0.0.1:${port}/health`;
 const deadline = Date.now() + 60000;
+const waitForClose = () => new Promise((resolve) => {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    resolve();
+    return;
+  }
+
+  child.once('close', resolve);
+});
 
 try {
   while (Date.now() < deadline) {
@@ -73,6 +85,8 @@ try {
     throw new Error(`API health check did not pass. stdout=${buffers.stdout}\nstderr=${buffers.stderr}`);
   }
 } finally {
-  child.kill('SIGTERM');
-  await new Promise((resolve) => child.once('close', resolve));
+  if (child.exitCode === null && child.signalCode === null) {
+    child.kill('SIGTERM');
+  }
+  await waitForClose();
 }
