@@ -7,3 +7,4 @@ coverage/
 .expo/
 .expo-shared/
 web-build/
+mitm_mcp_traffic.db
