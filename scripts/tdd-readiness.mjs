@@ -3,7 +3,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const workspaces = ['apps/mobile', 'apps/api', 'packages/contracts', 'packages/domain', 'packages/config'];
+const workspaces = [
+  'apps/mobile',
+  'apps/api',
+  'packages/contracts',
+  'packages/domain',
+  'packages/config',
+];
 const hasTargets = workspaces.every((path) => {
   const manifest = join(root, path, 'package.json');
   if (!existsSync(manifest)) {
@@ -16,7 +22,9 @@ const hasTargets = workspaces.every((path) => {
 
 const result = {
   status: hasTargets ? 'ready' : 'disabled',
-  reason: hasTargets ? 'deterministic targets exist' : 'not every workspace has a deterministic target yet',
+  reason: hasTargets
+    ? 'deterministic targets exist'
+    : 'not every workspace has a deterministic target yet',
   localCommand: 'pnpm gate',
   ciCommand: 'pnpm gate',
   packageManager: JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).packageManager,

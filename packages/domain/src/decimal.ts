@@ -87,9 +87,7 @@ export function parseDecimal(input: DecimalInput): Decimal {
  */
 export function scaleUp(d: Decimal, targetScale: number): Decimal {
   if (targetScale < d.scale) {
-    throw new RangeError(
-      `Cannot scale down from ${d.scale} to ${targetScale} without rounding`
-    );
+    throw new RangeError(`Cannot scale down from ${d.scale} to ${targetScale} without rounding`);
   }
   if (targetScale === d.scale) return d;
   const factor = 10n ** BigInt(targetScale - d.scale);
@@ -230,7 +228,11 @@ export function reciprocal(d: Decimal, reciprocalRounding?: ReciprocalRounding):
     if (reciprocalRounding !== undefined) {
       // Caller provided rounding for a terminating reciprocal — that's acceptable;
       // we ignore it and return the exact result.
-      return scaleDown({ coefficient, scale: resultScale }, reciprocalRounding.precision, reciprocalRounding.mode);
+      return scaleDown(
+        { coefficient, scale: resultScale },
+        reciprocalRounding.precision,
+        reciprocalRounding.mode,
+      );
     }
 
     return { coefficient, scale: resultScale };
@@ -239,7 +241,7 @@ export function reciprocal(d: Decimal, reciprocalRounding?: ReciprocalRounding):
   // Non-terminating: explicit precision/rounding required
   if (!reciprocalRounding) {
     throw new RangeError(
-      `Non-terminating reciprocal requires explicit precision and rounding mode`
+      `Non-terminating reciprocal requires explicit precision and rounding mode`,
     );
   }
 
@@ -269,8 +271,14 @@ function factorTwosFives(n: bigint): FactorResult {
   let remaining = n;
   let twos = 0n;
   let fives = 0n;
-  while (remaining % 2n === 0n) { remaining /= 2n; twos++; }
-  while (remaining % 5n === 0n) { remaining /= 5n; fives++; }
+  while (remaining % 2n === 0n) {
+    remaining /= 2n;
+    twos++;
+  }
+  while (remaining % 5n === 0n) {
+    remaining /= 5n;
+    fives++;
+  }
   return { remaining, twos, fives };
 }
 

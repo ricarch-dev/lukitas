@@ -119,7 +119,7 @@ describe('money.validation-rounding', () => {
     assert.throws(
       // @ts-expect-error intentional runtime test
       () => Money.of(USD, 10),
-      TypeError
+      TypeError,
     );
   });
 
@@ -165,7 +165,7 @@ describe('money.validation-rounding', () => {
     assert.throws(
       () => Money.of(USD, '1.005'),
       RangeError,
-      '1.005 without rounding mode must throw'
+      '1.005 without rounding mode must throw',
     );
   });
 

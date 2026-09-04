@@ -10,3 +10,6 @@ web-build/
 mitm_mcp_traffic.db
 .uv-cache
 .uv-python
+.kiro
+.claude
+.agents

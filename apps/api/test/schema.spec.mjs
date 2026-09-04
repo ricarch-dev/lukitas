@@ -6,7 +6,19 @@ import { join } from 'node:path';
 const schema = readFileSync(join(import.meta.dirname, '..', 'prisma', 'schema.prisma'), 'utf8');
 
 test('P0 schema contains ownership, immutable facts and exact numeric fields', () => {
-  for (const model of ['User', 'UserPreferences', 'Account', 'Transaction', 'LedgerEntry', 'Transfer', 'FxRate', 'FxSnapshot', 'RefreshSession', 'AuditEvent', 'IdempotencyKey']) {
+  for (const model of [
+    'User',
+    'UserPreferences',
+    'Account',
+    'Transaction',
+    'LedgerEntry',
+    'Transfer',
+    'FxRate',
+    'FxSnapshot',
+    'RefreshSession',
+    'AuditEvent',
+    'IdempotencyKey',
+  ]) {
     assert.match(schema, new RegExp(`model\\s+${model}\\s+`));
   }
   assert.match(schema, /openingBalance Decimal\s+@db\.Decimal\(20, 8\)/);

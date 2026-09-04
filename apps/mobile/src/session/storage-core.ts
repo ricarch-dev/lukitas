@@ -1,4 +1,4 @@
-import type { SessionTokens } from '../api/client';
+import type { SessionTokens } from "../api/client";
 
 export interface KeyValueStore {
   getItem(key: string): Promise<string | null>;
@@ -11,7 +11,7 @@ export interface SessionStorage {
   write(tokens: SessionTokens | null): Promise<void>;
 }
 
-const sessionKey = 'lukitas.session.v1';
+const sessionKey = "lukitas.session.v1";
 
 export const createSessionStorage = (store: KeyValueStore): SessionStorage => ({
   async read() {
@@ -19,10 +19,13 @@ export const createSessionStorage = (store: KeyValueStore): SessionStorage => ({
     if (!raw) return null;
     try {
       const parsed = JSON.parse(raw) as Partial<SessionTokens>;
-      return typeof parsed.accessToken === 'string' && typeof parsed.refreshToken === 'string'
+      return typeof parsed.accessToken === "string" &&
+        typeof parsed.refreshToken === "string"
         ? { accessToken: parsed.accessToken, refreshToken: parsed.refreshToken }
         : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   },
   async write(tokens) {
     if (!tokens) return store.removeItem(sessionKey);

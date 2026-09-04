@@ -62,7 +62,7 @@ export class FxSnapshot {
       const key = FxSnapshot.#pairKey(rate.base, rate.quote);
       if (map.has(key)) {
         throw new RangeError(
-          `Duplicate rate pair ${rate.base.code}/${rate.quote.code} in snapshot`
+          `Duplicate rate pair ${rate.base.code}/${rate.quote.code} in snapshot`,
         );
       }
       map.set(key, rate);
@@ -87,7 +87,7 @@ export class FxSnapshot {
   resolve(base: Currency, quote: Currency, options: ResolveOptions = {}): FxRate {
     if (base.equals(quote)) {
       throw new RangeError(
-        `FxSnapshot.resolve requires distinct currencies; use Money.convertTo for same-currency identity`
+        `FxSnapshot.resolve requires distinct currencies; use Money.convertTo for same-currency identity`,
       );
     }
 
@@ -107,7 +107,7 @@ export class FxSnapshot {
         throw new RangeError(
           `Rate ${base.code}/${quote.code} is not in the snapshot; ` +
             `only ${quote.code}/${base.code} is present. ` +
-            `Pass { invert: true } to use the inverse.`
+            `Pass { invert: true } to use the inverse.`,
         );
       }
       const reverseRate = this.#rates.get(reverseKey)!;
@@ -115,7 +115,7 @@ export class FxSnapshot {
     }
 
     throw new RangeError(
-      `Rate pair ${base.code}/${quote.code} (and its inverse) is not in this snapshot`
+      `Rate pair ${base.code}/${quote.code} (and its inverse) is not in this snapshot`,
     );
   }
 

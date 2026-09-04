@@ -44,17 +44,13 @@ export class FxRate {
    * @param quote - quote Currency (what you get)
    * @param rate  - positive rate value; string or bigint; Number is rejected
    */
-  static of(
-    base: Currency,
-    quote: Currency,
-    rate: DecimalInput
-  ): FxRate {
+  static of(base: Currency, quote: Currency, rate: DecimalInput): FxRate {
     if (typeof rate === 'number') {
       throw new TypeError('Number inputs are not accepted; use string or bigint');
     }
     if (base.equals(quote)) {
       throw new RangeError(
-        `FxRate base and quote must be distinct currencies; both are ${base.code}`
+        `FxRate base and quote must be distinct currencies; both are ${base.code}`,
       );
     }
 
@@ -98,7 +94,7 @@ export class FxRate {
       throw new RangeError(
         `FxRate direction mismatch: rate converts ${this.#base.code} → ${this.#quote.code} ` +
           `but received ${money.currency.code} Money; ` +
-          `invert the rate first if you need the reverse direction`
+          `invert the rate first if you need the reverse direction`,
       );
     }
 
@@ -123,7 +119,7 @@ export class FxRate {
         if (!roundingMode) {
           throw new RangeError(
             `Conversion product has ${product.scale} decimal places but ` +
-              `${this.#quote.code} requires ${targetScale}; provide an explicit rounding mode`
+              `${this.#quote.code} requires ${targetScale}; provide an explicit rounding mode`,
           );
         }
         quantized = scaleDown(product, targetScale, roundingMode);

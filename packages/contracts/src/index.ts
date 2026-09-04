@@ -8,5 +8,10 @@ export type { FxSnapshotDto } from './fx.ts';
 export type { AuthUserDto, AuthResponseDto, RegisterRequest, LoginRequest } from './auth.ts';
 export type { OnboardingRequest, OnboardingResponse } from './onboarding.ts';
 export type { AccountDto, CreateAccountRequest } from './accounts.ts';
-export type { TransactionKindDto, TransactionDto, RecordTransactionRequest, TransferRequest } from './ledger.ts';
+export type {
+  TransactionKindDto,
+  TransactionDto,
+  RecordTransactionRequest,
+  TransferRequest,
+} from './ledger.ts';
 export type { DashboardDto } from './dashboard.ts';

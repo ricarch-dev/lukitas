@@ -21,17 +21,11 @@ export class Currency {
 
   static of(code: string, precision: number): Currency {
     if (typeof code !== 'string' || !/^[A-Z]{3}$/.test(code)) {
-      throw new TypeError(
-        `Currency code must be an uppercase three-letter string; got "${code}"`
-      );
+      throw new TypeError(`Currency code must be an uppercase three-letter string; got "${code}"`);
     }
-    if (
-      !Number.isInteger(precision) ||
-      precision < 0 ||
-      !Number.isSafeInteger(precision)
-    ) {
+    if (!Number.isInteger(precision) || precision < 0 || !Number.isSafeInteger(precision)) {
       throw new RangeError(
-        `Currency precision must be a non-negative safe integer; got ${precision}`
+        `Currency precision must be a non-negative safe integer; got ${precision}`,
       );
     }
     return new Currency(code, precision);

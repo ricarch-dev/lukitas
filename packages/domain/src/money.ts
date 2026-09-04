@@ -40,11 +40,7 @@ export class Money {
    * @param roundingMode - required when amount has more fractional digits than
    *                       currency.precision; must be explicit
    */
-  static of(
-    currency: Currency,
-    amount: DecimalInput,
-    roundingMode?: RoundingMode
-  ): Money {
+  static of(currency: Currency, amount: DecimalInput, roundingMode?: RoundingMode): Money {
     if (typeof amount === 'number') {
       throw new TypeError('Number inputs are not accepted; use string or bigint');
     }
@@ -63,7 +59,7 @@ export class Money {
         throw new RangeError(
           `Amount "${amount}" has ${parsed.scale} decimal places but currency ` +
             `${currency.code} requires ${targetScale}; ` +
-            `provide an explicit rounding mode`
+            `provide an explicit rounding mode`,
         );
       }
       value = scaleDown(parsed, targetScale, roundingMode);
@@ -120,13 +116,15 @@ export class Money {
     }
     throw new RangeError(
       `Cross-currency conversion via Money.convertTo is not supported; ` +
-        `use FxRate.convert to convert from ${this.#currency.code} to ${target.code}`
+        `use FxRate.convert to convert from ${this.#currency.code} to ${target.code}`,
     );
   }
 
   /** Structural equality: same currency and same amount. */
   equals(other: Money): boolean {
-    return this.#currency.equals(other.#currency) && compareDecimal(this.#value, other.#value) === 0;
+    return (
+      this.#currency.equals(other.#currency) && compareDecimal(this.#value, other.#value) === 0
+    );
   }
 
   toString(): string {
@@ -136,7 +134,7 @@ export class Money {
   #requireSameCurrency(other: Money): void {
     if (!this.#currency.equals(other.#currency)) {
       throw new RangeError(
-        `Currency mismatch: cannot operate on ${this.#currency.code} and ${other.#currency.code}`
+        `Currency mismatch: cannot operate on ${this.#currency.code} and ${other.#currency.code}`,
       );
     }
   }

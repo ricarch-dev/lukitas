@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const source = readFileSync(join(import.meta.dirname, '..', 'src', 'main.ts'), 'utf8');
-const moduleSource = readFileSync(join(import.meta.dirname, '..', 'src', 'modules', 'p0.module.ts'), 'utf8');
+const moduleSource = readFileSync(
+  join(import.meta.dirname, '..', 'src', 'modules', 'p0.module.ts'),
+  'utf8',
+);
 
 test('API exposes a versioned prefix while preserving the health probe', () => {
   assert.match(source, /setGlobalPrefix\(['"]v1['"]/);

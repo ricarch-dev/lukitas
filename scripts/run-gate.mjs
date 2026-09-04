@@ -4,7 +4,10 @@ import { dirname, join } from 'node:path';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const steps = [
-  ['workspace.reproducible-checkout', [process.execPath, join(root, 'scripts', 'check-workspace.mjs')]],
+  [
+    'workspace.reproducible-checkout',
+    [process.execPath, join(root, 'scripts', 'check-workspace.mjs')],
+  ],
   ['quality.tdd-redetection', [process.execPath, join(root, 'scripts', 'tdd-readiness.mjs')]],
 ];
 

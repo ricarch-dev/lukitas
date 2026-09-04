@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hashPassword, signAccessToken, verifyAccessToken, verifyPassword } from '../src/common/crypto.ts';
+import {
+  hashPassword,
+  signAccessToken,
+  verifyAccessToken,
+  verifyPassword,
+} from '../src/common/crypto.ts';
 
 test('auth crypto uses Argon2id hashes and jose-issued expiring JWTs', async () => {
   const passwordHash = await hashPassword('correct horse battery staple');
