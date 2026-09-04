@@ -8,6 +8,7 @@ export interface TransactionDto {
   readonly occurredAt: string;
   readonly note?: string;
   readonly voidedAt?: string;
+  readonly categoryId?: string;
 }
 export interface RecordTransactionRequest {
   readonly kind: TransactionKindDto;
@@ -15,6 +16,8 @@ export interface RecordTransactionRequest {
   readonly currencyCode: string;
   readonly occurredAt?: string;
   readonly note?: string;
+  readonly categoryId?: string;
+  readonly manualRate?: string;
 }
 export interface TransferRequest {
   readonly sourceAccountId: string;

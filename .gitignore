@@ -13,3 +13,16 @@ mitm_mcp_traffic.db
 .kiro
 .claude
 .agents
+# Versioned project-local Codex skills
+!.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/type-safe-development/
+!.agents/skills/type-safe-development/SKILL.md
+!.agents/skills/normalized-reuse/
+!.agents/skills/normalized-reuse/SKILL.md
+!.agents/skills/refactorable-source/
+!.agents/skills/refactorable-source/SKILL.md
+!.agents/skills/technology-documentation/
+!.agents/skills/technology-documentation/SKILL.md

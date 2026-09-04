@@ -15,3 +15,11 @@ export type {
   TransferRequest,
 } from './ledger.ts';
 export type { DashboardDto } from './dashboard.ts';
+export type { CategoryDto, CreateCategoryRequest, UpdateCategoryRequest } from './categories.ts';
+export type { BudgetDto, UpsertBudgetRequest } from './budgets.ts';
+export type {
+  RecurrenceCadenceDto,
+  RecurringRuleDto,
+  CreateRecurringRuleRequest,
+} from './recurrence.ts';
+export type { FinancialReportDto, FinancialReportItem } from './reports.ts';

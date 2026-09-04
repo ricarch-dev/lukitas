@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Button,
@@ -7,26 +7,28 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
-import { useSession } from "../session/SessionContext";
+} from 'react-native';
+import { useSession } from '../session/SessionContext';
+import { PlanningScreen } from './planning-screens';
+import { ReportsScreen } from './reports-screens';
 
 export function AuthScreen() {
   const { client, setTokens } = useSession();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const submit = async () => {
     setLoading(true);
-    setError("");
+    setError('');
     try {
-      const result = await client.post<any>("/auth/login", { email, password });
+      const result = await client.post<any>('/auth/login', { email, password });
       await setTokens({
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
       });
     } catch (value) {
-      setError(value instanceof Error ? value.message : "Unable to sign in");
+      setError(value instanceof Error ? value.message : 'Unable to sign in');
     } finally {
       setLoading(false);
     }
@@ -50,39 +52,33 @@ export function AuthScreen() {
         style={styles.input}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {loading ? (
-        <ActivityIndicator />
-      ) : (
-        <Button title="Sign in" onPress={submit} />
-      )}
+      {loading ? <ActivityIndicator /> : <Button title="Sign in" onPress={submit} />}
     </SafeAreaView>
   );
 }
 
 export function OnboardingScreen() {
   const { client } = useSession();
-  const [name, setName] = useState("Main account");
-  const [balance, setBalance] = useState("0");
-  const [error, setError] = useState("");
+  const [name, setName] = useState('Main account');
+  const [balance, setBalance] = useState('0');
+  const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const submit = async () => {
     try {
       await client.post(
-        "/onboarding",
+        '/onboarding',
         {
-          baseCurrency: "USD",
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+          baseCurrency: 'USD',
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
           accountName: name,
-          accountCurrency: "USD",
+          accountCurrency: 'USD',
           openingBalance: balance,
         },
         `onboarding-${Date.now()}`,
       );
       setDone(true);
     } catch (value) {
-      setError(
-        value instanceof Error ? value.message : "Unable to finish setup",
-      );
+      setError(value instanceof Error ? value.message : 'Unable to finish setup');
     }
   };
   return (
@@ -114,15 +110,14 @@ export function OnboardingScreen() {
 export function DashboardScreen() {
   const { client, setTokens } = useSession();
   const [dashboard, setDashboard] = useState<any>();
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const [section, setSection] = useState<'dashboard' | 'planning' | 'reports'>('dashboard');
   React.useEffect(() => {
     client
-      .get<any>("/dashboard")
+      .get<any>('/dashboard')
       .then(setDashboard)
       .catch((value) =>
-        setError(
-          value instanceof Error ? value.message : "Unable to load dashboard",
-        ),
+        setError(value instanceof Error ? value.message : 'Unable to load dashboard'),
       );
   }, [client]);
   if (error)
@@ -141,9 +136,18 @@ export function DashboardScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <Text style={styles.title}>Overview</Text>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Button title="Planning" onPress={() => setSection('planning')} />
+        <Button title="Reports" onPress={() => setSection('reports')} />
+      </View>
+      {section === 'planning' ? (
+        <PlanningScreen />
+      ) : section === 'reports' ? (
+        <ReportsScreen />
+      ) : null}
       <Text style={styles.total}>
         {dashboard.totals.amount} {dashboard.baseCurrency}
-        {dashboard.totals.partial ? " *" : ""}
+        {dashboard.totals.partial ? ' *' : ''}
       </Text>
       {dashboard.totals.warnings.map((warning: string) => (
         <Text key={warning} style={styles.warning}>
@@ -166,15 +170,15 @@ export function DashboardScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, gap: 14, padding: 24 },
-  title: { fontSize: 28, fontWeight: "700" },
-  subtitle: { fontSize: 18, fontWeight: "600", marginTop: 14 },
-  total: { fontSize: 36, fontWeight: "700" },
-  input: { borderColor: "#bbb", borderRadius: 8, borderWidth: 1, padding: 12 },
-  error: { color: "#b42318" },
-  warning: { color: "#9a6700" },
+  title: { fontSize: 28, fontWeight: '700' },
+  subtitle: { fontSize: 18, fontWeight: '600', marginTop: 14 },
+  total: { fontSize: 36, fontWeight: '700' },
+  input: { borderColor: '#bbb', borderRadius: 8, borderWidth: 1, padding: 12 },
+  error: { color: '#b42318' },
+  warning: { color: '#9a6700' },
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 8,
   },
 });

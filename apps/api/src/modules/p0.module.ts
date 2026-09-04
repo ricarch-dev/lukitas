@@ -119,6 +119,7 @@ const transactionDto = (value: any) => ({
   occurredAt: new Date(value.occurredAt).toISOString(),
   note: value.note ?? undefined,
   voidedAt: value.voidedAt ? new Date(value.voidedAt).toISOString() : undefined,
+  categoryId: value.categoryId ?? undefined,
 });
 
 @Injectable()
@@ -384,9 +385,47 @@ export class AccountsService {
     if (kind !== 'INCOME' && kind !== 'EXPENSE') validation('kind must be INCOME or EXPENSE');
     const amount = positiveAmount(body?.amount);
     const currencyCode = code(body?.currencyCode ?? account.currencyCode);
-    if (currencyCode !== account.currencyCode)
-      throw new AppError('CURRENCY_MISMATCH', 'Transaction currency must match account currency');
     const occurredAt = instant(body?.occurredAt);
+    let category: any = null;
+    if (body?.categoryId !== undefined) {
+      category = await this.prisma.category.findFirst({
+        where: { id: body.categoryId, userId, archivedAt: null },
+      });
+      if (!category) throw new AppError('NOT_FOUND', 'Active category not found', 404);
+    }
+    let baseAmount = amount;
+    let fxRate: string | undefined;
+    if (currencyCode !== account.currencyCode) {
+      if (!category)
+        throw new AppError(
+          'CURRENCY_MISMATCH',
+          'Only categorized transactions may use another currency',
+        );
+      await this.prisma.currency.upsert({
+        where: { code: currencyCode },
+        create: { code: currencyCode, precision: currencyDefaults[currencyCode] ?? 2 },
+        update: {},
+      });
+      if (body?.manualRate !== undefined) fxRate = positiveAmount(body.manualRate);
+      else {
+        const historical = await this.prisma.fxRate.findFirst({
+          where: {
+            baseCode: currencyCode,
+            quoteCode: account.currencyCode,
+            effectiveAt: { lte: occurredAt },
+          },
+          orderBy: { effectiveAt: 'desc' },
+        });
+        if (!historical)
+          throw new AppError(
+            'MISSING_FX_RATE',
+            'A historical FX rate is required for this transaction',
+            422,
+          );
+        fxRate = asString(historical.rate);
+      }
+      baseAmount = multiplyDecimal(amount, fxRate, account.currency.precision);
+    }
     const result = await this.prisma.$transaction(async (tx: any) => {
       const transaction = await tx.transaction.create({
         data: {
@@ -397,12 +436,26 @@ export class AccountsService {
           currencyCode,
           occurredAt,
           note: typeof body?.note === 'string' ? body.note.trim() : null,
+          categoryId: category?.id ?? null,
         },
       });
-      const signedAmount = kind === 'EXPENSE' ? `-${amount}` : amount;
+      const signedAmount = kind === 'EXPENSE' ? `-${baseAmount}` : baseAmount;
       await tx.ledgerEntry.create({
         data: { transactionId: transaction.id, accountId, signedAmount },
       });
+      if (fxRate)
+        await tx.transactionFxSnapshot.create({
+          data: {
+            transactionId: transaction.id,
+            sourceCurrency: currencyCode,
+            baseCurrency: account.currencyCode,
+            sourceAmount: amount,
+            baseAmount,
+            rate: fxRate,
+            effectiveAt: occurredAt,
+            source: body?.manualRate !== undefined ? 'MANUAL' : 'MARKET',
+          },
+        });
       return transactionDto(transaction);
     });
     await this.idem.save(userId, key, body, result);

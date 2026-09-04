@@ -17,6 +17,12 @@ enum FxSource {
   MANUAL
 }
 
+enum RecurrenceCadence {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
 model User {
   id              String             @id @default(uuid()) @db.Uuid
   email           String             @unique
@@ -31,6 +37,9 @@ model User {
   resetTokens     PasswordResetToken[]
   auditEvents     AuditEvent[]
   idempotencyKeys IdempotencyKey[]
+  categories      Category[]
+  budgets         Budget[]
+  recurringRules  RecurringRule[]
 }
 
 model UserPreferences {
@@ -51,6 +60,7 @@ model Currency {
   transactions  Transaction[]
   ratesAsBase   FxRate[]            @relation("FxBase")
   ratesAsQuote  FxRate[]            @relation("FxQuote")
+  budgets       Budget[]
 }
 
 model Account {
@@ -68,6 +78,7 @@ model Account {
   entries       LedgerEntry[]
   sourceTransfers Transfer[]  @relation("TransferSource")
   destinationTransfers Transfer[] @relation("TransferDestination")
+  recurringRules RecurringRule[]
   @@index([userId, archivedAt])
 }
 
@@ -83,14 +94,103 @@ model Transaction {
   voidedAt       DateTime?       @db.Timestamptz(3)
   voidReason     String?
   transferId     String?         @db.Uuid
+  categoryId     String?         @db.Uuid
   createdAt      DateTime        @default(now()) @db.Timestamptz(3)
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   account        Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
   currency       Currency        @relation(fields: [currencyCode], references: [code])
   transfer       Transfer?       @relation(fields: [transferId], references: [id], onDelete: SetNull)
   entries        LedgerEntry[]
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  fxSnapshot     TransactionFxSnapshot?
+  recurrence     RecurringOccurrence?
   @@index([userId, occurredAt])
   @@index([accountId, occurredAt])
+  @@index([userId, categoryId, occurredAt])
+}
+
+model Category {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  name         String
+  normalizedName String
+  archivedAt   DateTime?     @db.Timestamptz(3)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  budgets      Budget[]
+  recurringRules RecurringRule[]
+  @@unique([userId, normalizedName])
+  @@index([userId, archivedAt])
+}
+
+model Budget {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  categoryId   String   @db.Uuid
+  monthKey     String   @db.VarChar(7)
+  timezone     String
+  currencyCode String   @db.VarChar(3)
+  limit        Decimal  @db.Decimal(20,8)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  currency     Currency @relation(fields: [currencyCode], references: [code])
+  @@unique([userId, categoryId, monthKey])
+  @@index([userId, monthKey])
+}
+
+model RecurringRule {
+  id             String            @id @default(uuid()) @db.Uuid
+  userId         String            @db.Uuid
+  accountId      String            @db.Uuid
+  categoryId     String?           @db.Uuid
+  kind           TransactionKind
+  amount         Decimal           @db.Decimal(20,8)
+  currencyCode   String            @db.VarChar(3)
+  note           String?
+  cadence        RecurrenceCadence
+  timezone       String
+  startAt        DateTime          @db.Timestamptz(3)
+  endAt          DateTime?         @db.Timestamptz(3)
+  nextOccurrence DateTime          @db.Timestamptz(3)
+  active         Boolean           @default(true)
+  createdAt      DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @db.Timestamptz(3)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account        Account           @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  category       Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  occurrences    RecurringOccurrence[]
+  @@index([userId, active, nextOccurrence])
+}
+
+model RecurringOccurrence {
+  id             String        @id @default(uuid()) @db.Uuid
+  ruleId         String        @db.Uuid
+  occurrenceAt   DateTime      @db.Timestamptz(3)
+  transactionId  String        @unique @db.Uuid
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  rule           RecurringRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  transaction    Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  @@unique([ruleId, occurrenceAt])
+  @@index([ruleId, occurrenceAt])
+}
+
+model TransactionFxSnapshot {
+  id             String      @id @default(uuid()) @db.Uuid
+  transactionId  String      @unique @db.Uuid
+  sourceCurrency String      @db.VarChar(3)
+  baseCurrency   String      @db.VarChar(3)
+  sourceAmount   Decimal     @db.Decimal(20,8)
+  baseAmount     Decimal     @db.Decimal(20,8)
+  rate           Decimal     @db.Decimal(24,12)
+  effectiveAt    DateTime    @db.Timestamptz(3)
+  source         FxSource
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+  transaction    Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  @@index([baseCurrency, effectiveAt])
 }
 
 model LedgerEntry {
