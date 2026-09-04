@@ -1,4 +1,7 @@
 {
-  "compilerOptions": {},
+  "compilerOptions": {
+    "allowImportingTsExtensions": true
+  },
+  "include": ["App.tsx", "src/**/*.ts", "src/**/*.tsx"],
   "extends": "expo/tsconfig.base"
 }

@@ -5,3 +5,198 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum TransactionKind {
+  OPENING
+  INCOME
+  EXPENSE
+}
+
+enum FxSource {
+  MARKET
+  MANUAL
+}
+
+model User {
+  id              String             @id @default(uuid()) @db.Uuid
+  email           String             @unique
+  passwordHash    String
+  createdAt       DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime           @updatedAt @db.Timestamptz(3)
+  preferences     UserPreferences?
+  accounts        Account[]
+  transactions    Transaction[]
+  transfers       Transfer[]
+  sessions        RefreshSession[]
+  resetTokens     PasswordResetToken[]
+  auditEvents     AuditEvent[]
+  idempotencyKeys IdempotencyKey[]
+}
+
+model UserPreferences {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @db.Uuid
+  baseCurrency String
+  timezone     String
+  onboardingComplete Boolean @default(false)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency     Currency @relation(fields: [baseCurrency], references: [code])
+}
+
+model Currency {
+  code          String             @id @db.VarChar(3)
+  precision     Int
+  preferences   UserPreferences[]
+  accounts      Account[]
+  transactions  Transaction[]
+  ratesAsBase   FxRate[]            @relation("FxBase")
+  ratesAsQuote  FxRate[]            @relation("FxQuote")
+}
+
+model Account {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @db.Uuid
+  name          String
+  currencyCode  String        @db.VarChar(3)
+  openingBalance Decimal       @db.Decimal(20, 8)
+  archivedAt    DateTime?     @db.Timestamptz(3)
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime      @updatedAt @db.Timestamptz(3)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency      Currency      @relation(fields: [currencyCode], references: [code])
+  transactions  Transaction[]
+  entries       LedgerEntry[]
+  sourceTransfers Transfer[]  @relation("TransferSource")
+  destinationTransfers Transfer[] @relation("TransferDestination")
+  @@index([userId, archivedAt])
+}
+
+model Transaction {
+  id             String          @id @default(uuid()) @db.Uuid
+  userId         String          @db.Uuid
+  accountId      String          @db.Uuid
+  kind           TransactionKind
+  amount         Decimal         @db.Decimal(20, 8)
+  currencyCode   String          @db.VarChar(3)
+  occurredAt     DateTime        @db.Timestamptz(3)
+  note           String?
+  voidedAt       DateTime?       @db.Timestamptz(3)
+  voidReason     String?
+  transferId     String?         @db.Uuid
+  createdAt      DateTime        @default(now()) @db.Timestamptz(3)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account        Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  currency       Currency        @relation(fields: [currencyCode], references: [code])
+  transfer       Transfer?       @relation(fields: [transferId], references: [id], onDelete: SetNull)
+  entries        LedgerEntry[]
+  @@index([userId, occurredAt])
+  @@index([accountId, occurredAt])
+}
+
+model LedgerEntry {
+  id            String      @id @default(uuid()) @db.Uuid
+  transactionId String      @db.Uuid
+  accountId     String      @db.Uuid
+  signedAmount  Decimal     @db.Decimal(20, 8)
+  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  account       Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  @@index([accountId, createdAt])
+}
+
+model Transfer {
+  id                 String        @id @default(uuid()) @db.Uuid
+  userId             String        @db.Uuid
+  sourceAccountId    String        @db.Uuid
+  destinationAccountId String      @db.Uuid
+  sourceAmount       Decimal       @db.Decimal(20, 8)
+  destinationAmount  Decimal       @db.Decimal(20, 8)
+  sourceCurrency     String        @db.VarChar(3)
+  destinationCurrency String       @db.VarChar(3)
+  feeAmount          Decimal?      @db.Decimal(20, 8)
+  occurredAt         DateTime      @db.Timestamptz(3)
+  createdAt          DateTime      @default(now()) @db.Timestamptz(3)
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceAccount      Account       @relation("TransferSource", fields: [sourceAccountId], references: [id])
+  destinationAccount Account      @relation("TransferDestination", fields: [destinationAccountId], references: [id])
+  transactions       Transaction[]
+  snapshot           FxSnapshot?
+  @@index([userId, occurredAt])
+}
+
+model FxRate {
+  id           String   @id @default(uuid()) @db.Uuid
+  baseCode     String   @db.VarChar(3)
+  quoteCode    String   @db.VarChar(3)
+  rate         Decimal  @db.Decimal(24, 12)
+  effectiveAt  DateTime @db.Timestamptz(3)
+  source       FxSource
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  base         Currency @relation("FxBase", fields: [baseCode], references: [code])
+  quote        Currency @relation("FxQuote", fields: [quoteCode], references: [code])
+  @@index([baseCode, quoteCode, effectiveAt])
+}
+
+model FxSnapshot {
+  id          String         @id @default(uuid()) @db.Uuid
+  transferId  String         @unique @db.Uuid
+  effectiveAt DateTime       @db.Timestamptz(3)
+  source      FxSource
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  transfer    Transfer       @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  rates       FxSnapshotRate[]
+}
+
+model FxSnapshotRate {
+  id         String      @id @default(uuid()) @db.Uuid
+  snapshotId String      @db.Uuid
+  baseCode   String      @db.VarChar(3)
+  quoteCode  String      @db.VarChar(3)
+  rate       Decimal     @db.Decimal(24, 12)
+  snapshot   FxSnapshot  @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  @@unique([snapshotId, baseCode, quoteCode])
+}
+
+model RefreshSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  familyId   String    @db.Uuid
+  tokenHash  String    @unique
+  expiresAt  DateTime  @db.Timestamptz(3)
+  revokedAt  DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, familyId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime  @db.Timestamptz(3)
+  usedAt    DateTime? @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  action    String
+  targetId  String
+  reason    String?
+  metadata  Json?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model IdempotencyKey {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  key         String
+  fingerprint String
+  response    Json
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, key])
+}

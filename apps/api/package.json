@@ -5,14 +5,18 @@
   "scripts": {
     "postinstall": "prisma generate --schema prisma/schema.prisma",
     "start": "node --import tsx src/main.ts",
-    "smoke": "node test/smoke.mjs"
+    "smoke": "node test/smoke.mjs",
+    "test": "node --test --experimental-strip-types test/*.spec.*",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@nestjs/common": "12.0.1",
     "@nestjs/core": "12.0.1",
     "@nestjs/platform-express": "12.0.1",
+    "@node-rs/argon2": "1.7.0",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "jose": "6.1.0",
     "reflect-metadata": "0.2.2",
     "pg": "8.23.0",
     "rxjs": "7.8.2"

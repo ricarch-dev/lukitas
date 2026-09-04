@@ -3,6 +3,7 @@ packages:
   - packages/*
 allowBuilds:
   '@prisma/engines': true
+  argon2: set this to true or false
   esbuild: true
   prisma: true
 minimumReleaseAgeExclude:

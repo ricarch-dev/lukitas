@@ -1,24 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { SessionProvider } from './src/session/SessionContext';
 
 export default function App() {
-  return (
-    <View style={styles.root}>
-      <Text style={styles.title}>lukitas</Text>
-      <Text>Mobile shell online.</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+  return <SessionProvider><View style={{ flex: 1 }}><RootNavigator /><StatusBar style="auto" /></View></SessionProvider>;
 }
-
-const styles = StyleSheet.create({
-  root: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-  },
-});

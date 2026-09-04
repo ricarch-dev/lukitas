@@ -11,9 +11,10 @@
     "gate": "node scripts/run-gate.mjs",
     "tdd:readiness": "node scripts/tdd-readiness.mjs",
     "test:smoke": "pnpm --dir apps/mobile smoke && pnpm --dir apps/api smoke",
-    "test:domain": "pnpm --dir packages/domain test"
+    "test:domain": "pnpm --dir packages/domain test",
+    "test:all": "pnpm --dir packages/domain test && pnpm --dir packages/contracts test && pnpm --dir packages/config test && pnpm --dir apps/api test"
   },
   "devDependencies": {
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   }
 }

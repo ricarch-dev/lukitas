@@ -27,8 +27,18 @@ expect('quality.clean-parity', read('.github/workflows/ci.yml').includes('pnpm i
 for (const entry of ['apps/mobile', 'apps/api', 'apps/api/prisma', 'infra/docker']) {
   expect('workspace.scope-boundary', existsSync(join(root, entry)), `${entry} is required by Phase 0`);
 }
-for (const entry of ['apps/api/prisma/migrations', 'packages/ui', 'supabase']) {
+for (const entry of ['packages/ui', 'supabase']) {
   expect('workspace.scope-boundary', !existsSync(join(root, entry)), `${entry} is outside the Phase 0 scope`);
+}
+
+const migrationsPath = join(root, 'apps/api/prisma/migrations');
+expect('workspace.prisma-migrations', existsSync(migrationsPath), 'P0 requires forward Prisma migrations');
+const migrationDirectories = readdirSync(migrationsPath, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+expect('workspace.prisma-migrations', migrationDirectories.length > 0, 'at least one forward Prisma migration is required');
+for (const migration of migrationDirectories) {
+  expect('workspace.prisma-migrations', existsSync(join(migrationsPath, migration, 'migration.sql')), `${migration} must contain migration.sql`);
 }
 
 const nestedGit = [];
@@ -38,7 +48,7 @@ const scan = (dir) => {
     const rel = relative(root, full);
     if (rel === '.git' || rel.startsWith('.git' + '\\')) continue;
     if (item.name === '.git') nestedGit.push(rel || '.git');
-    if (item.isDirectory() && !['.git', '.atl', 'node_modules', '.pnpm-store', 'dist', 'coverage'].includes(item.name)) scan(full);
+    if (item.isDirectory() && !['.git', '.atl', '.uv-cache', 'node_modules', '.pnpm-store', 'dist', 'coverage'].includes(item.name)) scan(full);
   }
 };
 scan(root);
