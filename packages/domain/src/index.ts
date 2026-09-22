@@ -2,6 +2,7 @@
 // Zero I/O, zero external dependencies.
 
 export { Currency } from './currency.ts';
+export { parseMonetaryUnitCode, SUPPORTED_MONETARY_UNITS } from './monetary-unit.ts';
 export { Money } from './money.ts';
 export { FxRate } from './fx-rate.ts';
 export { FxSnapshot } from './fx-snapshot.ts';
@@ -13,3 +14,8 @@ export type { Decimal, DecimalInput, RoundingMode, ReciprocalRounding } from './
 export type { ResolveOptions, ConvertOptions } from './fx-snapshot.ts';
 export { normalizeCategoryName, monthKeyAt, monthBounds, nextOccurrenceAt } from './planning.ts';
 export type { Cadence } from './planning.ts';
+export type {
+  MonetaryUnitCode,
+  MonetaryUnitMetadata,
+  SupportedMonetaryUnitCode,
+} from './monetary-unit.ts';

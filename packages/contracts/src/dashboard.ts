@@ -1,7 +1,8 @@
 import type { AccountDto } from './accounts.ts';
 import type { TransactionDto } from './ledger.ts';
+import type { SupportedMonetaryUnitCode } from '@lukitas/domain';
 export interface DashboardDto {
-  readonly baseCurrency: string;
+  readonly baseCurrency: SupportedMonetaryUnitCode;
   readonly accounts: readonly AccountDto[];
   readonly totals: {
     readonly amount: string;

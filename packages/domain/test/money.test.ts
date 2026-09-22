@@ -148,8 +148,8 @@ describe('money.validation-rounding', () => {
     assert.throws(() => Currency.of('US', 2), TypeError);
   });
 
-  it('rejects invalid Currency code (four letters)', () => {
-    assert.throws(() => Currency.of('USDX', 2), TypeError);
+  it('rejects invalid Currency code (five letters)', () => {
+    assert.throws(() => Currency.of('USDTX', 2), TypeError);
   });
 
   it('rejects negative precision', () => {

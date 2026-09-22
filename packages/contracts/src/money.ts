@@ -1,10 +1,12 @@
+import type { SupportedMonetaryUnitCode } from '@lukitas/domain';
+
 /**
  * DTO shape for Currency.
  * Transfer-only: no behaviour, no validation logic.
  */
 export interface CurrencyDto {
-  /** Uppercase ISO-4217 three-letter code, e.g. "USD". */
-  readonly code: string;
+  /** Supported monetary-unit code, e.g. "USD" or "USDT". Structural only. */
+  readonly code: SupportedMonetaryUnitCode;
   /** Non-negative safe-integer number of decimal places, e.g. 2 for USD. */
   readonly precision: number;
 }
