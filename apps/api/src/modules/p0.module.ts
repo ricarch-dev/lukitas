@@ -6,7 +6,6 @@ import {
   HttpCode,
   Injectable,
   Param,
-  Patch,
   Post,
   Query,
   Req,
@@ -26,39 +25,23 @@ import {
   verifyPassword,
 } from '../common/crypto.js';
 import { dashboardPeriod } from './dashboard-timezone.js';
+import { AccountsController, AccountsService, accountDto } from './accounts.js';
+import {
+  addDecimal,
+  asString,
+  code,
+  currencyDefaults,
+  instant,
+  multiplyDecimal,
+  now,
+  positiveAmount,
+  transactionDto,
+} from './p0-finance.js';
 
-const currencyDefaults: Record<string, number> = { USD: 2, EUR: 2, VES: 2, GBP: 2, JPY: 0, BTC: 8 };
-const asString = (value: unknown): string => String(value);
-const fixedAmount = (value: unknown, precision = 2): string => {
-  const text = asString(value);
-  const negative = text.startsWith('-');
-  const unsigned = negative ? text.slice(1) : text;
-  const [whole, fraction = ''] = unsigned.split('.');
-  return `${negative ? '-' : ''}${whole}${precision ? `.${fraction.padEnd(precision, '0').slice(0, precision)}` : ''}`;
-};
-const now = () => new Date();
-const instant = (value: unknown): Date => {
-  const date = value ? new Date(String(value)) : now();
-  if (!Number.isFinite(date.getTime())) validation('occurredAt must be a valid ISO instant');
-  return date;
-};
 const normalizeEmail = (email: unknown): string => {
   if (typeof email !== 'string' || !/^\S+@\S+\.\S+$/.test(email.trim()))
     validation('A valid email is required');
   return email.trim().toLowerCase();
-};
-const positiveAmount = (value: unknown): string => {
-  if (typeof value !== 'string' && typeof value !== 'bigint')
-    validation('Amount must be an exact decimal string');
-  const text = String(value).trim();
-  if (!/^\d+(?:\.\d+)?$/.test(text) || /^0+(?:\.0+)?$/.test(text))
-    validation('Amount must be positive');
-  return text;
-};
-const code = (value: unknown): string => {
-  if (typeof value !== 'string' || !/^[A-Z]{3}$/.test(value))
-    validation('Currency must be an uppercase ISO-4217 code');
-  return value;
 };
 const safeTimezone = (value: unknown): string => {
   if (typeof value !== 'string' || !value.trim()) validation('Timezone is required');
@@ -69,58 +52,6 @@ const safeTimezone = (value: unknown): string => {
   }
   return value;
 };
-const decimalParts = (value: string): [bigint, number] => {
-  const [whole, fraction = ''] = value.split('.');
-  return [BigInt(`${whole}${fraction}`), fraction.length];
-};
-const addDecimal = (left: string, right: string): string => {
-  const [a, as] = decimalParts(left);
-  const [b, bs] = decimalParts(right);
-  const scale = Math.max(as, bs);
-  const factorA = 10n ** BigInt(scale - as);
-  const factorB = 10n ** BigInt(scale - bs);
-  const raw = a * factorA + b * factorB;
-  const negative = raw < 0n;
-  const abs = negative ? -raw : raw;
-  const text = abs.toString().padStart(scale + 1, '0');
-  return (
-    `${negative ? '-' : ''}${text.slice(0, -scale || undefined)}${scale ? `.${text.slice(-scale).replace(/0+$/, '')}` : ''}`.replace(
-      /\.$/,
-      '',
-    ) || '0'
-  );
-};
-const multiplyDecimal = (left: string, right: string, precision: number): string => {
-  const [a, as] = decimalParts(left);
-  const [b, bs] = decimalParts(right);
-  const raw = a * b;
-  const scale = as + bs;
-  const divisor = 10n ** BigInt(Math.max(0, scale - precision));
-  const rounded = divisor > 1n ? raw / divisor : raw * 10n ** BigInt(precision - scale);
-  const negative = rounded < 0n;
-  const abs = negative ? -rounded : rounded;
-  const text = abs.toString().padStart(precision + 1, '0');
-  return `${negative ? '-' : ''}${text.slice(0, -precision || undefined)}${precision ? `.${text.slice(-precision)}` : ''}`;
-};
-const accountDto = (account: any, balance: string) => ({
-  id: account.id,
-  name: account.name,
-  currency: { code: account.currency.code, precision: account.currency.precision },
-  openingBalance: fixedAmount(account.openingBalance, account.currency.precision),
-  balance: fixedAmount(balance, account.currency.precision),
-  archived: Boolean(account.archivedAt),
-});
-const transactionDto = (value: any) => ({
-  id: value.id,
-  accountId: value.accountId,
-  kind: value.kind,
-  amount: fixedAmount(value.amount, currencyDefaults[value.currencyCode] ?? 2),
-  currencyCode: value.currencyCode,
-  occurredAt: new Date(value.occurredAt).toISOString(),
-  note: value.note ?? undefined,
-  voidedAt: value.voidedAt ? new Date(value.voidedAt).toISOString() : undefined,
-  categoryId: value.categoryId ?? undefined,
-});
 
 @Injectable()
 export class AuthService {
@@ -291,175 +222,6 @@ export class OnboardingService {
           timezone: preferences.timezone,
         }
       : { complete: false };
-  }
-}
-
-@Injectable()
-export class AccountsService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly idem: IdempotencyService,
-  ) {}
-  private async find(userId: string, id: string) {
-    const account = await this.prisma.account.findFirst({
-      where: { id, userId },
-      include: { currency: true },
-    });
-    if (!account) notFound('Account not found');
-    return account;
-  }
-  private async balance(account: any): Promise<string> {
-    const entries = await this.prisma.ledgerEntry.findMany({
-      where: { accountId: account.id, transaction: { voidedAt: null } },
-      select: { signedAmount: true },
-    });
-    return entries.reduce(
-      (total, entry) => addDecimal(total, asString(entry.signedAmount)),
-      asString(account.openingBalance),
-    );
-  }
-  async list(userId: string, includeArchived = false) {
-    const accounts = await this.prisma.account.findMany({
-      where: { userId, ...(includeArchived ? {} : { archivedAt: null }) },
-      include: { currency: true },
-      orderBy: { createdAt: 'asc' },
-    });
-    return Promise.all(
-      accounts.map(async (account) => accountDto(account, await this.balance(account))),
-    );
-  }
-  async create(userId: string, key: string | undefined, body: any) {
-    const replay = await this.idem.replay(userId, key, body);
-    if (replay) return replay;
-    const name =
-      typeof body?.name === 'string' && body.name.trim()
-        ? body.name.trim()
-        : validation('Account name is required');
-    const currencyCode = code(body?.currencyCode);
-    const openingBalance = String(body?.openingBalance ?? '0');
-    if (openingBalance !== '0') positiveAmount(openingBalance);
-    await this.prisma.currency.upsert({
-      where: { code: currencyCode },
-      create: { code: currencyCode, precision: currencyDefaults[currencyCode] ?? 2 },
-      update: {},
-    });
-    const account = await this.prisma.account.create({
-      data: { userId, name, currencyCode, openingBalance },
-      include: { currency: true },
-    });
-    const result = accountDto(account, openingBalance);
-    await this.idem.save(userId, key, body, result);
-    return result;
-  }
-  async update(userId: string, id: string, body: any) {
-    await this.find(userId, id);
-    if (typeof body?.name !== 'string' || !body.name.trim()) validation('Account name is required');
-    const account = await this.prisma.account.update({
-      where: { id },
-      data: { name: body.name.trim() },
-      include: { currency: true },
-    });
-    return accountDto(account, await this.balance(account));
-  }
-  async archive(userId: string, id: string, key: string | undefined) {
-    const body = { id };
-    const replay = await this.idem.replay(userId, key, body);
-    if (replay) return replay;
-    const account = await this.find(userId, id);
-    if (account.archivedAt) return { archived: true };
-    const updated = await this.prisma.account.update({
-      where: { id },
-      data: { archivedAt: now() },
-    });
-    const result = { id: updated.id, archived: true };
-    await this.idem.save(userId, key, body, result);
-    return result;
-  }
-  async transaction(userId: string, accountId: string, key: string | undefined, body: any) {
-    const replay = await this.idem.replay(userId, key, body);
-    if (replay) return replay;
-    const account = await this.find(userId, accountId);
-    if (account.archivedAt)
-      throw new AppError('ACCOUNT_ARCHIVED', 'Archived accounts cannot receive new transactions');
-    const kind = body?.kind;
-    if (kind !== 'INCOME' && kind !== 'EXPENSE') validation('kind must be INCOME or EXPENSE');
-    const amount = positiveAmount(body?.amount);
-    const currencyCode = code(body?.currencyCode ?? account.currencyCode);
-    const occurredAt = instant(body?.occurredAt);
-    let category: any = null;
-    if (body?.categoryId !== undefined) {
-      category = await this.prisma.category.findFirst({
-        where: { id: body.categoryId, userId, archivedAt: null },
-      });
-      if (!category) throw new AppError('NOT_FOUND', 'Active category not found', 404);
-    }
-    let baseAmount = amount;
-    let fxRate: string | undefined;
-    if (currencyCode !== account.currencyCode) {
-      if (!category)
-        throw new AppError(
-          'CURRENCY_MISMATCH',
-          'Only categorized transactions may use another currency',
-        );
-      await this.prisma.currency.upsert({
-        where: { code: currencyCode },
-        create: { code: currencyCode, precision: currencyDefaults[currencyCode] ?? 2 },
-        update: {},
-      });
-      if (body?.manualRate !== undefined) fxRate = positiveAmount(body.manualRate);
-      else {
-        const historical = await this.prisma.fxRate.findFirst({
-          where: {
-            baseCode: currencyCode,
-            quoteCode: account.currencyCode,
-            effectiveAt: { lte: occurredAt },
-          },
-          orderBy: { effectiveAt: 'desc' },
-        });
-        if (!historical)
-          throw new AppError(
-            'MISSING_FX_RATE',
-            'A historical FX rate is required for this transaction',
-            422,
-          );
-        fxRate = asString(historical.rate);
-      }
-      baseAmount = multiplyDecimal(amount, fxRate, account.currency.precision);
-    }
-    const result = await this.prisma.$transaction(async (tx: any) => {
-      const transaction = await tx.transaction.create({
-        data: {
-          userId,
-          accountId,
-          kind,
-          amount,
-          currencyCode,
-          occurredAt,
-          note: typeof body?.note === 'string' ? body.note.trim() : null,
-          categoryId: category?.id ?? null,
-        },
-      });
-      const signedAmount = kind === 'EXPENSE' ? `-${baseAmount}` : baseAmount;
-      await tx.ledgerEntry.create({
-        data: { transactionId: transaction.id, accountId, signedAmount },
-      });
-      if (fxRate)
-        await tx.transactionFxSnapshot.create({
-          data: {
-            transactionId: transaction.id,
-            sourceCurrency: currencyCode,
-            baseCurrency: account.currencyCode,
-            sourceAmount: amount,
-            baseAmount,
-            rate: fxRate,
-            effectiveAt: occurredAt,
-            source: body?.manualRate !== undefined ? 'MANUAL' : 'MARKET',
-          },
-        });
-      return transactionDto(transaction);
-    });
-    await this.idem.save(userId, key, body, result);
-    return result;
   }
 }
 
@@ -752,47 +514,6 @@ export class OnboardingController {
   }
   @Get() get(@Req() req: AuthenticatedRequest) {
     return this.onboarding.get(req.user.sub);
-  }
-}
-
-@Controller('accounts')
-@UseGuards(AuthGuard)
-export class AccountsController {
-  constructor(private readonly accounts: AccountsService) {}
-  @Get() list(
-    @Req() req: AuthenticatedRequest,
-    @Query('includeArchived') includeArchived?: string,
-  ) {
-    return this.accounts.list(req.user.sub, includeArchived === 'true');
-  }
-  @Post() create(
-    @Req() req: AuthenticatedRequest,
-    @Headers('idempotency-key') key: string | undefined,
-    @Body() body: any,
-  ) {
-    return this.accounts.create(req.user.sub, key, body);
-  }
-  @Patch(':id') update(
-    @Req() req: AuthenticatedRequest,
-    @Param('id') id: string,
-    @Body() body: any,
-  ) {
-    return this.accounts.update(req.user.sub, id, body);
-  }
-  @Post(':id/archive') archive(
-    @Req() req: AuthenticatedRequest,
-    @Param('id') id: string,
-    @Headers('idempotency-key') key: string | undefined,
-  ) {
-    return this.accounts.archive(req.user.sub, id, key);
-  }
-  @Post(':id/transactions') transaction(
-    @Req() req: AuthenticatedRequest,
-    @Param('id') id: string,
-    @Headers('idempotency-key') key: string | undefined,
-    @Body() body: any,
-  ) {
-    return this.accounts.transaction(req.user.sub, id, key, body);
   }
 }
 
