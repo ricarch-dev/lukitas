@@ -45,11 +45,11 @@ Equivalent decimal representations must behave consistently, and all monthly rep
 - Test runner: ordinary focused package tests plus `pnpm test:all` and `pnpm gate`
 - Delivery strategy: `ask-on-risk`, resolved to chained delivery after the first work unit exceeded 400 authored changed lines
 - Chain strategy: `stacked-to-main`
-- Forecast: approximately 120 authored changed lines; one PR slice expected
+- Final delivery shape: two stacked-to-main slices
 - RDD mode at start: on (global)
 - Initial reviewed boundary: `9da2612`
 - Slice 1: `fab15552ce5957293e829e8490d794ef8c7d05b2` (P1FI-01), reviewed against `9da2612`
-- Slice 2: P1FI-02, pending commit and review against `fab15552ce5957293e829e8490d794ef8c7d05b2`
+- Slice 2: `5593c2d` (P1FI-02), reviewed against `fab15552ce5957293e829e8490d794ef8c7d05b2`
 
 ## Tasks
 
@@ -82,8 +82,8 @@ Equivalent decimal representations must behave consistently, and all monthly rep
   - Runtime harness: UTC February produced `[2026-02-01T00:00:00.000Z, 2026-03-01T00:00:00.000Z)`; New York March crossed DST with `[2026-03-01T05:00:00.000Z, 2026-04-01T04:00:00.000Z)`; December rolled to `2027-01-01T00:00:00.000Z`; malformed months and unsupported timezones raised deterministic domain `RangeError` values and API 422 validation errors; report queries used `gte from` and `lt to`.
   - Formatter evidence: Prettier remains unavailable and unenforced; no formatter was installed or downloaded. Existing style and `git diff --check` were used.
   - Rollback boundary: revert the domain month-bound implementation/tests/export, API workspace dependency and lockfile entry, API adapter/call sites, and focused API test. P1FI-01 behavior and slice 1 remain unaffected.
-  - Commit evidence: pending parent readback.
-  - RDD outcome: implementation verified; review pending.
+  - Commit evidence: `5593c2d` (`fix(domain): canonicalize monthly boundaries`).
+  - RDD outcome: approved and acknowledged for lineage `review-5bb8a58d2680378f`; reliability review reported no findings.
 
 ## Progress
 
@@ -94,8 +94,8 @@ Equivalent decimal representations must behave consistently, and all monthly rep
 ## Verification Evidence
 
 - P1FI-01 executable checks passed. Formatter enforcement is unavailable and non-blocking because Prettier is not installed or referenced by repository scripts, CI, or gates. Native reliability review approved and acknowledged the committed candidate with no findings.
-- P1FI-02 focused domain/API boundary suites, package tests/typechecks, aggregate tests, repository gate, and diff check passed on Node `24.20.0` with pnpm `11.24.0`. Formatter enforcement remains unavailable and non-blocking.
+- P1FI-02 focused domain/API boundary suites, package tests/typechecks, aggregate tests, repository gate, and diff check passed on Node `24.20.0` with pnpm `11.24.0`. Formatter enforcement remains unavailable and non-blocking. Native reliability review approved and acknowledged the committed candidate with no findings.
 
 ## Next Step
 
-Commit P1FI-02 as stacked-to-main slice 2 for review against `fab15552ce5957293e829e8490d794ef8c7d05b2`; no further finance-invariant implementation remains in this tracker.
+No implementation remains. Delivery is intentionally unperformed: slice 1 and slice 2 are ready for the user's ordinary push/PR decisions.
