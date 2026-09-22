@@ -34,24 +34,70 @@ export function nextOccurrenceAt(value: Date, cadence: Cadence): Date {
   return next;
 }
 
+type ZonedParts = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+};
+
+function formatter(timezone: string): Intl.DateTimeFormat {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    });
+  } catch {
+    throw new RangeError('Unsupported timezone');
+  }
+}
+
+function partsAt(value: Date, timezone: string): ZonedParts {
+  const parts = formatter(timezone).formatToParts(value);
+  const number = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+  return {
+    year: number('year'),
+    month: number('month'),
+    day: number('day'),
+    hour: number('hour'),
+    minute: number('minute'),
+    second: number('second'),
+  };
+}
+
+function monthStart(year: number, month: number, timezone: string): Date {
+  const intended = Date.UTC(year, month - 1, 1);
+  let candidate = intended;
+  for (let index = 0; index < 3; index += 1) {
+    const local = partsAt(new Date(candidate), timezone);
+    const represented = Date.UTC(
+      local.year,
+      local.month - 1,
+      local.day,
+      local.hour,
+      local.minute,
+      local.second,
+    );
+    candidate += intended - represented;
+  }
+  return new Date(candidate);
+}
+
 export function monthBounds(month: string, timezone: string): { from: Date; to: Date } {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new RangeError('month must be YYYY-MM');
   const [year, monthNumber] = month.split('-').map(Number);
-  const offsetDate = (day: number) => {
-    const local = new Date(Date.UTC(year, monthNumber - 1, day));
-    const formatted = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      timeZoneName: 'longOffset',
-    }).formatToParts(local);
-    const offset = formatted.find((part) => part.type === 'timeZoneName')?.value ?? 'GMT';
-    const match = /GMT([+-])(\d{2}):?(\d{2})?/.exec(offset);
-    const minutes = match
-      ? (Number(match[2]) * 60 + Number(match[3] ?? 0)) * (match[1] === '+' ? 1 : -1)
-      : 0;
-    return new Date(local.getTime() - minutes * 60_000);
-  };
+  const nextYear = monthNumber === 12 ? year + 1 : year;
+  const nextMonth = monthNumber === 12 ? 1 : monthNumber + 1;
   return {
-    from: offsetDate(1),
-    to: offsetDate(new Date(Date.UTC(year, monthNumber, 0)).getUTCDate()),
+    from: monthStart(year, monthNumber, timezone),
+    to: monthStart(nextYear, nextMonth, timezone),
   };
 }

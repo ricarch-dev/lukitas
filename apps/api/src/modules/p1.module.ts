@@ -11,12 +11,13 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { monthBounds as domainMonthBounds } from '@lukitas/domain/planning';
 import type { AuthenticatedRequest } from '../common/types.js';
 import { PrismaService } from '../common/prisma.js';
 import { IdempotencyService } from '../common/idempotency.js';
 import { AppError, notFound, validation } from '../common/errors.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
-import { dashboardPeriod, zonedDateTimeToUtc } from './dashboard-timezone.js';
+import { dashboardPeriod } from './dashboard-timezone.js';
 
 const currencyDefaults: Record<string, number> = { USD: 2, EUR: 2, VES: 2, GBP: 2, JPY: 0, BTC: 8 };
 const asString = (value: unknown): string => String(value);
@@ -114,20 +115,13 @@ const dtoRule = (rule: any) => ({
   nextOccurrence: new Date(rule.nextOccurrence).toISOString(),
   active: rule.active,
 });
-const monthBounds = (month: string, timezone: string) => {
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) validation('month must be YYYY-MM');
-  const [year, monthNumber] = month.split('-').map(Number);
-  const from = zonedDateTimeToUtc(
-    { year, month: monthNumber, day: 1, hour: 0, minute: 0, second: 0 },
-    timezone,
-  );
-  const nextYear = monthNumber === 12 ? year + 1 : year;
-  const nextMonth = monthNumber === 12 ? 1 : monthNumber + 1;
-  const to = zonedDateTimeToUtc(
-    { year: nextYear, month: nextMonth, day: 1, hour: 0, minute: 0, second: 0 },
-    timezone,
-  );
-  return { from, to };
+export const validatedMonthBounds = (month: string, timezone: string) => {
+  try {
+    return domainMonthBounds(month, timezone);
+  } catch (error) {
+    if (error instanceof RangeError) validation(error.message);
+    throw error;
+  }
 };
 const addCadence = (value: Date, cadence: string) => {
   const next = new Date(value);
@@ -233,7 +227,7 @@ export class BudgetsService {
     const prefs = await this.prisma.userPreferences.findUnique({ where: { userId } });
     if (!prefs) validation('Onboarding is required');
     const month = String(body?.month ?? '');
-    const bounds = monthBounds(month, prefs.timezone);
+    const bounds = validatedMonthBounds(month, prefs.timezone);
     void bounds;
     const limit = positiveAmount(body?.limit);
     await this.prisma.currency.upsert({
@@ -273,7 +267,7 @@ export class BudgetsService {
     return this.progress(userId, budget);
   }
   private async progress(userId: string, budget: any) {
-    const { from, to } = monthBounds(budget.monthKey, budget.timezone);
+    const { from, to } = validatedMonthBounds(budget.monthKey, budget.timezone);
     const transactions = await this.prisma.transaction.findMany({
       where: {
         userId,
@@ -474,7 +468,7 @@ export class ReportsService {
       query.from && query.to
         ? dashboardPeriod(prefs.timezone, query.from, query.to)
         : query.month
-          ? monthBounds(String(query.month), prefs.timezone)
+          ? validatedMonthBounds(String(query.month), prefs.timezone)
           : dashboardPeriod(prefs.timezone);
     if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime()) || from >= to)
       validation('Report period is invalid');
