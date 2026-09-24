@@ -16,44 +16,41 @@ import { PrismaService } from '../common/prisma.js';
 import { IdempotencyService } from '../common/idempotency.js';
 import { AppError, notFound, validation } from '../common/errors.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
+import { record, requiredString } from '../common/request-input.js';
+import { selectFxEvidence, type SelectedFxEvidence } from './fx-evidence.js';
 import {
   addDecimal,
   asString,
   code,
-  currencyDefaults,
+  convertAmount,
+  currencyData,
   fixedAmount,
   instant,
-  multiplyDecimal,
+  monetaryUnit,
+  nativeAmount,
   now,
-  positiveAmount,
   transactionDto,
+  type StoredDecimal,
 } from './p0-finance.js';
 
 type AccountView = {
   id: string;
   name: string;
   currency: { code: string; precision: number };
-  openingBalance: unknown;
+  openingBalance: StoredDecimal;
   archivedAt: Date | null;
 };
 
-export const accountDto = (account: AccountView, balance: string) => ({
-  id: account.id,
-  name: account.name,
-  currency: { code: account.currency.code, precision: account.currency.precision },
-  openingBalance: fixedAmount(account.openingBalance, account.currency.precision),
-  balance: fixedAmount(balance, account.currency.precision),
-  archived: Boolean(account.archivedAt),
-});
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const openingBalanceAmount = (value: unknown): string => {
-  if (value === undefined) return '0';
-  if (typeof value !== 'string' || !/^\d+(?:\.\d+)?$/.test(value))
-    validation('Opening balance must be a non-negative exact decimal string');
-  return /^0+(?:\.0+)?$/.test(value) ? '0' : value;
+export const accountDto = (account: AccountView, balance: string) => {
+  const unit = monetaryUnit(account.currency.code);
+  return {
+    id: account.id,
+    name: account.name,
+    currency: { code: unit.code, precision: unit.precision },
+    openingBalance: fixedAmount(account.openingBalance, unit.precision),
+    balance: fixedAmount(balance, unit.precision),
+    archived: Boolean(account.archivedAt),
+  };
 };
 
 @Injectable()
@@ -97,17 +94,14 @@ export class AccountsService {
   async create(userId: string, key: string | undefined, body: unknown) {
     const replay = await this.idem.replay(userId, key, body);
     if (replay) return replay;
-    const input = isRecord(body) ? body : {};
-    const name =
-      typeof input.name === 'string' && input.name.trim()
-        ? input.name.trim()
-        : validation('Account name is required');
+    const input = record(body);
+    const name = requiredString(input.name, 'Account name is required');
     const currencyCode = code(input.currencyCode);
-    const openingBalance = openingBalanceAmount(input.openingBalance);
+    const openingBalance = nativeAmount(input.openingBalance, currencyCode, 'non-negative');
     await this.prisma.currency.upsert({
       where: { code: currencyCode },
-      create: { code: currencyCode, precision: currencyDefaults[currencyCode] ?? 2 },
-      update: {},
+      create: currencyData(currencyCode),
+      update: currencyData(currencyCode),
     });
     const account = await this.prisma.account.create({
       data: { userId, name, currencyCode, openingBalance },
@@ -120,12 +114,11 @@ export class AccountsService {
 
   async update(userId: string, id: string, body: unknown) {
     await this.find(userId, id);
-    const input = isRecord(body) ? body : {};
-    if (typeof input.name !== 'string' || !input.name.trim())
-      validation('Account name is required');
+    const input = record(body);
+    const name = requiredString(input.name, 'Account name is required');
     const account = await this.prisma.account.update({
-      where: { id },
-      data: { name: input.name.trim() },
+      where: { id, userId },
+      data: { name },
       include: { currency: true },
     });
     return accountDto(account, await this.balance(account));
@@ -138,7 +131,7 @@ export class AccountsService {
     const account = await this.find(userId, id);
     if (account.archivedAt) return { archived: true };
     const updated = await this.prisma.account.update({
-      where: { id },
+      where: { id, userId },
       data: { archivedAt: now() },
     });
     const result = { id: updated.id, archived: true };
@@ -149,14 +142,14 @@ export class AccountsService {
   async transaction(userId: string, accountId: string, key: string | undefined, body: unknown) {
     const replay = await this.idem.replay(userId, key, body);
     if (replay) return replay;
-    const input = isRecord(body) ? body : {};
+    const input = record(body);
     const account = await this.find(userId, accountId);
     if (account.archivedAt)
       throw new AppError('ACCOUNT_ARCHIVED', 'Archived accounts cannot receive new transactions');
     const kind = input.kind;
     if (kind !== 'INCOME' && kind !== 'EXPENSE') validation('kind must be INCOME or EXPENSE');
-    const amount = positiveAmount(input.amount);
-    const currencyCode = code(input.currencyCode ?? account.currencyCode);
+    const currencyCode = code(input.currencyCode === undefined ? account.currencyCode : input.currencyCode);
+    const amount = nativeAmount(input.amount, currencyCode, 'positive');
     const occurredAt = instant(input.occurredAt);
     let categoryId: string | null = null;
     if (input.categoryId !== undefined) {
@@ -168,39 +161,34 @@ export class AccountsService {
       categoryId = category.id;
     }
     let baseAmount = amount;
-    let fxRate: string | undefined;
+    let evidence: SelectedFxEvidence | null = null;
     if (currencyCode !== account.currencyCode) {
       if (!categoryId)
         throw new AppError(
           'CURRENCY_MISMATCH',
           'Only categorized transactions may use another currency',
         );
+      evidence = await selectFxEvidence(this.prisma, currencyCode, code(account.currencyCode), occurredAt, input.manualRate);
+      if (!evidence)
+        throw new AppError('MISSING_FX_RATE', 'A historical FX rate is required for this transaction', 422);
+      baseAmount = convertAmount(amount, currencyCode, evidence.quoteCode, evidence.rate);
       await this.prisma.currency.upsert({
         where: { code: currencyCode },
-        create: { code: currencyCode, precision: currencyDefaults[currencyCode] ?? 2 },
-        update: {},
+        create: currencyData(currencyCode),
+        update: currencyData(currencyCode),
       });
-      if (input.manualRate !== undefined) fxRate = positiveAmount(input.manualRate);
-      else {
-        const historical = await this.prisma.fxRate.findFirst({
-          where: {
-            baseCode: currencyCode,
-            quoteCode: account.currencyCode,
-            effectiveAt: { lte: occurredAt },
-          },
-          orderBy: { effectiveAt: 'desc' },
-        });
-        if (!historical)
-          throw new AppError(
-            'MISSING_FX_RATE',
-            'A historical FX rate is required for this transaction',
-            422,
-          );
-        fxRate = asString(historical.rate);
-      }
-      baseAmount = multiplyDecimal(amount, fxRate, account.currency.precision);
     }
     const result = await this.prisma.$transaction(async (tx) => {
+      const ownedAccount = await tx.account.findFirst({
+        where: { id: accountId, userId, archivedAt: null },
+      });
+      if (!ownedAccount) notFound('Account not found');
+      if (categoryId) {
+        const ownedCategory = await tx.category.findFirst({
+          where: { id: categoryId, userId, archivedAt: null },
+        });
+        if (!ownedCategory) notFound('Active category not found');
+      }
       const transaction = await tx.transaction.create({
         data: {
           userId,
@@ -217,7 +205,7 @@ export class AccountsService {
       await tx.ledgerEntry.create({
         data: { transactionId: transaction.id, accountId, signedAmount },
       });
-      if (fxRate)
+      if (evidence)
         await tx.transactionFxSnapshot.create({
           data: {
             transactionId: transaction.id,
@@ -225,9 +213,9 @@ export class AccountsService {
             baseCurrency: account.currencyCode,
             sourceAmount: amount,
             baseAmount,
-            rate: fxRate,
-            effectiveAt: occurredAt,
-            source: input.manualRate !== undefined ? 'MANUAL' : 'MARKET',
+            rate: evidence.rate,
+            effectiveAt: evidence.effectiveAt,
+            source: evidence.source,
           },
         });
       return transactionDto(transaction);

@@ -1,0 +1,86 @@
+schema: spec-driven
+
+context: |
+  Workspace: Lukitas, a pnpm monorepo with Expo/React Native mobile, NestJS API, and shared TypeScript packages.
+  Architecture: feature modules in apps/api and apps/mobile; shared contracts and domain logic in packages.
+  Runtime: Node 24.20.0, pnpm 11.24.0, TypeScript 7.0.2.
+  Quality: CI runs `pnpm gate`; package-local tests and smoke checks are recorded below.
+  Standards: zero `any`; normalize shared concepts; keep handwritten source maintainable; verify exact-version technology documentation.
+
+strict_tdd: false
+
+testing:
+  mode: disabled
+  reason: No explicit strict_tdd marker or prior OpenSpec configuration existed; the workspace readiness script reports deterministic target availability, not a user-selected strict-TDD setting. Preserve the conservative disabled default and record capabilities without inferring intent.
+  workspace_command: pnpm gate
+  projects:
+    - path: .
+      stack: Node.js and pnpm workspace orchestration
+      test_command: pnpm test:smoke; pnpm test:all
+      test_layers: unit/package tests and mobile/API smoke checks through constituent projects
+      coverage_command: null
+      linter_command: null
+      typecheck_command: null
+      formatter_command: null
+    - path: apps/mobile
+      stack: Expo 57, React 19, React Native 0.86, TypeScript
+      test_command: `pnpm --dir apps/mobile test`; `pnpm --dir apps/mobile smoke`
+      test_layers: node:test journey/spec tests; Expo web-export smoke
+      coverage_command: null
+      linter_command: null
+      typecheck_command: pnpm --dir apps/mobile typecheck
+      formatter_command: null
+    - path: apps/api
+      stack: NestJS 12, Prisma 7, TypeScript
+      test_command: `pnpm --dir apps/api test`; `pnpm --dir apps/api smoke`
+      test_layers: node:test tests; Prisma validation/generation and API health smoke
+      coverage_command: null
+      linter_command: null
+      typecheck_command: pnpm --dir apps/api typecheck
+      formatter_command: null
+    - path: packages/contracts
+      stack: TypeScript shared contracts
+      test_command: pnpm --dir packages/contracts test
+      test_layers: TypeScript compile-time validation
+      coverage_command: null
+      linter_command: null
+      typecheck_command: pnpm --dir packages/contracts typecheck
+      formatter_command: null
+    - path: packages/domain
+      stack: TypeScript shared domain
+      test_command: pnpm --dir packages/domain test
+      test_layers: node:test unit tests
+      coverage_command: null
+      linter_command: null
+      typecheck_command: pnpm --dir packages/domain typecheck
+      formatter_command: null
+    - path: packages/config
+      stack: TypeScript configuration package
+      test_command: pnpm --dir packages/config test
+      test_layers: Node configuration assertions
+      coverage_command: null
+      linter_command: null
+      typecheck_command: pnpm --dir packages/config typecheck
+      formatter_command: null
+
+rules:
+  proposal:
+    - State intent, scope, and approach; include rollback considerations for risky changes.
+  specs:
+    - Use Given/When/Then scenarios and RFC 2119 requirement language.
+  design:
+    - Follow existing module boundaries and document material decisions with rationale.
+  tasks:
+    - Group tasks by phase and keep each task verifiable and completable in a focused work unit.
+  apply:
+    guidelines:
+      - Preserve unrelated working-tree changes and follow repository engineering standards.
+      - Do not claim strict TDD is enabled; this workspace is configured with strict_tdd false until explicitly changed.
+    tdd: false
+    test_command: pnpm gate
+  verify:
+    test_command: pnpm gate
+    build_command: null
+    coverage_threshold: 0
+  archive:
+    - Preserve the change artifacts as an audit trail and warn before merging destructive deltas.

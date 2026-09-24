@@ -96,6 +96,10 @@ importers:
         version: 7.0.2
 
   packages/contracts:
+    dependencies:
+      '@lukitas/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       typescript:
         specifier: 7.0.2

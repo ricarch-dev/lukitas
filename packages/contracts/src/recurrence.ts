@@ -1,3 +1,5 @@
+import type { SupportedMonetaryUnitCode } from '@lukitas/domain';
+
 export type RecurrenceCadenceDto = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 export interface RecurringRuleDto {
   readonly id: string;
@@ -5,7 +7,7 @@ export interface RecurringRuleDto {
   readonly categoryId?: string;
   readonly kind: 'INCOME' | 'EXPENSE';
   readonly amount: string;
-  readonly currencyCode: string;
+  readonly currencyCode: SupportedMonetaryUnitCode;
   readonly note?: string;
   readonly cadence: RecurrenceCadenceDto;
   readonly timezone: string;
@@ -19,7 +21,7 @@ export interface CreateRecurringRuleRequest {
   readonly categoryId?: string;
   readonly kind: 'INCOME' | 'EXPENSE';
   readonly amount: string;
-  readonly currencyCode: string;
+  readonly currencyCode: SupportedMonetaryUnitCode;
   readonly note?: string;
   readonly cadence: RecurrenceCadenceDto;
   readonly timezone: string;

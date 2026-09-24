@@ -11,13 +11,18 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { monthBounds as domainMonthBounds } from '@lukitas/domain/planning';
+import type { Category, RecurringRule } from '@prisma/client';
 import type { AuthenticatedRequest } from '../common/types.js';
 import { PrismaService } from '../common/prisma.js';
 import { IdempotencyService } from '../common/idempotency.js';
 import { AppError, notFound, validation } from '../common/errors.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 import { dashboardPeriod } from './dashboard-timezone.js';
+import { record, requiredString } from '../common/request-input.js';
+import { BudgetsService } from './budgets.js';
+import { validatedMonthBounds } from './planning-time.js';
+export { BudgetsService } from './budgets.js';
+export { validatedMonthBounds } from './planning-time.js';
 
 const currencyDefaults: Record<string, number> = { USD: 2, EUR: 2, VES: 2, GBP: 2, JPY: 0, BTC: 8 };
 const asString = (value: unknown): string => String(value);
@@ -95,12 +100,12 @@ const fixed = (value: unknown, precision = 2) => {
   const [whole, fraction = ''] = unsigned.split('.');
   return `${negative ? '-' : ''}${whole}${precision ? `.${fraction.padEnd(precision, '0').slice(0, precision)}` : ''}`;
 };
-const dtoCategory = (category: any) => ({
+const dtoCategory = (category: Category) => ({
   id: category.id,
   name: category.name,
   archived: Boolean(category.archivedAt),
 });
-const dtoRule = (rule: any) => ({
+const dtoRule = (rule: RecurringRule) => ({
   id: rule.id,
   accountId: rule.accountId,
   categoryId: rule.categoryId ?? undefined,
@@ -115,14 +120,6 @@ const dtoRule = (rule: any) => ({
   nextOccurrence: new Date(rule.nextOccurrence).toISOString(),
   active: rule.active,
 });
-export const validatedMonthBounds = (month: string, timezone: string) => {
-  try {
-    return domainMonthBounds(month, timezone);
-  } catch (error) {
-    if (error instanceof RangeError) validation(error.message);
-    throw error;
-  }
-};
 const addCadence = (value: Date, cadence: string) => {
   const next = new Date(value);
   if (cadence === 'DAILY') next.setUTCDate(next.getUTCDate() + 1);
@@ -152,10 +149,11 @@ export class CategoriesService {
     });
     return categories.map(dtoCategory);
   }
-  async create(userId: string, key: string | undefined, body: any) {
+  async create(userId: string, key: string | undefined, body: unknown) {
     const replay = await this.idem.replay(userId, key, body);
     if (replay) return replay;
-    const name = normalizeName(body?.name);
+    const input = record(body);
+    const name = normalizeName(input.name);
     const normalized = normalizedName(name);
     const existing = await this.prisma.category.findFirst({
       where: { userId, normalizedName: normalized },
@@ -171,9 +169,9 @@ export class CategoriesService {
     await this.idem.save(userId, key, body, result);
     return result;
   }
-  async rename(userId: string, id: string, body: any) {
+  async rename(userId: string, id: string, body: unknown) {
     const category = await this.find(userId, id);
-    const name = normalizeName(body?.name);
+    const name = normalizeName(record(body).name);
     const normalized = normalizedName(name);
     const duplicate = await this.prisma.category.findFirst({
       where: { userId, normalizedName: normalized, NOT: { id } },
@@ -212,107 +210,6 @@ export class CategoriesService {
 }
 
 @Injectable()
-export class BudgetsService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly idem: IdempotencyService,
-  ) {}
-  async upsert(userId: string, key: string | undefined, body: any) {
-    const replay = await this.idem.replay(userId, key, body);
-    if (replay) return replay;
-    const category = await this.prisma.category.findFirst({
-      where: { id: body?.categoryId, userId, archivedAt: null },
-    });
-    if (!category) notFound('Active category not found');
-    const prefs = await this.prisma.userPreferences.findUnique({ where: { userId } });
-    if (!prefs) validation('Onboarding is required');
-    const month = String(body?.month ?? '');
-    const bounds = validatedMonthBounds(month, prefs.timezone);
-    void bounds;
-    const limit = positiveAmount(body?.limit);
-    await this.prisma.currency.upsert({
-      where: { code: prefs.baseCurrency },
-      create: { code: prefs.baseCurrency, precision: currencyDefaults[prefs.baseCurrency] ?? 2 },
-      update: {},
-    });
-    const budget = await this.prisma.budget.upsert({
-      where: { userId_categoryId_monthKey: { userId, categoryId: category.id, monthKey: month } },
-      create: {
-        userId,
-        categoryId: category.id,
-        monthKey: month,
-        timezone: prefs.timezone,
-        currencyCode: prefs.baseCurrency,
-        limit,
-      },
-      update: { limit },
-    });
-    await this.prisma.auditEvent.create({
-      data: { userId, action: 'BUDGET_UPSERTED', targetId: budget.id, metadata: { month } },
-    });
-    const result = await this.progress(userId, budget);
-    await this.idem.save(userId, key, body, result);
-    return result;
-  }
-  async list(userId: string, month?: string) {
-    const budgets = await this.prisma.budget.findMany({
-      where: { userId, ...(month ? { monthKey: month } : {}) },
-      orderBy: { monthKey: 'desc' },
-    });
-    return Promise.all(budgets.map((budget) => this.progress(userId, budget)));
-  }
-  async get(userId: string, id: string) {
-    const budget = await this.prisma.budget.findFirst({ where: { id, userId } });
-    if (!budget) notFound('Budget not found');
-    return this.progress(userId, budget);
-  }
-  private async progress(userId: string, budget: any) {
-    const { from, to } = validatedMonthBounds(budget.monthKey, budget.timezone);
-    const transactions = await this.prisma.transaction.findMany({
-      where: {
-        userId,
-        categoryId: budget.categoryId,
-        kind: 'EXPENSE',
-        voidedAt: null,
-        occurredAt: { gte: from, lt: to },
-      },
-      include: { fxSnapshot: true },
-    });
-    let spent = '0';
-    let partial = false;
-    const warnings: string[] = [];
-    const affectedIds: string[] = [];
-    for (const transaction of transactions) {
-      if (transaction.currencyCode === budget.currencyCode)
-        spent = add(spent, asString(transaction.amount));
-      else if (
-        transaction.fxSnapshot &&
-        transaction.fxSnapshot.baseCurrency === budget.currencyCode
-      )
-        spent = add(spent, asString(transaction.fxSnapshot.baseAmount));
-      else {
-        partial = true;
-        affectedIds.push(transaction.id);
-        warnings.push(`Missing FX evidence for ${transaction.currencyCode}/${budget.currencyCode}`);
-      }
-    }
-    return {
-      id: budget.id,
-      categoryId: budget.categoryId,
-      month: budget.monthKey,
-      timezone: budget.timezone,
-      currencyCode: budget.currencyCode,
-      limit: fixed(budget.limit),
-      spent: fixed(spent),
-      remaining: fixed(add(asString(budget.limit), `-${spent}`)),
-      partial,
-      warnings,
-      affectedIds,
-    };
-  }
-}
-
-@Injectable()
 export class RecurringRulesService {
   constructor(
     private readonly prisma: PrismaService,
@@ -325,28 +222,29 @@ export class RecurringRulesService {
     });
     return rules.map(dtoRule);
   }
-  async create(userId: string, key: string | undefined, body: any) {
+  async create(userId: string, key: string | undefined, body: unknown) {
     const replay = await this.idem.replay(userId, key, body);
     if (replay) return replay;
+    const input = record(body);
     const account = await this.prisma.account.findFirst({
-      where: { id: body?.accountId, userId, archivedAt: null },
+      where: { id: requiredString(input.accountId, 'Account is required'), userId, archivedAt: null },
     });
     if (!account) notFound('Account not found');
-    const kind = body?.kind;
+    const kind = input.kind;
     if (kind !== 'INCOME' && kind !== 'EXPENSE') validation('kind must be INCOME or EXPENSE');
-    const cadence = body?.cadence;
-    if (!['DAILY', 'WEEKLY', 'MONTHLY'].includes(cadence)) validation('Unsupported cadence');
-    const timezone = safeTimezone(body?.timezone);
-    const startAt = instant(body?.startAt);
-    const endAt = body?.endAt ? instant(body.endAt) : null;
+    const cadence = input.cadence;
+    if (cadence !== 'DAILY' && cadence !== 'WEEKLY' && cadence !== 'MONTHLY') validation('Unsupported cadence');
+    const timezone = safeTimezone(input.timezone);
+    const startAt = instant(input.startAt);
+    const endAt = input.endAt ? instant(input.endAt) : null;
     if (endAt && endAt < startAt) validation('endAt must be after startAt');
-    const currencyCode = code(body?.currencyCode ?? account.currencyCode);
+    const currencyCode = code(input.currencyCode ?? account.currencyCode);
     if (currencyCode !== account.currencyCode)
       throw new AppError('CURRENCY_MISMATCH', 'Rule currency must match account currency');
     let categoryId: string | null = null;
-    if (body?.categoryId) {
+    if (input.categoryId) {
       const category = await this.prisma.category.findFirst({
-        where: { id: body.categoryId, userId, archivedAt: null },
+        where: { id: requiredString(input.categoryId, 'Category is required'), userId, archivedAt: null },
       });
       if (!category) notFound('Active category not found');
       categoryId = category.id;
@@ -357,9 +255,9 @@ export class RecurringRulesService {
         accountId: account.id,
         categoryId,
         kind,
-        amount: positiveAmount(body?.amount),
+        amount: positiveAmount(input.amount),
         currencyCode,
-        note: typeof body?.note === 'string' ? body.note.trim() : null,
+        note: typeof input.note === 'string' ? input.note.trim() : null,
         cadence,
         timezone,
         startAt,
@@ -374,33 +272,35 @@ export class RecurringRulesService {
     await this.idem.save(userId, key, body, result);
     return result;
   }
-  async update(userId: string, id: string, body: any) {
+  async update(userId: string, id: string, body: unknown) {
+    const input = record(body);
     const rule = await this.find(userId, id);
-    const active = body?.active === undefined ? rule.active : Boolean(body.active);
+    const active = input.active === undefined ? rule.active : Boolean(input.active);
     const updated = await this.prisma.recurringRule.update({
       where: { id: rule.id },
-      data: { active, ...(body?.endAt ? { endAt: instant(body.endAt) } : {}) },
+      data: { active, ...(input.endAt ? { endAt: instant(input.endAt) } : {}) },
     });
     await this.prisma.auditEvent.create({
       data: { userId, action: 'RECURRING_RULE_UPDATED', targetId: id },
     });
     return dtoRule(updated);
   }
-  async catchUp(userId: string, id: string, key: string | undefined, body: any) {
+  async catchUp(userId: string, id: string, key: string | undefined, body: unknown) {
     const replay = await this.idem.replay(userId, key, body);
     if (replay) return replay;
-    const asOf = body?.until ? instant(body.until) : now();
+    const input = record(body);
+    const asOf = input.until ? instant(input.until) : now();
     const result = await this.prisma.$transaction(
-      async (tx: any) => {
+      async (tx) => {
         const rule = await tx.recurringRule.findFirst({ where: { id, userId } });
-        if (!rule) notFound('Recurring rule not found');
+        if (!rule || rule.userId !== userId) notFound('Recurring rule not found');
         if (!rule.active)
           return { ruleId: id, created: [], nextOccurrence: rule.nextOccurrence, active: false };
-        const created: any[] = [];
+        const created: Array<{ occurrenceAt: string; transactionId: string }> = [];
         let cursor = new Date(rule.nextOccurrence);
         let count = 0;
         while (cursor <= asOf && count < 500 && (!rule.endAt || cursor <= new Date(rule.endAt))) {
-          let occurrence: any = await tx.recurringOccurrence.findUnique({
+          let occurrence = await tx.recurringOccurrence.findUnique({
             where: { ruleId_occurrenceAt: { ruleId: rule.id, occurrenceAt: cursor } },
           });
           if (!occurrence) {
@@ -453,7 +353,7 @@ export class RecurringRulesService {
   }
   private async find(userId: string, id: string) {
     const rule = await this.prisma.recurringRule.findFirst({ where: { id, userId } });
-    if (!rule) notFound('Recurring rule not found');
+    if (!rule || rule.userId !== userId) notFound('Recurring rule not found');
     return rule;
   }
 }
@@ -461,11 +361,12 @@ export class RecurringRulesService {
 @Injectable()
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
-  async get(userId: string, query: any) {
+  async get(userId: string, rawQuery: unknown) {
+    const query = record(rawQuery);
     const prefs = await this.prisma.userPreferences.findUnique({ where: { userId } });
     if (!prefs) validation('Onboarding is required');
     const { from, to } =
-      query.from && query.to
+      typeof query.from === 'string' && typeof query.to === 'string'
         ? dashboardPeriod(prefs.timezone, query.from, query.to)
         : query.month
           ? validatedMonthBounds(String(query.month), prefs.timezone)
@@ -477,9 +378,9 @@ export class ReportsService {
         userId,
         occurredAt: { gte: from, lt: to },
         voidedAt: null,
-        ...(query.accountId ? { accountId: query.accountId } : {}),
-        ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-        ...(query.kind ? { kind: query.kind } : {}),
+        ...(typeof query.accountId === 'string' ? { accountId: query.accountId } : {}),
+        ...(typeof query.categoryId === 'string' ? { categoryId: query.categoryId } : {}),
+        ...(query.kind === 'EXPENSE' || query.kind === 'INCOME' ? { kind: query.kind } : {}),
       },
       include: { fxSnapshot: true },
       orderBy: { occurredAt: 'asc' },
@@ -489,7 +390,7 @@ export class ReportsService {
     let partial = false;
     const warnings: string[] = [];
     const affectedIds: string[] = [];
-    const items = transactions.map((transaction: any) => {
+    const items = transactions.map((transaction) => {
       nativeTotals[transaction.currencyCode] = add(
         nativeTotals[transaction.currencyCode] ?? '0',
         transaction.kind === 'EXPENSE' ? `-${transaction.amount}` : asString(transaction.amount),
@@ -545,14 +446,14 @@ export class CategoriesController {
   @Post() create(
     @Req() req: AuthenticatedRequest,
     @Headers('idempotency-key') key: string | undefined,
-    @Body() body: any,
+    @Body() body: unknown,
   ) {
     return this.categories.create(req.user.sub, key, body);
   }
   @Patch(':id') rename(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: unknown,
   ) {
     return this.categories.rename(req.user.sub, id, body);
   }
@@ -577,7 +478,7 @@ export class BudgetsController {
   @Post() upsert(
     @Req() req: AuthenticatedRequest,
     @Headers('idempotency-key') key: string | undefined,
-    @Body() body: any,
+    @Body() body: unknown,
   ) {
     return this.budgets.upsert(req.user.sub, key, body);
   }
@@ -592,14 +493,14 @@ export class RecurringRulesController {
   @Post() create(
     @Req() req: AuthenticatedRequest,
     @Headers('idempotency-key') key: string | undefined,
-    @Body() body: any,
+    @Body() body: unknown,
   ) {
     return this.rules.create(req.user.sub, key, body);
   }
   @Patch(':id') update(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: unknown,
   ) {
     return this.rules.update(req.user.sub, id, body);
   }
@@ -607,7 +508,7 @@ export class RecurringRulesController {
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
     @Headers('idempotency-key') key: string | undefined,
-    @Body() body: any,
+    @Body() body: unknown,
   ) {
     return this.rules.catchUp(req.user.sub, id, key, body);
   }
@@ -616,7 +517,7 @@ export class RecurringRulesController {
 @UseGuards(AuthGuard)
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
-  @Get() get(@Req() req: AuthenticatedRequest, @Query() query: any) {
+  @Get() get(@Req() req: AuthenticatedRequest, @Query() query: unknown) {
     return this.reports.get(req.user.sub, query);
   }
 }

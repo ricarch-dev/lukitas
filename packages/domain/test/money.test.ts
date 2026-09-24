@@ -24,6 +24,7 @@ import { Money } from '../src/money.ts';
 
 const USD = Currency.of('USD', 2);
 const EUR = Currency.of('EUR', 2);
+const USDT = Currency.of('USDT', 6);
 
 // ---------------------------------------------------------------------------
 // money.exact-immutable
@@ -148,8 +149,8 @@ describe('money.validation-rounding', () => {
     assert.throws(() => Currency.of('US', 2), TypeError);
   });
 
-  it('rejects invalid Currency code (four letters)', () => {
-    assert.throws(() => Currency.of('USDX', 2), TypeError);
+  it('rejects invalid Currency code (five letters)', () => {
+    assert.throws(() => Currency.of('USDTX', 2), TypeError);
   });
 
   it('rejects negative precision', () => {
@@ -177,6 +178,13 @@ describe('money.validation-rounding', () => {
   it('HALF_UP rounds 1.004 to 1.00 at precision 2', () => {
     const m = Money.of(USD, '1.004', 'HALF_UP');
     assert.strictEqual(m.amount, '1.00');
+  });
+
+  it('HALF_UP rounds negative ties away from zero and retains exact USDT subunits', () => {
+    assert.strictEqual(Money.of(USD, '-1.005', 'HALF_UP').amount, '-1.01');
+    assert.strictEqual(Money.of(USDT, '0.000001').amount, '0.000001');
+    assert.strictEqual(Money.of(USDT, '0').amount, '0.000000');
+    assert.strictEqual(Money.of(USDT, '1.23456700', 'HALF_UP').amount, '1.234567');
   });
 
   it('throws on currency mismatch in add', () => {

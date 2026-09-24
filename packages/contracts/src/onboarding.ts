@@ -1,13 +1,15 @@
+import type { SupportedMonetaryUnitCode } from '@lukitas/domain';
+
 export interface OnboardingRequest {
-  readonly baseCurrency: string;
+  readonly baseCurrency: SupportedMonetaryUnitCode;
   readonly timezone: string;
   readonly accountName: string;
-  readonly accountCurrency: string;
+  readonly accountCurrency: SupportedMonetaryUnitCode;
   readonly openingBalance: string;
 }
 export interface OnboardingResponse {
   readonly complete: boolean;
-  readonly baseCurrency: string;
+  readonly baseCurrency: SupportedMonetaryUnitCode;
   readonly timezone: string;
   readonly accountId: string;
 }

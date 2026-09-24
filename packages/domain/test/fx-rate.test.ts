@@ -24,8 +24,25 @@ import { FxRate } from '../src/fx-rate.ts';
 const USD = Currency.of('USD', 2);
 const EUR = Currency.of('EUR', 2);
 const JPY = Currency.of('JPY', 0);
+const USDT = Currency.of('USDT', 6);
+const VES = Currency.of('VES', 2);
 
 describe('fx-rate.direction-inversion', () => {
+  it('converts USDT and fiat in the declared direction with target-only HALF_UP rounding', () => {
+    const toUsd = FxRate.of(USDT, USD, '1.005');
+    assert.strictEqual(toUsd.convert(Money.of(USDT, '1.234567'), 'HALF_UP').amount, '1.24');
+    assert.strictEqual(
+      FxRate.of(USDT, VES, '36.5').convert(Money.of(USDT, '1.234567'), 'HALF_UP').amount,
+      '45.06',
+    );
+    const toUsdt = FxRate.of(USD, USDT, '1.2345675');
+    assert.strictEqual(toUsdt.rate, '1.2345675');
+    assert.strictEqual(toUsdt.convert(Money.of(USD, '1.00'), 'HALF_UP').amount, '1.234568');
+    assert.strictEqual(toUsd.convert(Money.of(USDT, '1'), 'HALF_UP').amount, '1.01');
+    assert.strictEqual(toUsd.convert(Money.of(USDT, '-1'), 'HALF_UP').amount, '-1.01');
+    assert.strictEqual(toUsd.convert(Money.of(USDT, '0'), 'HALF_UP').amount, '0.00');
+    assert.throws(() => toUsdt.convert(Money.of(USDT, '1'), 'HALF_UP'), /direction mismatch/);
+  });
   it('1 USD = 0.9 EUR: 10 USD → 9.00 EUR', () => {
     const rate = FxRate.of(USD, EUR, '0.9');
     const ten = Money.of(USD, '10.00');
