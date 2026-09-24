@@ -60,7 +60,7 @@ The current monetary model rejects `USDT` as a four-character code, persists cur
   - Keep domain, Prisma schema, migration, and focused tests in the same work-unit commit.
   - Acceptance: `Currency.of("USDT", 6)` succeeds; invalid/lowercase codes fail; schema and migration contain no active three-character currency limit; existing fiat rows remain compatible.
   - Checks: domain typecheck/tests, contracts typecheck, Prisma validate/generate, migration structural test.
-  - Evidence: canonical domain metadata and code validation, structural contract typing, Prisma `VARCHAR(4)` schema alignment, one 14-column widening migration, active USDT upsert, and focused domain/schema tests are included in the USDT-01 work-unit commit.
+  - Evidence: commit `5fc5de405eaf1b5a4a02e76b61bae11a163ea56c` (`feat(domain): support USDT monetary metadata`) includes canonical domain metadata and code validation, structural contract typing, Prisma `VARCHAR(4)` schema alignment, one 14-column widening migration, active USDT upsert, and focused domain/schema tests. Required checks passed under Node `24.20.0` and pnpm `11.24.0`; the parent repeated `pnpm --dir packages/domain typecheck` successfully. Native medium-risk review `review-03c3cf4ffd99173e` was approved and acknowledged. Its non-blocking warning about runtime non-string coercion will be hardened at the API validation boundary in USDT-02.
 
 - [ ] **USDT-02 — API precision and financial flows**
   - Replace touched duplicate precision/default maps with the canonical monetary metadata owner.
@@ -104,4 +104,7 @@ The current monetary model rejects `USDT` as a four-character code, persists cur
 ## Progress and next step
 
 - Branch created: `feat/usdt-monetary-unit` from `7b1ec4d`.
-- Next: implement USDT-01 with focused verification and close it as a Conventional Commit work unit.
+- USDT-01 completed, verified, reviewed, and acknowledged at commit `5fc5de405eaf1b5a4a02e76b61bae11a163ea56c`.
+- Running authored change count: 653 lines (489 additions, 164 deletions); the current slice exceeds the 400-line review heuristic because Prisma normalization, the atomic 14-column migration, contracts, tests, and the feature document form one reviewed foundation. Subsequent work remains split by coherent behavior under `stacked-to-main`.
+- USDT-02 is partially implemented but unverified and uncommitted after its delegated writer was cancelled. Preserve and reconcile changes in `apps/api/src/modules/accounts.ts`, `apps/api/src/modules/p0-finance.ts`, `apps/api/src/modules/p0.module.ts`, `packages/domain/src/index.ts`, `packages/domain/src/monetary-unit.ts`, `packages/domain/test/monetary-unit.test.ts`, and the new untracked `apps/api/src/modules/p0-monetary.ts`. The current tracked diff is 197 additions and 426 deletions; no USDT-02 verification result exists yet.
+- Next: inspect the partial USDT-02 diff, complete its tests and financial-flow behavior, normalize, run the required checks, and only then create its work-unit commit.

@@ -9,6 +9,11 @@ export interface DashboardDto {
     readonly partial: boolean;
     readonly warnings: readonly string[];
   };
-  readonly flow: { readonly income: string; readonly expense: string };
+  readonly flow: {
+    readonly income: string;
+    readonly expense: string;
+    readonly partial: boolean;
+    readonly warnings: readonly string[];
+  };
   readonly recentActivity: readonly TransactionDto[];
 }

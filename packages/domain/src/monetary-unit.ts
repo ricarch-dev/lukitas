@@ -7,8 +7,8 @@ export type MonetaryUnitCode = string & {
   readonly [monetaryUnitCodeBrand]: true;
 };
 
-export function parseMonetaryUnitCode(value: string): MonetaryUnitCode {
-  if (!MONETARY_UNIT_CODE_PATTERN.test(value)) {
+export function parseMonetaryUnitCode(value: unknown): MonetaryUnitCode {
+  if (typeof value !== 'string' || !MONETARY_UNIT_CODE_PATTERN.test(value)) {
     throw new TypeError(
       `Monetary unit code must contain three or four uppercase letters; got "${value}"`,
     );
@@ -31,6 +31,21 @@ export interface MonetaryUnitMetadata {
   readonly code: SupportedMonetaryUnitCode;
   readonly precision: number;
   readonly active: boolean;
+}
+
+export function isSupportedMonetaryUnitCode(
+  value: unknown,
+): value is SupportedMonetaryUnitCode {
+  return typeof value === 'string' && Object.hasOwn(SUPPORTED_MONETARY_UNITS, value);
+}
+
+export function getSupportedMonetaryUnit(value: unknown): MonetaryUnitMetadata {
+  const code = parseMonetaryUnitCode(value);
+  if (!isSupportedMonetaryUnitCode(value)) {
+    throw new RangeError(`Unsupported monetary unit code: "${code}"`);
+  }
+
+  return SUPPORTED_MONETARY_UNITS[value];
 }
 
 Object.values(SUPPORTED_MONETARY_UNITS).forEach(Object.freeze);
