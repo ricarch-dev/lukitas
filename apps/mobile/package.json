@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@lukitas/contracts": "workspace:*",
+    "@lukitas/domain": "workspace:*",
     "@expo/metro-runtime": "57.0.15",
     "expo": "57.0.20",
     "expo-secure-store": "57.0.3",

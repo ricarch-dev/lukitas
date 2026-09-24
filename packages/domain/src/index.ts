@@ -2,6 +2,7 @@
 // Zero I/O, zero external dependencies.
 
 export { Currency } from './currency.ts';
+export { normalizeAuthEmail, isValidRegistrationPassword } from './auth.ts';
 export {
   getSupportedMonetaryUnit,
   isSupportedMonetaryUnitCode,

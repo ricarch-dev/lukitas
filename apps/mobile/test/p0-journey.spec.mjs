@@ -9,6 +9,7 @@ const screens = readFileSync(
   join(root, "src", "features", "screens.tsx"),
   "utf8",
 );
+const authSubmit = readFileSync(join(root, "src", "features", "auth-submit.ts"), "utf8");
 const navigator = readFileSync(
   join(root, "src", "navigation", "RootNavigator.tsx"),
   "utf8",
@@ -19,7 +20,8 @@ test("mobile P0 journey has auth, setup, dashboard and session restore boundarie
   assert.match(navigator, /auth\/me/);
   assert.match(navigator, /OnboardingScreen/);
   assert.match(navigator, /DashboardScreen/);
-  assert.match(screens, /auth\/login/);
+  assert.match(screens, /submitAuth\('login'/);
+  assert.match(authSubmit, /auth\/login/);
   assert.match(screens, /onboarding/);
   assert.match(screens, /dashboard/);
 });

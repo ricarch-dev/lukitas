@@ -20,7 +20,9 @@ export class ApiError extends Error {
 
 export class ApiClient {
   private readonly baseUrl: string;
-  constructor(private readonly options: ApiClientOptions = {}) {
+  private readonly options: ApiClientOptions;
+  constructor(options: ApiClientOptions = {}) {
+    this.options = options;
     this.baseUrl = options.baseUrl ?? 'http://127.0.0.1:3000/v1';
   }
   async request<T>(path: string, init: RequestInit = {}): Promise<T> {

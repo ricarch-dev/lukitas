@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { User } from '@prisma/client';
+import { normalizeAuthEmail, isValidRegistrationPassword } from '@lukitas/domain';
 import { randomUUID } from 'node:crypto';
 import type { AuthenticatedRequest } from '../common/types.js';
 import { PrismaService } from '../common/prisma.js';
@@ -46,9 +47,9 @@ export {
 } from './p0-monetary.js';
 
 const normalizeEmail = (email: unknown): string => {
-  if (typeof email !== 'string' || !/^\S+@\S+\.\S+$/.test(email.trim()))
-    validation('A valid email is required');
-  return email.trim().toLowerCase();
+  const normalized = normalizeAuthEmail(email);
+  if (!normalized) validation('A valid email is required');
+  return normalized;
 };
 
 type UserIdentity = Pick<User, 'id' | 'email'>;
@@ -91,7 +92,7 @@ export class AuthService {
     const input = record(body);
     const email = normalizeEmail(input.email);
     const password = input.password;
-    if (typeof password !== 'string' || password.length < 8)
+    if (!isValidRegistrationPassword(password))
       validation('Password must contain at least 8 characters');
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) throw new AppError('CONFLICT', 'Unable to create account', 409);

@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useSession } from '../session/SessionContext';
+import { submitAuth } from './auth-submit';
 import { PlanningScreen } from './planning-screens';
 import { ReportsScreen } from './reports-screens';
 
@@ -22,11 +23,7 @@ export function AuthScreen() {
     setLoading(true);
     setError('');
     try {
-      const result = await client.post<any>('/auth/login', { email, password });
-      await setTokens({
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-      });
+      await submitAuth('login', { email, password }, { post: client.post.bind(client), setTokens });
     } catch (value) {
       setError(value instanceof Error ? value.message : 'Unable to sign in');
     } finally {
