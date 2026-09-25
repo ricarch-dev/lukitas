@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T18:24:02.5546909Z",
+  "title": "Design System: Lukitas Auth Entry",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Deep Current Teal",
+        "canonical": "oklch(0.422 0.073 210.7)"
+      }
+    },
+    "breakpoints": [
+      {
+        "name": "wide-auth-composition",
+        "value": "880px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Auth Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Submits the current sign-in or account-creation form.",
+      "html": "<button class=\"ds-auth-primary\" type=\"button\">Iniciar sesión</button>",
+      "css": ".ds-auth-primary { background: #005864; color: #FFFFFF; min-height: 52px; padding: 0 18px; border: 2px solid transparent; border-radius: 10px; font: 700 16px/22px system-ui, sans-serif; } .ds-auth-primary:hover, .ds-auth-primary:active { background: #004751; } .ds-auth-primary:focus-visible { border-color: #192D30; } .ds-auth-primary:disabled { background: #4C696D; color: #FFFFFF; }"
+    },
+    {
+      "name": "Authentication Field",
+      "kind": "input",
+      "refersTo": "auth-field",
+      "description": "A labeled email or password field with a distinct focus stroke.",
+      "html": "<label class=\"ds-auth-label\" for=\"email\">Correo electrónico</label><input class=\"ds-auth-input\" id=\"email\" autocomplete=\"email\" type=\"email\" />",
+      "css": ".ds-auth-label { display: block; color: #192D30; margin-bottom: 8px; font: 600 14px/20px system-ui, sans-serif; } .ds-auth-input { width: 100%; min-height: 52px; padding: 12px 14px; border: 1px solid #71868A; border-radius: 10px; background: #FFFFFF; color: #192D30; font: 400 16px/22px system-ui, sans-serif; } .ds-auth-input:focus-visible { border: 2px solid #005864; outline: none; }"
+    },
+    {
+      "name": "Authentication Panel",
+      "kind": "card",
+      "refersTo": "auth-panel",
+      "description": "The single bounded surface that contains the credential form.",
+      "html": "<section class=\"ds-auth-panel\"><h2>Inicia sesión</h2><p>Ingresa tus datos para acceder a tus cuentas.</p></section>",
+      "css": ".ds-auth-panel { width: min(100%, 456px); padding: 24px; border: 1px solid #D8E2DF; border-radius: 16px; background: #FFFFFF; color: #192D30; } .ds-auth-panel h2 { margin: 0; font: 700 25px/32px system-ui, sans-serif; } .ds-auth-panel p { color: #334A4E; font: 400 15px/22px system-ui, sans-serif; }"
+    },
+    {
+      "name": "Auth Mode Selector",
+      "kind": "button",
+      "refersTo": "auth-mode-switch",
+      "description": "Two adjacent actions keep sign-in and account creation visible.",
+      "html": "<div class=\"ds-auth-modes\"><button class=\"ds-auth-mode ds-auth-mode-selected\" aria-pressed=\"true\">Iniciar sesión</button><button class=\"ds-auth-mode\" aria-pressed=\"false\">Crear cuenta</button></div>",
+      "css": ".ds-auth-modes { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: #EAF0EE; } .ds-auth-mode { flex: 1; min-height: 44px; padding: 10px 8px; border: 2px solid transparent; border-radius: 9px; background: transparent; color: #334A4E; font: 600 14px/20px system-ui, sans-serif; } .ds-auth-mode-selected { background: #005864; color: #FFFFFF; } .ds-auth-mode:focus-visible { border-color: #192D30; }"
+    },
+    {
+      "name": "Password Visibility Control",
+      "kind": "button",
+      "refersTo": "button-password-visibility",
+      "description": "Reveals or masks the password and changes its accessible label.",
+      "html": "<button class=\"ds-auth-password-toggle\" type=\"button\" aria-pressed=\"false\">Mostrar</button>",
+      "css": ".ds-auth-password-toggle { min-height: 44px; padding: 0 8px; border: 2px solid transparent; border-radius: 6px; background: transparent; color: #005864; font: 600 14px/20px system-ui, sans-serif; } .ds-auth-password-toggle:focus-visible { border-color: #192D30; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clear Currency Desk",
+    "overview": "This entry screen serves someone reviewing money across currencies in a quiet home workspace with soft morning daylight. A near-white surface keeps the sign-in task familiar on a phone or laptop, while a restrained blue-teal accent identifies the brand and the next action. The documented scope is the authentication entry surface, not the rest of the app. It pairs a concise Lukitas wordmark and practical multi-currency explanation with a bounded form panel.",
+    "keyCharacteristics": [
+      "Clear Spanish copy and visible field labels.",
+      "Calm, high-contrast neutrals with one blue-teal action color.",
+      "Familiar form controls, direct feedback, and a responsive two-column desktop composition."
+    ],
+    "rules": [
+      {
+        "name": "The Single Accent Rule",
+        "body": "Keep blue-teal attached to a meaningful action or current state; never use it as decoration across large surfaces.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Family Rule",
+        "body": "Use the platform's system sans-serif throughout this task surface; do not introduce a display font for a credential form.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border-Only Rule",
+        "body": "Do not add drop shadows to the auth panel; keep the existing border as its only edge treatment.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep sign-in and create-account modes visible together; the mode must determine the existing login or registration action.",
+      "Do keep the form readable at narrow widths and constrain its desktop width.",
+      "Do preserve the measured text and control contrast ratios documented above.",
+      "Do show loading, validation, authentication, duplicate-email, and connectivity feedback in neutral Spanish."
+    ],
+    "donts": [
+      "Don't copy Rial's logo, QR code, visual assets, or exact interface.",
+      "Don't use accounting jargon, opaque currency conversions, cluttered screens, or decorative controls that obscure common actions.",
+      "Don't imply that Lukitas is a bank, custodian, or payment processor.",
+      "Don't default to generic fintech navy+cream+orange, gradients, QR codes, or decorative motion.",
+      "Don't expose unknown server messages, credentials, or implementation details in user-facing errors."
+    ]
+  }
+}

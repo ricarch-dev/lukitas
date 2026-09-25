@@ -9,50 +9,10 @@ import {
   View,
 } from 'react-native';
 import { useSession } from '../session/SessionContext';
-import { submitAuth } from './auth-submit';
 import { PlanningScreen } from './planning-screens';
 import { ReportsScreen } from './reports-screens';
 
-export function AuthScreen() {
-  const { client, setTokens } = useSession();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const submit = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await submitAuth('login', { email, password }, { post: client.post.bind(client), setTokens });
-    } catch (value) {
-      setError(value instanceof Error ? value.message : 'Unable to sign in');
-    } finally {
-      setLoading(false);
-    }
-  };
-  return (
-    <SafeAreaView style={styles.root}>
-      <Text style={styles.title}>Sign in to lukitas</Text>
-      <TextInput
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-      />
-      <TextInput
-        secureTextEntry
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {loading ? <ActivityIndicator /> : <Button title="Sign in" onPress={submit} />}
-    </SafeAreaView>
-  );
-}
+export { AuthScreen } from './auth-screen';
 
 export function OnboardingScreen() {
   const { client } = useSession();
