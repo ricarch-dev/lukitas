@@ -1,4 +1,4 @@
-import { readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
@@ -36,9 +36,8 @@ for (const args of [
 }
 
 const port = 3217;
-const buildDir = join(root, '.tmp-api-smoke');
-rmSync(buildDir, { force: true, recursive: true });
-const build = spawnSync(tsc, ['-p', 'tsconfig.json', '--outDir', buildDir, '--rootDir', '.'], {
+const buildDir = mkdtempSync(join(root, '.tmp-api-smoke-'));
+const build = spawnSync(tsc, ['-p', 'tsconfig.json', '--outDir', buildDir], {
   cwd: root,
   encoding: 'utf8',
   shell: process.platform === 'win32',
@@ -48,7 +47,7 @@ if (build.status !== 0) {
   rmSync(buildDir, { force: true, recursive: true });
   throw new Error(build.stderr || build.stdout || 'API TypeScript build failed');
 }
-const child = spawn(process.execPath, [join(buildDir, 'src', 'main.js')], {
+const child = spawn(process.execPath, [join(buildDir, 'apps', 'api', 'src', 'main.js')], {
   cwd: root,
   encoding: 'utf8',
   env: { ...process.env, CI: '1', PORT: String(port), DATABASE_URL: databaseUrl },
