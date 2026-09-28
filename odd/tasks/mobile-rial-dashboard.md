@@ -33,5 +33,6 @@ The user explicitly requested that the app's initial front resemble the two Rial
 
 ## Progress
 - Exploration: complete. Existing data is sufficient in `/dashboard` and `DashboardDto`; no endpoint change is needed.
-- Commit evidence: pending work-unit commit `feat(mobile): redesign dashboard overview`.
+- Commit evidence: work-unit commit `e5abedf` (`feat(mobile): redesign dashboard overview`).
+- Receipt-driven review: disabled/unmanaged (clone-local setting); no review was run.
 - Rollback boundary: revert the dashboard UI and focused journey assertions in `apps/mobile/src/features/screens.tsx` and `apps/mobile/test/p0-journey.spec.mjs`; onboarding, API and contracts remain independent.
