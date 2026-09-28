@@ -1,66 +1,17 @@
 import type { DashboardDto } from '@lukitas/contracts';
 import React, { useState } from 'react';
-import { ActivityIndicator, Button, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Button, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSession } from '../session/SessionContext';
 import { PlanningScreen } from './planning-screens';
 import { ReportsScreen } from './reports-screens';
 
 export { AuthScreen } from './auth-screen';
+export { OnboardingScreen } from './onboarding-screen';
 
 type DashboardSection = 'dashboard' | 'planning' | 'reports';
 
 const markerFor = (currency: string) => currency === 'USD' ? '🇺🇸' : currency === 'EUR' ? '🇪🇺' : '◉';
 const formatAmount = (amount: string, currency: string) => `${currency === 'USD' ? '$' : `${currency} `}${amount}`;
-
-export function OnboardingScreen() {
-  const { client } = useSession();
-  const [name, setName] = useState('Main account');
-  const [balance, setBalance] = useState('0');
-  const [error, setError] = useState('');
-  const [done, setDone] = useState(false);
-  const submit = async () => {
-    try {
-      await client.post(
-        '/onboarding',
-        {
-          baseCurrency: 'USD',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-          accountName: name,
-          accountCurrency: 'USD',
-          openingBalance: balance,
-        },
-        `onboarding-${Date.now()}`,
-      );
-      setDone(true);
-    } catch (value) {
-      setError(value instanceof Error ? value.message : 'Unable to finish setup');
-    }
-  };
-  return (
-    <SafeAreaView style={styles.root}>
-      <Text style={styles.title}>Set up your first account</Text>
-      <TextInput
-        placeholder="Account name"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
-      <TextInput
-        keyboardType="decimal-pad"
-        placeholder="Opening balance"
-        value={balance}
-        onChangeText={setBalance}
-        style={styles.input}
-      />
-      {done ? (
-        <Text>Setup complete. Loading dashboard…</Text>
-      ) : (
-        <Button title="Continue" onPress={submit} />
-      )}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-    </SafeAreaView>
-  );
-}
 
 function RoundAction({ icon, label }: { readonly icon: string; readonly label: string }) {
   return (
@@ -131,8 +82,6 @@ const styles = StyleSheet.create({
 
   root: { flex: 1, gap: 14, padding: 24 },
   sectionRoot: { flex: 1 },
-  title: { fontSize: 28, fontWeight: '700' },
-  input: { borderColor: '#bbb', borderRadius: 8, borderWidth: 1, padding: 12 },
   error: { color: '#b42318' },
   dashboardRoot: { backgroundColor: '#f7f6fb', flex: 1 },
   dashboardContent: { paddingBottom: 112 },
