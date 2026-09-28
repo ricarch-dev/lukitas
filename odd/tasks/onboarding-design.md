@@ -15,15 +15,16 @@ The current screen stretches two unlabeled fields across desktop. It also sets a
 - Documentation: React Native 0.86 TextInput, Pressable, KeyboardAvoidingView official docs; Expo 57.0.20, RN 0.86.3, React 19.2.3 from mobile manifest.
 
 ## Delivery
-Strategy: ask-on-risk. Forecast: ~360 authored lines, excluding generated files. Current branch: fix/api-decorator-metadata (non-default); preserve unrelated work. One coherent work unit.
+Strategy: ask-on-risk. Forecast: ~360 authored lines. Work-unit actual: 371 authored additions/deletions including its task document (342 source/tests). Current branch: fix/api-decorator-metadata (non-default); preserve unrelated work. One coherent work unit.
 
 ## Tasks
-- [ ] ONB-1: Extract and redesign the typed onboarding form, preserve its payload, complete navigator handoff, and add focused tests. Route: delegated-direct attempted (preparation/mapping trigger); worker failed due account usage limit. Continue inline under user's “continua” instruction with a recorded unavailable delegate. Checks: typecheck PASS, tests 19/19 PASS, Expo smoke PASS, diff/any/line scans PASS. Commit: pending; visual QA unavailable.
+- [x] ONB-1: Extract and redesign the typed onboarding form, preserve its payload, complete navigator handoff, and add focused tests. Route: delegated-direct attempted (preparation/mapping trigger); worker failed due account usage limit. Continued inline under user's “continua” instruction with a recorded unavailable delegate. Checks: typecheck PASS, tests 19/19 PASS, Expo smoke PASS, diff/any/line scans PASS. Commit: `4d08814`; visual QA unavailable.
 
 ## Evidence and next step
 - CodeGraph index exists; upstream CLI unavailable in PATH. Scoped source reads used as fallback.
 - Browser visual QA blocked by automatic approval review usage limit. No alternate browser or bypass attempted. Native device QA remains pending.
 - Engram mirror: pending. MCP writes failed because multiple active sessions match the project; no session identity was guessed.
 - Implementation and functional checks complete. Typecheck passed; mobile tests passed 19/19, including amount/payload/validation, handoff structure and contrast. Expo smoke passed after escalation for installed-module reads. Diff check and zero-any scans passed. No real accounts or user-owned services touched.
-- Next: commit the verified work unit and record committed candidate assessment. Visual/browser and native-device QA remain pending.
+- Committed native risk assessment: `gentle-ai review assess --cwd <repo> --agent codex --base-ref e48aa13 --committed-only --json`: medium, `review_due=false`, `under_budget` (371 lines). Pending slice boundary remains `e48aa13`; no reviewer or approval claim.
+- Next: inspect the rendered form on desktop/mobile when browser access is restored. Native-device QA remains pending. No push/PR.
 - Rollback: revert the onboarding screen/helper/tests and its narrow feature export and navigator handoff; dashboard/auth/API remain unchanged.
