@@ -50,7 +50,7 @@ if (build.status !== 0) {
 const child = spawn(process.execPath, [join(buildDir, 'apps', 'api', 'src', 'main.js')], {
   cwd: root,
   encoding: 'utf8',
-  env: { ...process.env, CI: '1', PORT: String(port), DATABASE_URL: databaseUrl },
+  env: { ...process.env, CI: '1', NODE_ENV: 'development', PORT: String(port), DATABASE_URL: databaseUrl },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 
@@ -63,6 +63,10 @@ child.stderr.on('data', (chunk) => {
 });
 
 const healthUrl = `http://127.0.0.1:${port}/health`;
+const startupLines = [
+  `API listening at http://localhost:${port}/v1`,
+  `Health check: http://localhost:${port}/health (checks database on request)`,
+];
 const deadline = Date.now() + 60000;
 const waitForClose = () =>
   new Promise((resolve) => {
@@ -75,23 +79,29 @@ const waitForClose = () =>
   });
 
 try {
+  let healthPassed = false;
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
       break;
     }
 
-    try {
-      const response = await fetch(healthUrl);
-      if (response.ok) {
-        const payload = await response.json();
-        if (payload.ok === true && payload.database === 'up') {
-          console.log('api.smoke: pass');
-          process.exitCode = 0;
-          break;
+    if (!healthPassed) {
+      try {
+        const response = await fetch(healthUrl);
+        if (response.ok) {
+          const payload = await response.json();
+          healthPassed = payload.ok === true && payload.database === 'up';
         }
+      } catch {
+        // keep waiting
       }
-    } catch {
-      // keep waiting
+    }
+
+    if (healthPassed && startupLines.every((line) => buffers.stdout.split(/\r?\n/).includes(line))) {
+      for (const line of startupLines) console.log(`api.smoke child stdout: ${line}`);
+      console.log('api.smoke: pass');
+      process.exitCode = 0;
+      break;
     }
 
     await new Promise((resolve) => setTimeout(resolve, 1000));

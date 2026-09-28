@@ -15,7 +15,14 @@ async function bootstrap() {
   });
   app.setGlobalPrefix('v1', { exclude: ['health'] });
   app.enableShutdownHooks();
-  await app.listen(Number(process.env.PORT ?? '3000'), '0.0.0.0');
+  const port = Number(process.env.PORT ?? '3000');
+  await app.listen(port, '0.0.0.0');
+  if (process.env.NODE_ENV !== 'production') {
+    const localUrl = new URL(await app.getUrl());
+    localUrl.hostname = 'localhost';
+    console.info(`API listening at ${localUrl.origin}/v1`);
+    console.info(`Health check: ${localUrl.origin}/health (checks database on request)`);
+  }
 }
 
 bootstrap().catch((error) => {
