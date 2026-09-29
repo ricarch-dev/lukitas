@@ -22,7 +22,7 @@ Route: delegated (trigger: 2+ files), but user explicitly prohibits delegation; 
 - [x] NAV-03: Make Planificación and Ajustes honest, typed and usable; repair route-dependent tests. Checks below, same work unit.
 
 ## Evidence
-NAV-01/02/03 are coupled by route imports and land together; rollback boundary is the mobile route entry, dependency set, four screens and their tests, without API files. Commit identity: recorded in the follow-up evidence entry after creation.
+NAV-01/02/03 are coupled by route imports and land together; rollback boundary is the mobile route entry, dependency set, four screens and their tests, without API files. Behavior, tests and plan commit: `88e735b` (`feat(mobile): add native four-tab finance navigation`). Evidence-record commit: see Git history for this follow-up document change.
 
 - `pnpm --dir apps/mobile test`: pass, 22/22 (after fixing two stale route assertions and one contrast-test assumption).
 - `pnpm --dir apps/mobile typecheck`: pass, `tsc --noEmit`.
