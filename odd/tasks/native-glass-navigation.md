@@ -14,7 +14,7 @@ Deliver the smallest functional Expo SDK 57 native-tab prototype for iOS and And
 - Foreground checks: `pnpm --dir apps/mobile test`, `pnpm --dir apps/mobile typecheck`, `pnpm --dir apps/mobile smoke`, `pnpm gate`, `git diff --check`. Native device QA remains pending without Mac/iPhone.
 
 ## Execution policy and forecast
-Route: delegated (trigger: 2+ files), but user explicitly prohibits delegation; sole direct writer executes locally. Delivery: ask-on-risk; ~400 authored additions + deletions per task is advisory, never code-golf. Forecast: NAV-01 180–300, NAV-02 280–460, NAV-03 180–320, total ~640–1080 authored lines. Running authored lines: 599 (including tracker, excluding generated lockfile); one coupled migration work unit exceeds 400, defer any PR slicing decision to user. TDD off per `sdd/lukitas/testing-capabilities` (`strict_tdd: false`); focused runner `pnpm --dir apps/mobile test`.
+Route: delegated direct (trigger: 2+ non-trivial files); one bounded writer implemented the coupled migration. Delivery: ask-on-risk; ~400 authored additions + deletions per task is advisory, never code-golf. Forecast: NAV-01 180–300, NAV-02 280–460, NAV-03 180–320, total ~640–1080 authored lines. Running authored lines: 599 (including tracker, excluding generated lockfile); one coupled migration work unit exceeds 400, defer any PR slicing decision to user. TDD off per `sdd/lukitas/testing-capabilities` (`strict_tdd: false`); focused runner `pnpm --dir apps/mobile test`.
 
 ## Tasks (stable IDs)
 - [x] NAV-01: Install only SDK-compatible router prerequisites; migrate entry and auth/onboarding gate to file routes and native four-tab shell. Linked to NAV-02/03 in one compilable migration commit; checks below.
