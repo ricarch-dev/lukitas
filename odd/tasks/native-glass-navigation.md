@@ -34,6 +34,7 @@ NAV-01/02/03 are coupled by route imports and land together; rollback boundary i
 - SDK 57 docs: https://docs.expo.dev/versions/v57.0.0/sdk/router/native-tabs/ ; https://docs.expo.dev/versions/v57.0.0/sdk/glass-effect/ ; https://docs.expo.dev/router/installation/ . Native tabs provide platform-native iOS 26 glass and Android navigation; `expo-glass-effect` is not directly required. Android physical QA, iOS 26 compatible build/device visual, safe areas and glass verification remain pending (Windows host).
 
 ### NAV-04 (R3-001) follow-up evidence
+- Behavior, test and task-close commit: `b76994e` (`fix(mobile): provide session recovery from account check error`). Commit identity is recorded in this follow-up evidence commit.
 - `apps/mobile/src/navigation/RootNavigator.tsx` preserves Retry and the onboarding gate, and offers an accessible "Volver a iniciar sesión" action using `setTokens(null)` via `session-recovery.ts`. `sessionStorage.write(null)` deletes only `lukitas.session.v1`; it does not clear account or other device data.
 - `apps/mobile/test/session-recovery.spec.ts` exercises token-only clearing against the storage adapter and checks the error-gate action wiring. Focused runtime boundary: Node test of storage behavior; a rendered navigation test is unavailable in the existing Node-only harness. R3-002 remains non-blocking for later rendered-navigation coverage. Device UI QA remains pending.
 - `pnpm --dir apps/mobile test`: pass, 24/24.
