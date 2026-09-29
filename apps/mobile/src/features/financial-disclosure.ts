@@ -2,8 +2,12 @@ import type { DashboardDto, FinancialReportDto } from '@lukitas/contracts';
 
 export function dashboardDisclosure(dashboard: DashboardDto) {
   return {
-    balance: dashboard.totals.partial ? 'Saldo parcial: faltan tipos de cambio para algunas cuentas.' : null,
-    flow: dashboard.flow.partial ? 'Los movimientos sin tipo de cambio no están incluidos en estos totales.' : null,
+    balance: dashboard.totals.partial
+      ? 'Saldo parcial: faltan tipos de cambio para algunas cuentas.'
+      : null,
+    flow: dashboard.flow.partial
+      ? 'Los movimientos sin tipo de cambio no están incluidos en estos totales.'
+      : null,
   };
 }
 

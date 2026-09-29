@@ -97,10 +97,7 @@ export function AuthScreen() {
   const switchMode = () => chooseMode(getOtherAuthMode(mode));
 
   return (
-    <KeyboardAvoidingView
-      behavior={keyboardBehavior}
-      style={styles.page}
-    >
+    <KeyboardAvoidingView behavior={keyboardBehavior} style={styles.page}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -192,7 +189,9 @@ export function AuthScreen() {
             <View style={styles.fields}>
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Correo electrónico</Text>
-                <View style={[styles.inputShell, emailFocused ? styles.inputShellFocused : undefined]}>
+                <View
+                  style={[styles.inputShell, emailFocused ? styles.inputShellFocused : undefined]}
+                >
                   <TextInput
                     accessibilityLabel="Correo electrónico"
                     accessibilityState={{ disabled: isSubmitting }}
@@ -218,7 +217,10 @@ export function AuthScreen() {
               <View style={styles.field}>
                 <Text style={styles.fieldLabel}>Contraseña</Text>
                 <View
-                  style={[styles.inputShell, passwordFocused ? styles.inputShellFocused : undefined]}
+                  style={[
+                    styles.inputShell,
+                    passwordFocused ? styles.inputShellFocused : undefined,
+                  ]}
                 >
                   <TextInput
                     ref={passwordInput}
@@ -240,7 +242,9 @@ export function AuthScreen() {
                     value={password}
                   />
                   <Pressable
-                    accessibilityLabel={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    accessibilityLabel={
+                      passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                    }
                     accessibilityRole="button"
                     accessibilityState={{ disabled: isSubmitting, expanded: passwordVisible }}
                     disabled={isSubmitting}
@@ -458,7 +462,13 @@ const styles = StyleSheet.create({
   submitButtonDisabled: { backgroundColor: AUTH_COLORS.disabled },
   submitButtonPressed: { backgroundColor: AUTH_COLORS.primaryPressed },
   submitButtonText: { color: AUTH_COLORS.surface, fontSize: 16, fontWeight: '700' },
-  alternative: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 4, justifyContent: 'center' },
+  alternative: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    justifyContent: 'center',
+  },
   alternativePrompt: { color: AUTH_COLORS.body, fontSize: 14, lineHeight: 20 },
   alternativeButton: {
     borderColor: 'transparent',

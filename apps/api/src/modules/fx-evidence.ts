@@ -19,14 +19,25 @@ export const selectFxEvidence = async (
   manualRate?: unknown,
 ): Promise<SelectedFxEvidence | null> => {
   if (manualRate !== undefined) {
-    return { baseCode, quoteCode, rate: storedRate(manualRate), source: 'MANUAL', effectiveAt: occurredAt };
+    return {
+      baseCode,
+      quoteCode,
+      rate: storedRate(manualRate),
+      source: 'MANUAL',
+      effectiveAt: occurredAt,
+    };
   }
   const row = await prisma.fxRate.findFirst({
     where: { baseCode, quoteCode, effectiveAt: { lte: occurredAt } },
     orderBy: { effectiveAt: 'desc' },
   });
   return row
-    ? { baseCode, quoteCode, rate: storedRate(decimalText(row.rate)),
-        source: row.source, effectiveAt: row.effectiveAt }
+    ? {
+        baseCode,
+        quoteCode,
+        rate: storedRate(decimalText(row.rate)),
+        source: row.source,
+        effectiveAt: row.effectiveAt,
+      }
     : null;
 };
