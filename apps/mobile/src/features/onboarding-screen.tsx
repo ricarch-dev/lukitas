@@ -144,15 +144,15 @@ export function OnboardingScreen({ onComplete }: { readonly onComplete: () => vo
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#f7f6fb' },
+  page: { flex: 1, backgroundColor: colors.canvas },
   scroll: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 36 },
   layout: { width: '100%', maxWidth: 500, gap: 28 },
   wide: { maxWidth: 1000, flexDirection: 'row', alignItems: 'center', gap: 64 },
   intro: { gap: 16 },
   introWide: { flex: 1 },
   wordmark: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  mark: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#b8e83f', alignItems: 'center', justifyContent: 'center' },
-  markText: { color: colors.ink, fontSize: 24, fontWeight: '800' },
+  mark: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  markText: { color: colors.surface, fontSize: 24, fontWeight: '800' },
   brand: { color: colors.ink, fontSize: 23, fontWeight: '800' },
   heading: { color: colors.ink, fontSize: 32, lineHeight: 39, fontWeight: '700' },
   description: { color: colors.body, fontSize: 16, lineHeight: 25 },
@@ -172,9 +172,9 @@ const styles = StyleSheet.create({
   hint: { color: colors.muted, fontSize: 13, lineHeight: 20 },
   currencyNote: { gap: 4 },
   error: { color: colors.error, backgroundColor: colors.errorSurface, padding: 12, borderRadius: 10, fontSize: 14, lineHeight: 21 },
-  submit: { backgroundColor: '#b8e83f', borderWidth: 2, borderColor: 'transparent', borderRadius: 12, minHeight: 56, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  submitText: { color: colors.ink, fontSize: 16, fontWeight: '700', textAlign: 'center', flexShrink: 1 },
-  pressed: { backgroundColor: '#a4d32e' },
-  disabled: { backgroundColor: '#e1edc3' },
+  submit: { backgroundColor: colors.primary, borderWidth: 2, borderColor: 'transparent', borderRadius: 12, minHeight: 56, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  submitText: { color: colors.surface, fontSize: 16, fontWeight: '700', textAlign: 'center', flexShrink: 1 },
+  pressed: { backgroundColor: colors.primaryPressed },
+  disabled: { backgroundColor: colors.disabled },
   footer: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: 'center' },
 });
