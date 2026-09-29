@@ -29,7 +29,7 @@ The current Inicio page is a basic text-and-card overview. The user wants a more
 - Delivery strategy: `ask-on-risk` (default). Forecast: ~280–380 authored changed lines; review-slice budget risk appears low but is advisory. Branch point: `120f21e875b4f95e414b676df1d399945f3dbb18` (`main`).
 
 ## Tasks
-- [x] HDB-01 — Build the branded, data-honest responsive Inicio dashboard composition and update focused mobile journey checks. Route: delegated direct. Work-unit commit and native review assessment: pending.
+- [x] HDB-01 — Build the branded, data-honest responsive Inicio dashboard composition and update focused mobile journey checks. Route: delegated direct. Work-unit commit `afe5eb3f8b08d673f041b8475b86d23585fe3a56`; native review granted, approved and acknowledged.
 
 ## Progress
 - Exploration complete: the existing page is `DashboardScreen` in `apps/mobile/src/features/screens.tsx`; the underlying DTO exposes a single base-currency total, flows, warnings, and active accounts. The reference's three-tab bar conflicts with the existing four-tab product navigation and is intentionally out of scope.
@@ -38,7 +38,9 @@ The current Inicio page is a basic text-and-card overview. The user wants a more
 - Reconciled on resumption: prior in-scope edits were tracked in `6674495` alongside unrelated formatting; the worktree was clean. The old pending/dirty state was stale; wide-screen adaptation and verification were still needed at that point.
 - User explicitly selected adapting the existing mobile Inicio to large screens, not building a standalone web dashboard. No live FX converter, historical chart, or period comparisons without their own trustworthy data contracts.
 - Implemented a locally scoped dark teal/charcoal Inicio, stacked phone reading order, bounded columns from 720px, and active native-currency account balances. The four native destinations and existing data contract remain unchanged; no converter or fabricated chart was added.
-- Next step: commit the verified work unit, assess the committed-only review range, and validate the visual result on devices or browsers when available.
+- Committed the work unit as `afe5eb3f8b08d673f041b8475b86d23585fe3a56`. Native committed-only assessment from branch point: high, due (`high_risk`) because the range also contained earlier formatting in an API auth path; 31 paths/1343 lines in that cumulative range, not all attributable to this redesign. User granted candidate-scoped consent. Four native lenses completed; approved and exactly acknowledged on lineage `review-2b03a0c2a4ec2fd4` (authority burned). No delivery operation was requested.
+- Nonblocking native follow-ups: R2-001 screen module concentration, R2-002 unnamed layout constants, R3-001 dashboard source-based checks lack rendered interaction proof. No correction was opened; review is terminal for the frozen candidate.
+- Next step: visually verify narrow/wide layouts and native accessibility on real devices/browser; separately address the pre-existing session-recovery assertion and rendered-interaction coverage.
 
 ## Verification evidence
 - `pnpm --dir apps/mobile test`: 26 passed, 1 failed. The failure is the pre-existing `session-recovery.spec.ts` line-25 source-regex mismatch with unchanged `RootNavigator.tsx`; independent verifier compared both with HEAD and reproduced the failure. Focused Inicio tests 4/4 passed. This baseline failure remains open, not hidden or treated as passing.
