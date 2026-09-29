@@ -148,7 +148,9 @@ export class AccountsService {
       throw new AppError('ACCOUNT_ARCHIVED', 'Archived accounts cannot receive new transactions');
     const kind = input.kind;
     if (kind !== 'INCOME' && kind !== 'EXPENSE') validation('kind must be INCOME or EXPENSE');
-    const currencyCode = code(input.currencyCode === undefined ? account.currencyCode : input.currencyCode);
+    const currencyCode = code(
+      input.currencyCode === undefined ? account.currencyCode : input.currencyCode,
+    );
     const amount = nativeAmount(input.amount, currencyCode, 'positive');
     const occurredAt = instant(input.occurredAt);
     let categoryId: string | null = null;
@@ -168,9 +170,19 @@ export class AccountsService {
           'CURRENCY_MISMATCH',
           'Only categorized transactions may use another currency',
         );
-      evidence = await selectFxEvidence(this.prisma, currencyCode, code(account.currencyCode), occurredAt, input.manualRate);
+      evidence = await selectFxEvidence(
+        this.prisma,
+        currencyCode,
+        code(account.currencyCode),
+        occurredAt,
+        input.manualRate,
+      );
       if (!evidence)
-        throw new AppError('MISSING_FX_RATE', 'A historical FX rate is required for this transaction', 422);
+        throw new AppError(
+          'MISSING_FX_RATE',
+          'A historical FX rate is required for this transaction',
+          422,
+        );
       baseAmount = convertAmount(amount, currencyCode, evidence.quoteCode, evidence.rate);
       await this.prisma.currency.upsert({
         where: { code: currencyCode },

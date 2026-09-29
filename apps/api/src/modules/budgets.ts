@@ -4,7 +4,14 @@ import { PrismaService } from '../common/prisma.js';
 import { IdempotencyService } from '../common/idempotency.js';
 import { notFound, validation } from '../common/errors.js';
 import { record, requiredString } from '../common/request-input.js';
-import { addDecimal, code, currencyData, decimalText, fixedAmount, nativeAmount } from './p0-finance.js';
+import {
+  addDecimal,
+  code,
+  currencyData,
+  decimalText,
+  fixedAmount,
+  nativeAmount,
+} from './p0-finance.js';
 import { validatedMonthBounds } from './planning-time.js';
 
 type BudgetTransaction = Prisma.TransactionGetPayload<{ include: { fxSnapshot: true } }>;
@@ -24,7 +31,8 @@ export class BudgetsService {
     const category = await this.prisma.category.findFirst({
       where: { id: categoryId, userId, archivedAt: null },
     });
-    if (!category || category.userId !== userId || category.archivedAt) notFound('Active category not found');
+    if (!category || category.userId !== userId || category.archivedAt)
+      notFound('Active category not found');
     const prefs = await this.prisma.userPreferences.findUnique({ where: { userId } });
     if (!prefs) validation('Onboarding is required');
     const month = requiredString(input.month, 'Month is required');
@@ -45,8 +53,12 @@ export class BudgetsService {
     const budget = await this.prisma.budget.upsert({
       where: { userId_categoryId_monthKey: { userId, categoryId: category.id, monthKey: month } },
       create: {
-        userId, categoryId: category.id, monthKey: month, timezone: prefs.timezone,
-        currencyCode, limit,
+        userId,
+        categoryId: category.id,
+        monthKey: month,
+        timezone: prefs.timezone,
+        currencyCode,
+        limit,
       },
       update: { limit },
     });
@@ -77,7 +89,10 @@ export class BudgetsService {
     const { from, to } = validatedMonthBounds(budget.monthKey, budget.timezone);
     const transactions: BudgetTransaction[] = await this.prisma.transaction.findMany({
       where: {
-        userId, categoryId: budget.categoryId, kind: 'EXPENSE', voidedAt: null,
+        userId,
+        categoryId: budget.categoryId,
+        kind: 'EXPENSE',
+        voidedAt: null,
         occurredAt: { gte: from, lt: to },
       },
       include: { fxSnapshot: true },
@@ -96,12 +111,20 @@ export class BudgetsService {
       }
     }
     return {
-      id: budget.id, categoryId: budget.categoryId, month: budget.monthKey,
-      timezone: budget.timezone, currencyCode: unit,
+      id: budget.id,
+      categoryId: budget.categoryId,
+      month: budget.monthKey,
+      timezone: budget.timezone,
+      currencyCode: unit,
       limit: fixedAmount(budget.limit, currencyData(unit).precision),
       spent: fixedAmount(spent, currencyData(unit).precision),
-      remaining: fixedAmount(addDecimal(decimalText(budget.limit), `-${spent}`), currencyData(unit).precision),
-      partial: affectedIds.length > 0, warnings, affectedIds,
+      remaining: fixedAmount(
+        addDecimal(decimalText(budget.limit), `-${spent}`),
+        currencyData(unit).precision,
+      ),
+      partial: affectedIds.length > 0,
+      warnings,
+      affectedIds,
     };
   }
 }

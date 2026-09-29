@@ -1,12 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { ApiClient, type SessionTokens } from "../api/client";
-import { sessionStorage } from "./storage";
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { ApiClient, type SessionTokens } from '../api/client';
+import { sessionStorage } from './storage';
 
 interface SessionContextValue {
   readonly tokens: SessionTokens | null;
@@ -28,18 +22,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setReady(true);
     });
   }, []);
-  const client = useMemo(
-    () => new ApiClient({ getTokens: () => tokens, setTokens }),
-    [tokens],
-  );
+  const client = useMemo(() => new ApiClient({ getTokens: () => tokens, setTokens }), [tokens]);
   return (
-    <Context.Provider value={{ tokens, ready, client, setTokens }}>
-      {children}
-    </Context.Provider>
+    <Context.Provider value={{ tokens, ready, client, setTokens }}>{children}</Context.Provider>
   );
 }
 export function useSession() {
   const value = useContext(Context);
-  if (!value) throw new Error("useSession must be used inside SessionProvider");
+  if (!value) throw new Error('useSession must be used inside SessionProvider');
   return value;
 }
