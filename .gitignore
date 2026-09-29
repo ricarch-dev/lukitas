@@ -3,6 +3,8 @@
 node_modules/
 .pnpm-store/
 dist/
+.tmp-api-smoke-*/
+.tmp-api-metadata-*/
 coverage/
 .expo/
 .expo-shared/

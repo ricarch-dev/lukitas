@@ -29,4 +29,9 @@ test("mobile P0 journey has auth, setup, dashboard and session restore boundarie
   assert.match(authSubmit, /auth\/login/);
   assert.match(screens, /onboarding/);
   assert.match(screens, /dashboard/);
+  assert.match(screens, /DashboardDto/);
+  assert.match(screens, /My balances/);
+  assert.match(screens, /currencyChips/);
+  assert.match(screens, /quickActions/);
+  assert.match(screens, /bottomNav/);
 });

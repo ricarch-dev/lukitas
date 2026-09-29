@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import type { AuthResponseDto } from '@lukitas/contracts';
 import { ActivityIndicator, View } from "react-native";
 import { useSession } from "../session/SessionContext";
 import {
@@ -13,7 +14,7 @@ export function RootNavigator() {
   useEffect(() => {
     if (tokens)
       client
-        .get<any>("/auth/me")
+        .get<Pick<AuthResponseDto, 'user'>>("/auth/me")
         .then((value) => setOnboarded(Boolean(value.user.onboardingComplete)))
         .catch(() => setOnboarded(false));
     else setOnboarded(null);
@@ -25,5 +26,5 @@ export function RootNavigator() {
       </View>
     );
   if (!tokens) return <AuthScreen />;
-  return onboarded ? <DashboardScreen /> : <OnboardingScreen />;
+  return onboarded ? <DashboardScreen /> : <OnboardingScreen onComplete={() => setOnboarded(true)} />;
 }
