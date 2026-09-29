@@ -48,10 +48,10 @@ test('onboarding exposes labels, bounded layout, keyboard handling and confirmed
   assert.match(screen, /accessibilityState=\{\{ busy, disabled: busy \}\}/);
   assert.match(screen, /if \(lock.current\) return/);
   assert.match(screen, /await submitOnboarding\([\s\S]*?onComplete\(\)/);
-  assert.match(navigator, /onComplete=\{\(\) => setOnboarded\(true\)\}/);
+  assert.match(navigator, /onComplete=\{\(\) => setOnboarding\(\{ token: tokens.accessToken, status: 'complete' \}\)\}/);
 });
 
-test('onboarding text and lime action colors maintain readable contrast', () => {
+test('onboarding text and teal action colors maintain readable contrast', () => {
   const luminance = (hex: string) => {
     const channels = [1, 3, 5].map((index) => {
       const value = parseInt(hex.slice(index, index + 2), 16) / 255;
@@ -59,10 +59,12 @@ test('onboarding text and lime action colors maintain readable contrast', () => 
     });
     return channels[0]! * 0.2126 + channels[1]! * 0.7152 + channels[2]! * 0.0722;
   };
-  const pairs = [[AUTH_COLORS.ink, '#b8e83f'], [AUTH_COLORS.ink, '#a4d32e'],
-    [AUTH_COLORS.ink, '#e1edc3'], [AUTH_COLORS.muted, '#f7f6fb'],
+  const pairs = [[AUTH_COLORS.surface, AUTH_COLORS.primary], [AUTH_COLORS.surface, AUTH_COLORS.primaryPressed],
+    [AUTH_COLORS.surface, AUTH_COLORS.disabled], [AUTH_COLORS.muted, AUTH_COLORS.canvas],
     [AUTH_COLORS.muted, AUTH_COLORS.surface]];
   for (const [text, surface] of pairs) {
-    assert.ok((luminance(surface!) + 0.05) / (luminance(text!) + 0.05) >= 4.5);
+    const foreground = luminance(text!);
+    const background = luminance(surface!);
+    assert.ok((Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05) >= 4.5);
   }
 });

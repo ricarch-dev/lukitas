@@ -2,6 +2,14 @@
   "expo": {
     "name": "lukitas-mobile",
     "slug": "lukitas-mobile",
-    "platforms": ["ios", "android", "web"]
+    "scheme": "lukitas",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
