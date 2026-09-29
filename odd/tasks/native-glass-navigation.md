@@ -14,7 +14,7 @@ Deliver the smallest functional Expo SDK 57 native-tab prototype for iOS and And
 - Foreground checks: `pnpm --dir apps/mobile test`, `pnpm --dir apps/mobile typecheck`, `pnpm --dir apps/mobile smoke`, `pnpm gate`, `git diff --check`. Native device QA remains pending without Mac/iPhone.
 
 ## Execution policy and forecast
-Route: delegated direct (trigger: 2+ non-trivial files); one bounded writer implemented the coupled migration. Delivery: ask-on-risk; ~400 authored additions + deletions per task is advisory, never code-golf. Forecast: NAV-01 180–300, NAV-02 280–460, NAV-03 180–320, total ~640–1080 authored lines. Running authored lines: 599 (including tracker, excluding generated lockfile); one coupled migration work unit exceeds 400, defer any PR slicing decision to user. TDD off per `sdd/lukitas/testing-capabilities` (`strict_tdd: false`); focused runner `pnpm --dir apps/mobile test`.
+Route: delegated direct (trigger: 2+ non-trivial files); one bounded writer implemented the coupled migration. Delivery: ask-on-risk; ~400 authored additions + deletions per task is advisory, never code-golf. Forecast: NAV-01 180–300, NAV-02 280–460, NAV-03 180–320, total ~640–1080 authored lines. Running authored lines: approximately 655 (including tracker, excluding generated lockfile); one coupled migration work unit exceeds 400, defer any PR slicing decision to user. TDD off per `sdd/lukitas/testing-capabilities` (`strict_tdd: false`); focused runner `pnpm --dir apps/mobile test`.
 
 ## Tasks (stable IDs)
 - [x] NAV-01: Install only SDK-compatible router prerequisites; migrate entry and auth/onboarding gate to file routes and native four-tab shell. Linked to NAV-02/03 in one compilable migration commit; checks below.
@@ -43,3 +43,7 @@ NAV-01/02/03 are coupled by route imports and land together; rollback boundary i
 - `pnpm gate`: pass; Node 24.14.0 versus required 24.20.0 warning.
 - `git diff --check`: pass; Git LF-to-CRLF notices only.
 - React Native 0.86 accessibility/Pressable docs: https://reactnative.dev/docs/0.86/accessibility and https://reactnative.dev/docs/0.86/pressable . No dependency changes.
+
+### Native review and boundaries
+- The first committed prototype range from `e98ba4e` through `b677574` assessed medium and due (`slice_budget_reached`); user granted candidate-scoped review. Native R3 review approved with two non-blocking warnings and was exactly acknowledged/burned on lineage `review-6050a364cbdb2611`. R3-001 motivated NAV-04 as a separate subsequent work unit; R3-002 (rendered navigation coverage) remains pending.
+- NAV-04 range from reviewed boundary `b677574` through `73569bb` assessed medium but `review_due: false` (`under_budget`, 56 changed lines); it remains pending in the next review slice. No receipt or approval is claimed for NAV-04.
