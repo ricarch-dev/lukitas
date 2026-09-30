@@ -301,7 +301,7 @@ export class DashboardService {
     if (to < from) validation('to must be after from');
     const accounts = await this.prisma.account.findMany({
       where: { userId, archivedAt: null },
-      include: { currency: true },
+      include: { currency: true, bankGroup: true },
       orderBy: { createdAt: 'asc' },
     });
     const accountDtos = await Promise.all(
