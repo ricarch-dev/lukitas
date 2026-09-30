@@ -3,7 +3,7 @@ import { Link } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useDashboard } from './use-dashboard';
 import { dashboardDisclosure } from './financial-disclosure';
-import { activeDashboardAccounts, homeDashboardLayout } from './home-dashboard-layout';
+import { activeDashboardAccounts, groupedDashboardAccounts, homeDashboardLayout } from './home-dashboard-layout';
 
 export { AuthScreen } from './auth-screen';
 export { OnboardingScreen } from './onboarding-screen';
@@ -64,19 +64,25 @@ export function DashboardScreen() {
     );
   const accounts = activeDashboardAccounts(dashboard);
   const disclosure = dashboardDisclosure(dashboard);
-  const accountBalances = accounts.map((account) => (
-    <View key={account.id} style={[styles.account, wide && styles.accountWide]}>
-      <View style={styles.accountHeader}>
-        <Text style={styles.accountName} numberOfLines={1}>{account.name}</Text>
-        <View style={styles.accountCurrencyTag}>
-          <Text style={styles.accountCurrencyTagText}>{account.currency.code}</Text>
+  const accountBalances = groupedDashboardAccounts(accounts).map((group) => (
+    <View key={group.id} style={[styles.accountGroup, wide && styles.accountGroupWide]}>
+      {group.name ? <Text accessibilityRole="header" style={styles.bankName}>{group.name}</Text> : null}
+      {group.accounts.map((account) => (
+        <View key={account.id} style={[styles.account, wide && styles.accountWide]}>
+          <View style={styles.accountHeader}>
+            <Text style={styles.accountName} numberOfLines={1}>{account.name}</Text>
+            <View style={styles.accountCurrencyTag}>
+              <Text style={styles.accountCurrencyTagText}>{account.currency.code}</Text>
+            </View>
+          </View>
+          <Text style={styles.caption}>Saldo</Text>
+          <Text selectable style={styles.value}>{account.balance} {account.currency.code}</Text>
         </View>
-      </View>
-      <Text style={styles.caption}>Saldo</Text>
-      <Text selectable style={styles.value}>{account.balance} {account.currency.code}</Text>
+      ))}
     </View>
   ));
   return (
+    <View style={styles.dashboardRoot}>
     <ScrollView contentInsetAdjustmentBehavior="automatic" style={styles.canvas} contentContainerStyle={[styles.page, { paddingHorizontal: gutter }]}>
       <View style={[styles.content, { maxWidth: contentWidth }]}>
         <View style={styles.header}>
@@ -201,17 +207,26 @@ export function DashboardScreen() {
         </View>
       </View>
     </ScrollView>
+    <Link href="/crear-cuenta" asChild>
+      <Pressable accessibilityRole="link" accessibilityLabel="Crear cuenta" accessibilityHint="Abre el formulario para agregar una cuenta." style={({ pressed }) => [styles.floatingAdd, { right: gutter }, pressed && styles.shortcutPressed]}>
+        <Text accessible={false} style={styles.floatingAddText}>+</Text>
+      </Pressable>
+    </Link>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  dashboardRoot: { flex: 1, backgroundColor: colors.canvas },
+  floatingAdd: { position: 'absolute', bottom: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  floatingAddText: { fontSize: 32, color: colors.canvas, lineHeight: 38, fontWeight: '600' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   loadingLabel: { color: colors.body, fontSize: 14 },
   canvas: { backgroundColor: colors.canvas },
   page: {
     flexGrow: 1,
     paddingTop: 14,
-    paddingBottom: 44,
+    paddingBottom: 100,
   },
   content: { width: '100%', alignSelf: 'center', gap: 24 },
   columns: { gap: 24 },
@@ -300,6 +315,9 @@ const styles = StyleSheet.create({
   },
   accountList: { gap: 12, paddingRight: 20 },
   accountListWide: { gap: 12 },
+  accountGroup: { width: 230, gap: 8 },
+  accountGroupWide: { width: '100%' },
+  bankName: { color: colors.primary, fontSize: 14, fontWeight: '700' },
   account: {
     backgroundColor: colors.surface,
     borderRadius: 12,
