@@ -5,8 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  const logger: false | LogLevel[] =
-    process.env.NODE_ENV === 'production' ? false : ['error'];
+  const logger: false | LogLevel[] = process.env.NODE_ENV === 'production' ? false : ['error'];
   const app = await NestFactory.create(AppModule, {
     logger,
     cors: {
@@ -25,12 +24,16 @@ async function bootstrap() {
           const template = request.route?.path;
           const route =
             typeof template === 'string' &&
-            /^\/(?:[a-zA-Z0-9_-]+|:[a-zA-Z0-9_]+)(?:\/(?:[a-zA-Z0-9_-]+|:[a-zA-Z0-9_]+))*\/?$/.test(template)
+            /^\/(?:[a-zA-Z0-9_-]+|:[a-zA-Z0-9_]+)(?:\/(?:[a-zA-Z0-9_-]+|:[a-zA-Z0-9_]+))*\/?$/.test(
+              template,
+            )
               ? template
               : '<unmatched>';
           const method = /^[A-Z]+$/.test(request.method) ? request.method : '<unknown>';
           const durationMs = Number(process.hrtime.bigint() - started) / 1e6;
-          console.info(`api.response ${method} ${route} ${response.statusCode} ${durationMs.toFixed(2)}ms`);
+          console.info(
+            `api.response ${method} ${route} ${response.statusCode} ${durationMs.toFixed(2)}ms`,
+          );
         });
         next();
       },

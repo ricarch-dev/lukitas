@@ -129,10 +129,25 @@ export class TransfersService {
     let destinationAmount = sourceAmount;
     let evidence: SelectedFxEvidence | null = null;
     if (sourceUnit.code !== destinationUnit.code) {
-      evidence = await selectFxEvidence(this.prisma, sourceUnit.code, destinationUnit.code, occurredAt, input.manualRate);
+      evidence = await selectFxEvidence(
+        this.prisma,
+        sourceUnit.code,
+        destinationUnit.code,
+        occurredAt,
+        input.manualRate,
+      );
       if (!evidence)
-        throw new AppError('MISSING_FX_RATE', 'A historical FX rate is required for this transfer', 422);
-      destinationAmount = convertAmount(sourceAmount, sourceUnit.code, destinationUnit.code, evidence.rate);
+        throw new AppError(
+          'MISSING_FX_RATE',
+          'A historical FX rate is required for this transfer',
+          422,
+        );
+      destinationAmount = convertAmount(
+        sourceAmount,
+        sourceUnit.code,
+        destinationUnit.code,
+        evidence.rate,
+      );
     }
     const feeAmount =
       input.feeAmount === undefined
@@ -186,7 +201,11 @@ export class TransfersService {
       await tx.ledgerEntry.createMany({
         data: [
           { transactionId: outgoing.id, accountId: source.id, signedAmount: `-${sourceAmount}` },
-          { transactionId: incoming.id, accountId: destination.id, signedAmount: destinationAmount },
+          {
+            transactionId: incoming.id,
+            accountId: destination.id,
+            signedAmount: destinationAmount,
+          },
         ],
       });
       if (feeAmount) {
@@ -213,7 +232,11 @@ export class TransfersService {
             effectiveAt: evidence.effectiveAt,
             source: evidence.source,
             rates: {
-              create: { baseCode: evidence.baseCode, quoteCode: evidence.quoteCode, rate: evidence.rate },
+              create: {
+                baseCode: evidence.baseCode,
+                quoteCode: evidence.quoteCode,
+                rate: evidence.rate,
+              },
             },
           },
         });
@@ -278,7 +301,7 @@ export class DashboardService {
     if (to < from) validation('to must be after from');
     const accounts = await this.prisma.account.findMany({
       where: { userId, archivedAt: null },
-      include: { currency: true },
+      include: { currency: true, bankGroup: true },
       orderBy: { createdAt: 'asc' },
     });
     const accountDtos = await Promise.all(
@@ -299,7 +322,11 @@ export class DashboardService {
     const periodTransactions = await this.prisma.transaction.findMany({
       where: { userId, occurredAt: { gte: from, lte: to }, voidedAt: null },
       select: {
-        amount: true, currencyCode: true, kind: true, occurredAt: true, transferId: true,
+        amount: true,
+        currencyCode: true,
+        kind: true,
+        occurredAt: true,
+        transferId: true,
         fxSnapshot: { select: { baseCurrency: true, baseAmount: true } },
       },
     });
@@ -319,7 +346,9 @@ export class DashboardService {
       const converted = await this.flowAmount(transaction, baseUnit.code);
       if (converted === undefined) {
         flowPartial = true;
-        flowWarnings.add(`Missing historical FX rate for ${transaction.currencyCode}/${baseUnit.code}`);
+        flowWarnings.add(
+          `Missing historical FX rate for ${transaction.currencyCode}/${baseUnit.code}`,
+        );
       } else if (transaction.kind === 'INCOME' || transaction.kind === 'OPENING') {
         income = addDecimal(income, converted);
       } else {
@@ -410,11 +439,7 @@ export class DashboardController {
   constructor(private readonly dashboard: DashboardService) {}
 
   @Get()
-  get(
-    @Req() req: AuthenticatedRequest,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
+  get(@Req() req: AuthenticatedRequest, @Query('from') from?: string, @Query('to') to?: string) {
     return this.dashboard.get(req.user.sub, from, to);
   }
 }
