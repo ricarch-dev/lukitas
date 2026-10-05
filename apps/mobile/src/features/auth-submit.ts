@@ -4,7 +4,9 @@ import type { ApiClient, SessionTokens } from '../api/client.ts';
 
 type AuthAction = 'login' | 'register';
 type AuthRequest = LoginRequest | RegisterRequest;
-type AuthSession = Pick<ApiClient, 'post'> & { setTokens: (tokens: SessionTokens) => Promise<void> | void };
+type AuthSession = Pick<ApiClient, 'post'> & {
+  setTokens: (tokens: SessionTokens) => Promise<void> | void;
+};
 
 export async function submitAuth(
   action: AuthAction,
@@ -21,8 +23,13 @@ export async function submitAuth(
     action === 'register' ? '/auth/register' : '/auth/login',
     { email, password: credentials.password },
   );
-  if (!result || typeof result.accessToken !== 'string' || !result.accessToken ||
-      typeof result.refreshToken !== 'string' || !result.refreshToken)
+  if (
+    !result ||
+    typeof result.accessToken !== 'string' ||
+    !result.accessToken ||
+    typeof result.refreshToken !== 'string' ||
+    !result.refreshToken
+  )
     throw new Error('Invalid authentication response');
   await session.setTokens({ accessToken: result.accessToken, refreshToken: result.refreshToken });
 }

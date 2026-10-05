@@ -227,13 +227,18 @@ export class RecurringRulesService {
     if (replay) return replay;
     const input = record(body);
     const account = await this.prisma.account.findFirst({
-      where: { id: requiredString(input.accountId, 'Account is required'), userId, archivedAt: null },
+      where: {
+        id: requiredString(input.accountId, 'Account is required'),
+        userId,
+        archivedAt: null,
+      },
     });
     if (!account) notFound('Account not found');
     const kind = input.kind;
     if (kind !== 'INCOME' && kind !== 'EXPENSE') validation('kind must be INCOME or EXPENSE');
     const cadence = input.cadence;
-    if (cadence !== 'DAILY' && cadence !== 'WEEKLY' && cadence !== 'MONTHLY') validation('Unsupported cadence');
+    if (cadence !== 'DAILY' && cadence !== 'WEEKLY' && cadence !== 'MONTHLY')
+      validation('Unsupported cadence');
     const timezone = safeTimezone(input.timezone);
     const startAt = instant(input.startAt);
     const endAt = input.endAt ? instant(input.endAt) : null;
@@ -244,7 +249,11 @@ export class RecurringRulesService {
     let categoryId: string | null = null;
     if (input.categoryId) {
       const category = await this.prisma.category.findFirst({
-        where: { id: requiredString(input.categoryId, 'Category is required'), userId, archivedAt: null },
+        where: {
+          id: requiredString(input.categoryId, 'Category is required'),
+          userId,
+          archivedAt: null,
+        },
       });
       if (!category) notFound('Active category not found');
       categoryId = category.id;

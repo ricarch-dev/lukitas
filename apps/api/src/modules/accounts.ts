@@ -39,6 +39,7 @@ type AccountView = {
   currency: { code: string; precision: number };
   openingBalance: StoredDecimal;
   archivedAt: Date | null;
+  bankGroup?: { id: string; name: string } | null;
 };
 
 export const accountDto = (account: AccountView, balance: string) => {
@@ -50,6 +51,9 @@ export const accountDto = (account: AccountView, balance: string) => {
     openingBalance: fixedAmount(account.openingBalance, unit.precision),
     balance: fixedAmount(balance, unit.precision),
     archived: Boolean(account.archivedAt),
+    bankGroup: account.bankGroup
+      ? { id: account.bankGroup.id, name: account.bankGroup.name }
+      : null,
   };
 };
 
@@ -63,7 +67,7 @@ export class AccountsService {
   private async find(userId: string, id: string) {
     const account = await this.prisma.account.findFirst({
       where: { id, userId },
-      include: { currency: true },
+      include: { currency: true, bankGroup: true },
     });
     if (!account) notFound('Account not found');
     return account;
@@ -83,7 +87,7 @@ export class AccountsService {
   async list(userId: string, includeArchived = false) {
     const accounts = await this.prisma.account.findMany({
       where: { userId, ...(includeArchived ? {} : { archivedAt: null }) },
-      include: { currency: true },
+      include: { currency: true, bankGroup: true },
       orderBy: { createdAt: 'asc' },
     });
     return Promise.all(
@@ -98,18 +102,57 @@ export class AccountsService {
     const name = requiredString(input.name, 'Account name is required');
     const currencyCode = code(input.currencyCode);
     const openingBalance = nativeAmount(input.openingBalance, currencyCode, 'non-negative');
+    if (input.bankName !== undefined && input.bankGroupId !== undefined)
+      validation('Choose a bank or enter a bank name');
+    const bankName = input.bankName === undefined
+      ? undefined
+      : requiredString(input.bankName, 'Bank name is required');
+    const bankGroupId = input.bankGroupId === undefined
+      ? undefined
+      : requiredString(input.bankGroupId, 'Bank group is required');
+    if (bankGroupId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bankGroupId))
+      validation('Bank group must be a valid ID');
     await this.prisma.currency.upsert({
       where: { code: currencyCode },
       create: currencyData(currencyCode),
       update: currencyData(currencyCode),
     });
-    const account = await this.prisma.account.create({
-      data: { userId, name, currencyCode, openingBalance },
-      include: { currency: true },
-    });
-    const result = accountDto(account, openingBalance);
-    await this.idem.save(userId, key, body, result);
-    return result;
+    // The unique owner/key constraint chooses the winner; a losing transaction rolls its account back.
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await this.prisma.$transaction(async (tx) => {
+          const bankGroup = bankGroupId
+            ? await tx.bankGroup.findFirst({ where: { id: bankGroupId, userId } })
+            : bankName
+              ? await tx.bankGroup.upsert({
+                  where: { userId_normalizedName: { userId, normalizedName: bankName.toLocaleLowerCase() } },
+                  create: { userId, name: bankName, normalizedName: bankName.toLocaleLowerCase() },
+                  update: {},
+                })
+              : null;
+          if (bankGroupId && !bankGroup) notFound('Bank group not found');
+          const account = await tx.account.create({
+            data: { userId, name, currencyCode, openingBalance, bankGroupId: bankGroup?.id },
+            include: { currency: true, bankGroup: true },
+          });
+          const result = accountDto(account, openingBalance);
+          if (key) {
+            await tx.idempotencyKey.create({
+              data: { userId, key, fingerprint: this.idem.fingerprint(body), response: result },
+            });
+          }
+          return result;
+        });
+      } catch (error) {
+        if (typeof error !== 'object' || error === null || !('code' in error) || error.code !== 'P2002')
+          throw error;
+        // Read only after rollback: the winning record is now visible outside the failed transaction.
+        const committed = await this.idem.replay(userId, key, body);
+        if (committed !== undefined) return committed;
+        // A concurrent bank-name upsert can also race on its own unique constraint.
+        if (!bankName || attempt >= 1) throw error;
+      }
+    }
   }
 
   async update(userId: string, id: string, body: unknown) {
@@ -119,7 +162,7 @@ export class AccountsService {
     const account = await this.prisma.account.update({
       where: { id, userId },
       data: { name },
-      include: { currency: true },
+      include: { currency: true, bankGroup: true },
     });
     return accountDto(account, await this.balance(account));
   }
@@ -148,7 +191,9 @@ export class AccountsService {
       throw new AppError('ACCOUNT_ARCHIVED', 'Archived accounts cannot receive new transactions');
     const kind = input.kind;
     if (kind !== 'INCOME' && kind !== 'EXPENSE') validation('kind must be INCOME or EXPENSE');
-    const currencyCode = code(input.currencyCode === undefined ? account.currencyCode : input.currencyCode);
+    const currencyCode = code(
+      input.currencyCode === undefined ? account.currencyCode : input.currencyCode,
+    );
     const amount = nativeAmount(input.amount, currencyCode, 'positive');
     const occurredAt = instant(input.occurredAt);
     let categoryId: string | null = null;
@@ -168,9 +213,19 @@ export class AccountsService {
           'CURRENCY_MISMATCH',
           'Only categorized transactions may use another currency',
         );
-      evidence = await selectFxEvidence(this.prisma, currencyCode, code(account.currencyCode), occurredAt, input.manualRate);
+      evidence = await selectFxEvidence(
+        this.prisma,
+        currencyCode,
+        code(account.currencyCode),
+        occurredAt,
+        input.manualRate,
+      );
       if (!evidence)
-        throw new AppError('MISSING_FX_RATE', 'A historical FX rate is required for this transaction', 422);
+        throw new AppError(
+          'MISSING_FX_RATE',
+          'A historical FX rate is required for this transaction',
+          422,
+        );
       baseAmount = convertAmount(amount, currencyCode, evidence.quoteCode, evidence.rate);
       await this.prisma.currency.upsert({
         where: { code: currencyCode },

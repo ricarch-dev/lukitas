@@ -13,12 +13,16 @@ export function ReportsScreen() {
     client
       .get<FinancialReportDto>('/reports')
       .then(setReport)
-      .catch(() => setError('No pudimos cargar el informe. Revisa tu conexión e intenta de nuevo.'));
+      .catch(() =>
+        setError('No pudimos cargar el informe. Revisa tu conexión e intenta de nuevo.'),
+      );
   }, [client]);
   if (error)
     return (
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.root}>
-        <Text accessibilityRole="alert" style={styles.error}>{error}</Text>
+        <Text accessibilityRole="alert" style={styles.error}>
+          {error}
+        </Text>
       </ScrollView>
     );
   if (!report)
@@ -30,12 +34,25 @@ export function ReportsScreen() {
   const disclosure = reportDisclosure(report);
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.root}>
-      <Text accessibilityRole="header" style={styles.title}>Informe del período</Text>
-      <Text style={styles.body}>{report.items.length} movimientos entre {report.from.slice(0, 10)} y {report.to.slice(0, 10)}</Text>
+      <Text accessibilityRole="header" style={styles.title}>
+        Informe del período
+      </Text>
+      <Text style={styles.body}>
+        {report.items.length} movimientos entre {report.from.slice(0, 10)} y{' '}
+        {report.to.slice(0, 10)}
+      </Text>
       <Text style={styles.body}>Moneda base: {report.baseCurrency}</Text>
       {disclosure.warning ? <Text style={styles.warning}>{disclosure.warning}</Text> : null}
-      {disclosure.total ? <Text selectable style={styles.body}>{disclosure.total}</Text> : null}
-      {report.warnings.map((warning, index) => <Text key={index} selectable style={styles.warning}>{warning}</Text>)}
+      {disclosure.total ? (
+        <Text selectable style={styles.body}>
+          {disclosure.total}
+        </Text>
+      ) : null}
+      {report.warnings.map((warning, index) => (
+        <Text key={index} selectable style={styles.warning}>
+          {warning}
+        </Text>
+      ))}
     </ScrollView>
   );
 }

@@ -31,6 +31,7 @@ model User {
   updatedAt       DateTime             @updatedAt @db.Timestamptz(3)
   preferences     UserPreferences?
   accounts        Account[]
+  bankGroups      BankGroup[]
   transactions    Transaction[]
   transfers       Transfer[]
   sessions        RefreshSession[]
@@ -68,12 +69,14 @@ model Account {
   id                   String          @id @default(uuid()) @db.Uuid
   userId               String          @db.Uuid
   name                 String
+  bankGroupId          String?         @db.Uuid
   currencyCode         String          @db.VarChar(4)
   openingBalance       Decimal         @db.Decimal(20, 8)
   archivedAt           DateTime?       @db.Timestamptz(3)
   createdAt            DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime        @updatedAt @db.Timestamptz(3)
   user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankGroup            BankGroup?      @relation(fields: [bankGroupId, userId], references: [id, userId])
   currency             Currency        @relation(fields: [currencyCode], references: [code])
   transactions         Transaction[]
   entries              LedgerEntry[]
@@ -82,6 +85,18 @@ model Account {
   recurringRules       RecurringRule[]
 
   @@index([userId, archivedAt])
+}
+
+model BankGroup {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @db.Uuid
+  name           String
+  normalizedName String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts       Account[]
+
+  @@unique([userId, normalizedName])
+  @@unique([id, userId])
 }
 
 model Transaction {
