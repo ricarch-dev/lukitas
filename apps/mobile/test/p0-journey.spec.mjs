@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { activeDashboardAccounts, homeDashboardLayout } from "../src/features/home-dashboard-layout.ts";
+import { APP_COLORS } from "../src/features/auth-screen-theme.ts";
 
 const root = join(import.meta.dirname, "..");
 const app = readFileSync(join(root, "src", "app", "_layout.tsx"), "utf8");
@@ -75,12 +76,10 @@ test("home presents only active native-currency accounts", () => {
   assert.match(screens, /disclosure\.flow[\s\S]*dashboard\.flow\.warnings/);
 });
 
-test("home's local dark palette keeps financial text readable without changing auth", () => {
-  const palette = screens.match(/const colors = \{([\s\S]*?)\} as const;/)?.[1];
-  assert.ok(palette);
+test("home uses the shared light app palette with readable financial text", () => {
   const token = (name) => {
-    const color = palette.match(new RegExp(`\\b${name}: '(#[0-9A-Fa-f]{6})'`))?.[1];
-    assert.ok(color, `missing home color ${name}`);
+    const color = APP_COLORS[name];
+    assert.match(color, /^#[0-9A-Fa-f]{6}$/, `missing app color ${name}`);
     return color;
   };
   const luminance = (hex) => {
@@ -95,12 +94,27 @@ test("home's local dark palette keeps financial text readable without changing a
     const darker = Math.min(luminance(a), luminance(b));
     return (lighter + 0.05) / (darker + 0.05);
   };
-  for (const surface of ["canvas", "surface", "raised"]) {
-    for (const text of ["ink", "body", "muted", "primary", "warning", "error"]) {
+  for (const surface of ["canvas", "surface", "softSurface", "warningSurface"]) {
+    for (const text of ["ink", "body", "muted", "primary", "warning", "expense", "error"]) {
       assert.ok(contrast(token(text), token(surface)) >= 4.5, `${text} on ${surface}`);
     }
   }
-  assert.ok(contrast(token("ink"), token("brand")) >= 4.5);
+  assert.ok(contrast(token("surface"), token("primary")) >= 4.5);
+  assert.match(screens, /APP_COLORS as colors/);
   assert.match(screens, /style=\{\[styles\.center, styles\.canvas\]\}/);
-  assert.doesNotMatch(screens, /AUTH_COLORS/);
+  assert.doesNotMatch(screens, /const colors = \{/);
+});
+
+test("home prioritizes shortcuts and native balances without unsupported reference controls", () => {
+  const shortcutPosition = screens.indexOf("dashboardShortcuts.map");
+  const flowPosition = screens.indexOf("dashboard.flow.income");
+  const accountsPosition = screens.indexOf("Mis balances");
+  assert.ok(shortcutPosition > 0 && shortcutPosition < flowPosition && flowPosition < accountsPosition);
+  const homeStyles = readFileSync(join(root, "src", "features", "home-dashboard-styles.ts"), "utf8");
+  assert.match(screens, /<ScrollView\s+horizontal[\s\S]*?accountBalances/);
+  assert.match(screens, /href="\/crear-cuenta" asChild/);
+  assert.match(screens, /accessibilityLabel="Agregar cuenta"/);
+  assert.match(homeStyles, /shortcutIcon: \{[\s\S]*?borderRadius: 24/);
+  assert.match(homeStyles, /flow: \{[\s\S]*?flexDirection: 'row'/);
+  assert.doesNotMatch(screens, /donaci[oó]n|gr[aá]fic[oa]|calculadora|transferir/i);
 });

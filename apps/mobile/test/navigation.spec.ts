@@ -22,6 +22,52 @@ describe('native navigation routes', () => {
   });
 });
 
+describe('web navigation routes', () => {
+  it('registers the tab list directly under Tabs so Expo Router discovers its screens', () => {
+    const tabs = source('(tabs)/_layout.web.tsx');
+    const stack: string[] = [];
+    const directLists: string[] = [];
+    let directTriggers = 0;
+    // Match the layout's JSX tags in document order and check parentage, not mere presence.
+    for (const [, closing, name, tail] of tabs.matchAll(/<(\/)?([A-Z][A-Za-z]*)\b([^>]*?)>/g)) {
+      if (closing) {
+        assert.equal(stack.pop(), name, `unexpected closing tag for ${name}`);
+      } else {
+        if (name === 'TabList' && stack.at(-1) === 'Tabs') directLists.push(name);
+        if (name === 'TabTrigger' && stack.at(-1) === 'TabList' && stack.at(-2) === 'Tabs') directTriggers++;
+        if (!tail.trimEnd().endsWith('/')) stack.push(name);
+      }
+    }
+    assert.deepEqual(stack, [], 'JSX tags should be balanced');
+    assert.equal(directLists.length, 1, 'TabList must be an immediate child of Tabs for Expo Router route discovery');
+    assert.equal(directTriggers, 4, 'four destinations must be direct TabTriggers in the registered TabList');
+  });
+
+  it('uses a guarded headless tab shell with four real, named destinations', () => {
+    const tabs = source('(tabs)/_layout.web.tsx');
+    assert.match(tabs, /<RootNavigator>/);
+    assert.match(tabs, /<Tabs\b/);
+    assert.match(tabs, /<TabSlot\b/);
+    assert.match(tabs, /<TabList\b/);
+    for (const [name, href, label] of [
+      ['index', '/(tabs)', 'Inicio'],
+      ['movimientos', '/(tabs)/movimientos', 'Movimientos'],
+      ['planificacion', '/(tabs)/planificacion', 'Planificación'],
+      ['ajustes', '/(tabs)/ajustes', 'Ajustes'],
+    ]) {
+      assert.ok(tabs.includes(`<TabTrigger name="${name}" href="${href}"`));
+      assert.match(tabs, new RegExp(`accessibilityLabel="${label}"`));
+      assert.match(source(`(tabs)/${name}.tsx`), /export default/);
+    }
+    assert.equal((tabs.match(/<TabTrigger name=/g) ?? []).length, 4);
+    assert.match(tabs, /isFocused/);
+    assert.match(tabs, /styles\.tabList/);
+    assert.match(tabs, /<Pressable\s+\{\.\.\.props\}/);
+    assert.match(tabs, /accessibilityState=\{\{ selected: isFocused \}\}/);
+    assert.doesNotMatch(tabs, /NativeTabs/);
+  });
+});
+
 describe('financial disclosures', () => {
   it('marks both partial dashboard aggregates independently without changing their values', () => {
     const dashboard: DashboardDto = {

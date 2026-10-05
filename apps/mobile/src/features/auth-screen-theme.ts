@@ -13,3 +13,13 @@ export const AUTH_COLORS = {
   errorSurface: '#FFF1EE',
   segmentSurface: '#EAF0EE',
 } as const;
+
+export const APP_COLORS = {
+  ...AUTH_COLORS,
+  softSurface: '#EAF4FF',
+  subtleSurface: AUTH_COLORS.segmentSurface,
+  warning: '#795200',
+  warningSurface: '#FFF6DF',
+  income: '#005864',
+  expense: '#A12F24',
+} as const;

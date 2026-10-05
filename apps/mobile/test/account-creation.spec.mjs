@@ -57,6 +57,7 @@ test('Inicio floating action opens the protected account form route', () => {
   const route = readFileSync(join(root, 'app', 'crear-cuenta.tsx'), 'utf8');
   assert.match(home, /href="\/crear-cuenta"/);
   assert.match(home, /position: 'absolute'/);
+  assert.match(home, /accessibilityLabel="Agregar cuenta"[\s\S]*?style=\{\{ \.\.\.styles\.floatingAdd, position: 'absolute', right: gutter \}\}/);
   assert.match(layout, /name="crear-cuenta"/);
   assert.match(route, /RootNavigator/);
 });

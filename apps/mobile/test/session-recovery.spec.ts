@@ -22,8 +22,11 @@ test('session recovery clears only tokens and leaves other device data untouched
 
 test('root error gate retains retry and exposes accessible token-clear recovery', () => {
   const navigator = readFileSync(fileURLToPath(new URL('../src/navigation/RootNavigator.tsx', import.meta.url)), 'utf8');
-  assert.match(navigator, /onPress=\{\(\) => setRetry\(value => value \+ 1\)\}/);
-  assert.match(navigator, /accessibilityRole="button" accessibilityHint="[^"]+" onPress=\{\(\) => void clearSessionForLogin\(setTokens\)\}/);
+  assert.match(navigator, /onPress=\{\(\) => setRetry\(\(value\) => value \+ 1\)\}/);
+  assert.match(
+    navigator,
+    /accessibilityRole="button"[\s\S]*?accessibilityHint="[^"]+"[\s\S]*?onPress=\{\(\) => void clearSessionForLogin\(setTokens\)\}/,
+  );
   assert.match(navigator, /Volver a iniciar sesión/);
-  assert.match(navigator, /<OnboardingScreen onComplete=/);
+  assert.match(navigator, /<OnboardingScreen\s+onComplete=/);
 });

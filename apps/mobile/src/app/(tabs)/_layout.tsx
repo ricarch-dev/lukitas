@@ -1,11 +1,11 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { AUTH_COLORS } from '../../features/auth-screen-theme';
+import { APP_COLORS } from '../../features/auth-screen-theme';
 import { RootNavigator } from '../../navigation/RootNavigator';
 
 export default function TabsLayout() {
   return (
     <RootNavigator>
-      <NativeTabs tintColor={AUTH_COLORS.primary}>
+      <NativeTabs tintColor={APP_COLORS.primary}>
         <NativeTabs.Trigger name="index">
           <NativeTabs.Trigger.Icon sf="house" md="home" />
           <NativeTabs.Trigger.Label>Inicio</NativeTabs.Trigger.Label>
