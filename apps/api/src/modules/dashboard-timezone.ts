@@ -49,6 +49,10 @@ export const startOfMonthInTimezone = (value: Date, timezone: string): Date => {
   return zonedDateTimeToUtc({ ...local, day: 1, hour: 0, minute: 0, second: 0 }, timezone);
 };
 
+// The exclusive cutoff for the preceding month's closing portfolio balance.
+export const previousBalanceCutoff = (clock: Date, timezone: string): Date =>
+  startOfMonthInTimezone(clock, timezone);
+
 export const dashboardPeriod = (
   timezone: string,
   from?: string,

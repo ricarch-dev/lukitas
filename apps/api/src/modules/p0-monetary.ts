@@ -16,6 +16,7 @@ import { AppError, notFound, validation } from '../common/errors.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 import { record, requiredString } from '../common/request-input.js';
 import { dashboardPeriod } from './dashboard-timezone.js';
+import { dashboardComparison } from './dashboard-valuation.js';
 import { accountDto } from './accounts.js';
 import { selectFxEvidence, type SelectedFxEvidence } from './fx-evidence.js';
 import {
@@ -291,7 +292,7 @@ export class DashboardService {
       : undefined;
   }
 
-  async get(userId: string, fromValue?: string, toValue?: string) {
+  async get(userId: string, fromValue?: string, toValue?: string, clock = new Date()) {
     const preferences = await this.prisma.userPreferences.findUnique({ where: { userId } });
     const baseUnit = monetaryUnit(preferences?.baseCurrency ?? 'USD');
     const timezone = preferences?.timezone ?? 'UTC';
@@ -379,6 +380,7 @@ export class DashboardService {
         }
       }
     }
+    const comparison = await dashboardComparison(this.prisma, userId, timezone, clock);
     return {
       baseCurrency: baseUnit.code,
       accounts: accountDtos,
@@ -394,6 +396,7 @@ export class DashboardService {
         warnings: [...flowWarnings],
       },
       recentActivity: recentTransactions.map(transactionDto),
+      comparison,
     };
   }
 }

@@ -52,16 +52,26 @@ export const transferHarness = () => {
   const prisma = {
     account: {
       findFirst: async ({ where }) => copy(state.accounts.find((account) => account.id === where.id && account.userId === where.userId) ?? null),
-      findMany: async ({ where }) => copy(state.accounts.filter((account) => account.userId === where.userId && !account.archivedAt)),
+      findMany: async ({ where }) => copy(state.accounts.filter((account) => account.userId === where.userId &&
+        (where.archivedAt === undefined || account.archivedAt === where.archivedAt) &&
+        (where.createdAt === undefined || account.createdAt < where.createdAt.lt))),
     },
     fxRate: { findFirst: async ({ where }) => copy(state.rates.filter((rate) =>
       rate.baseCode === where.baseCode && rate.quoteCode === where.quoteCode &&
-      rate.effectiveAt <= where.effectiveAt.lte).sort((a, b) => b.effectiveAt - a.effectiveAt)[0] ?? null) },
+       (where.effectiveAt.lt ? rate.effectiveAt < where.effectiveAt.lt :
+         rate.effectiveAt <= where.effectiveAt.lte)).sort((a, b) => b.effectiveAt - a.effectiveAt)[0] ?? null) },
     userPreferences: { findUnique: async () => ({ baseCurrency: 'USDT', timezone: 'UTC' }) },
     transaction: { findMany: async ({ where, take }) => copy(state.transactions.filter((transaction) =>
       transaction.userId === where.userId && transaction.occurredAt >= where.occurredAt.gte &&
       transaction.occurredAt <= where.occurredAt.lte).slice(0, take)) },
-    ledgerEntry: { findMany: async ({ where }) => store(state).ledgerEntry.findMany({ where }) },
+    ledgerEntry: { findMany: async ({ where }) => where.accountId
+      ? store(state).ledgerEntry.findMany({ where })
+      : copy(state.ledger.filter((entry) => {
+        const transaction = state.transactions.find((row) => row.id === entry.transactionId);
+        return transaction?.voidedAt === null && transaction.occurredAt < where.transaction.occurredAt.lt &&
+          state.accounts.some((account) => account.id === entry.accountId && account.userId === where.account.userId);
+      }).map((entry) => ({ accountId: entry.accountId, signedAmount: entry.signedAmount,
+        transaction: { occurredAt: state.transactions.find((row) => row.id === entry.transactionId).occurredAt } }))) },
     $transaction: async (run) => {
       const staged = copy(state);
       if (revokedAccount) staged.accounts.find((account) => account.id === revokedAccount).userId = 'another-user';
@@ -90,14 +100,22 @@ export const transferHarness = () => {
   };
 };
 
-export const dashboardHarness = (baseCurrency = 'USD') => {
+export const dashboardHarness = (baseCurrency = 'USD', timezone = 'UTC') => {
   const state = { accounts: [], ledger: [], transactions: [], rates: [], queries: [] };
   const prisma = {
-    userPreferences: { findUnique: async () => ({ baseCurrency, timezone: 'UTC' }) },
+    userPreferences: { findUnique: async () => ({ baseCurrency, timezone }) },
     account: { findMany: async ({ where }) => copy(state.accounts.filter((account) =>
-      account.userId === where.userId && account.archivedAt === null)) },
-    ledgerEntry: { findMany: async ({ where }) => copy(state.ledger.filter((entry) =>
-      entry.accountId === where.accountId).map(({ signedAmount }) => ({ signedAmount }))) },
+      account.userId === where.userId && (where.archivedAt === undefined || account.archivedAt === null) &&
+      (where.createdAt === undefined || account.createdAt < where.createdAt.lt))) },
+    ledgerEntry: { findMany: async ({ where }) => where.accountId
+      ? copy(state.ledger.filter((entry) => entry.accountId === where.accountId)
+        .map(({ signedAmount }) => ({ signedAmount })))
+      : copy(state.ledger.filter((entry) => {
+        const transaction = state.transactions.find((row) => row.id === entry.transactionId);
+        return transaction?.voidedAt === null && transaction.occurredAt < where.transaction.occurredAt.lt &&
+          state.accounts.some((account) => account.id === entry.accountId && account.userId === where.account.userId);
+      }).map((entry) => ({ accountId: entry.accountId, signedAmount: entry.signedAmount,
+        transaction: { occurredAt: state.transactions.find((row) => row.id === entry.transactionId).occurredAt } }))) },
     transaction: { findMany: async ({ where, take }) => {
       state.queries.push(take);
       const rows = state.transactions.filter((transaction) => transaction.userId === where.userId &&
@@ -107,7 +125,8 @@ export const dashboardHarness = (baseCurrency = 'USD') => {
     } },
     fxRate: { findFirst: async ({ where }) => copy(state.rates.filter((rate) =>
       rate.baseCode === where.baseCode && rate.quoteCode === where.quoteCode &&
-      rate.effectiveAt <= where.effectiveAt.lte).sort((a, b) => b.effectiveAt - a.effectiveAt)[0] ?? null) },
+      (where.effectiveAt.lt ? rate.effectiveAt < where.effectiveAt.lt :
+        rate.effectiveAt <= where.effectiveAt.lte)).sort((a, b) => b.effectiveAt - a.effectiveAt)[0] ?? null) },
   };
   return { state, dashboard: new DashboardService(prisma) };
 };
