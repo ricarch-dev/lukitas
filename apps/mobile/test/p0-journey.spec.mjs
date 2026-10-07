@@ -33,8 +33,10 @@ test("mobile P0 journey has auth, setup, dashboard and session restore boundarie
   assert.match(authSubmit, /auth\/login/);
   assert.match(screens, /useDashboard/);
   assert.match(screens, /Lukitas/);
-  assert.match(screens, /Saldo total/);
-  assert.match(screens, /dashboard\.totals\.amount/);
+  const summary = readFileSync(join(root, 'src', 'modules', 'home', 'components', 'balance-summary.tsx'), 'utf8');
+  assert.match(screens, /<BalanceSummary dashboard={dashboard}/);
+  assert.match(summary, /Saldo total/);
+  assert.match(summary, /summary\.amount/);
   assert.match(screens, /dashboard\.baseCurrency/);
   assert.match(screens, /dashboard\.flow\.income/);
   assert.match(screens, /dashboard\.flow\.expense/);

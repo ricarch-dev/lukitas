@@ -18,6 +18,8 @@ import {
 import { APP_COLORS as colors } from './auth-screen-theme';
 import { styles } from './home-dashboard-styles';
 
+import { BalanceSummary } from '../modules/home/components/balance-summary';
+
 export { AuthScreen } from './auth-screen';
 export { OnboardingScreen } from './onboarding-screen';
 
@@ -113,14 +115,10 @@ export function DashboardScreen() {
           <View style={[styles.columns, wide && styles.columnsWide]}>
             <View style={styles.primaryColumn}>
               <View style={styles.summary}>
-                <Text style={styles.sectionLabel}>Saldo total · {dashboard.baseCurrency}</Text>
-                <Text selectable style={styles.total}>
-                  {dashboard.totals.amount}{' '}
-                  <Text style={styles.totalCurrency}>{dashboard.baseCurrency}</Text>
-                </Text>
+                <BalanceSummary dashboard={dashboard} />
                 {disclosure.balance ? (
                   <Text selectable style={styles.warning}>
-                    {disclosure.balance}
+                    En {dashboard.baseCurrency}: {disclosure.balance}
                   </Text>
                 ) : null}
                 {dashboard.totals.warnings.map((warning, index) => (
