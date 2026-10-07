@@ -17,7 +17,15 @@ import {
 } from './home-dashboard-layout';
 import { APP_COLORS as colors } from './auth-screen-theme';
 import { styles } from './home-dashboard-styles';
-import { ArrowUpDown, Clock4, Ellipsis, MoveDown, MoveUp, Plus } from 'lucide-react-native';
+import {
+  ArrowUpDown,
+  Clock4,
+  Ellipsis,
+  MoveDown,
+  MoveUp,
+  Plus,
+  WalletCards,
+} from 'lucide-react-native';
 import { BalanceSummary } from '../modules/home/components/balance-summary';
 
 export { AuthScreen } from './auth-screen';
@@ -41,6 +49,12 @@ const dashboardShortcuts = [
     label: 'Ajustes',
     hint: 'Abre la pestaña de ajustes.',
     glyph: <Ellipsis />,
+  },
+  {
+    href: '/cuentas',
+    label: 'Cuentas',
+    hint: 'Abre la vista de cuentas activas y sus saldos.',
+    glyph: <WalletCards />,
   },
 ] as const;
 
@@ -114,7 +128,7 @@ export function DashboardScreen() {
           </View>
           <View style={[styles.columns, wide && styles.columnsWide]}>
             <View style={styles.primaryColumn}>
-              <View style={styles.summary}>
+              <View style={[styles.summary, { paddingBottom: 0 }]}>
                 <BalanceSummary dashboard={dashboard} />
                 {disclosure.balance ? (
                   <Text selectable style={styles.warning}>
@@ -148,7 +162,7 @@ export function DashboardScreen() {
                 <View style={[styles.flow, wide && styles.flowWide]}>
                   <View style={[styles.flowItem, wide && styles.flowItemWide]}>
                     <View style={styles.flowItemHeading}>
-                      <MoveUp accessible={false} size={17} color={colors.income} />
+                      <MoveUp aria-hidden={true} size={17} color={colors.income} />
                       <Text style={styles.caption}>Ingresos del período</Text>
                     </View>
                     <Text selectable style={[styles.value, styles.income]}>
@@ -157,7 +171,7 @@ export function DashboardScreen() {
                   </View>
                   <View style={[styles.flowItem, wide && styles.flowItemWide]}>
                     <View style={styles.flowItemHeading}>
-                      <MoveDown accessible={false} size={17} color={colors.expense} />
+                      <MoveDown aria-hidden={true} size={17} color={colors.expense} />
                       <Text style={styles.caption}>Gastos del período</Text>
                     </View>
                     <Text selectable style={[styles.value, styles.expense]}>

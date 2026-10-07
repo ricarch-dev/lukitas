@@ -67,17 +67,12 @@ test('Inicio floating action clears the web tab bar without moving the native ac
   const home = readFileSync(join(root, 'features', 'screens.tsx'), 'utf8');
   const styles = readFileSync(join(root, 'features', 'home-dashboard-styles.ts'), 'utf8');
   const tabs = readFileSync(join(root, 'app', '(tabs)', '_layout.web.tsx'), 'utf8');
-  const offset = styles.match(/floatingAdd: \{[^\n]*bottom: process\.env\.EXPO_OS === 'web' \? (\d+) : (\d+)/);
+  const offset = styles.match(/floatingAdd: \{[\s\S]*?bottom: process\.env\.EXPO_OS === 'web' \? (\d+) : (\d+)/);
 
   assert.ok(offset, 'web and native offsets must be explicitly platform-specific');
-  const [, web, native] = offset.map(Number);
-  assert.equal(native, 20);
-  const tab = Number(tabs.match(/minHeight: (\d+), borderRadius: 26/)?.[1]);
-  const padding = Number(tabs.match(/padding: (\d+),/)?.[1]);
-  const border = Number(tabs.match(/borderWidth: (\d+),/)?.[1]);
-  const top = Number(tabs.match(/marginTop: (\d+),/)?.[1]);
-  const bottom = Number(tabs.match(/marginBottom: (\d+),/)?.[1]);
-  assert.ok(Number.isFinite(tab + padding + border + top + bottom));
-  assert.ok(web >= native + tab + padding * 2 + border * 2 + top + bottom);
+  assert.equal(Number(offset[1]), 32);
+  assert.equal(Number(offset[2]), 20);
+  assert.match(tabs, /<Tabs style=\{styles\.shell\}>\s*<View style=\{styles\.content\}>\s*<TabSlot \/>\s*<\/View>\s*<TabList style=\{styles\.tabList\}/);
+  assert.match(tabs, /shell: \{ flex: 1,[^\n]*\}[\s\S]*?content: \{ flex: 1, minHeight: 0 \}/);
   assert.match(home, /<Link href="\/crear-cuenta" asChild>[\s\S]*?<Pressable[\s\S]*?style=\{\{ \.\.\.styles\.floatingAdd, position: 'absolute', right: gutter \}\}/);
 });

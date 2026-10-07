@@ -17,6 +17,9 @@ describe('native navigation routes', () => {
     assert.equal((tabs.match(/<NativeTabs.Trigger name=/g) ?? []).length, 4);
     assert.equal((tabs.match(/\.Trigger\.Icon sf=/g) ?? []).length, 4);
     assert.match(source('informes.tsx'), /ReportsScreen/);
+    assert.match(source('cuentas.tsx'), /AccountsScreen/);
+    assert.match(source('cuentas.tsx'), /<RootNavigator>/);
+    assert.match(source('_layout.tsx'), /<Stack\.Screen name="cuentas" options=\{\{ title: 'Cuentas' \}\} \/>/);
     assert.match(source('index.tsx'), /RootNavigator/);
     assert.match(tabs, /<RootNavigator>/);
   });

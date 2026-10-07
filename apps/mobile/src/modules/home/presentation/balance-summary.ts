@@ -43,11 +43,15 @@ export function balanceSummary(dashboard: DashboardDto, currency: DashboardDispl
   if (currency !== 'VES' && ves.partial) {
     warnings.push(`Equivalente en bolívares no disponible: faltan cotizaciones para ${ves.missingCurrencies.join(', ')} (subtotal parcial: ${ves.amount} VES).`);
   }
+  if (!selected.current.partial && !selected.previous.partial && selected.percentChange === null) {
+    warnings.push('No se puede calcular el cambio porcentual porque el saldo anterior es cero.');
+  }
 
   return {
     amount: selected.current.amount,
     equivalent: currency === 'VES' || ves.partial ? null : ves.amount,
     percentChange: selected.current.partial || selected.previous.partial ? null : selected.percentChange,
+    openingNote: 'Los saldos iniciales se ubican en la fecha de creación de cada cuenta como aproximación.',
     warnings,
     evidence,
   };

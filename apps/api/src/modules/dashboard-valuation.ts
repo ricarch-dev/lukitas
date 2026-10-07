@@ -1,5 +1,10 @@
 import { parseDecimal } from '@lukitas/domain';
-import type { DashboardComparison, DashboardDisplayCurrency, DashboardValuation } from '../../../../packages/contracts/src/dashboard.ts';
+import type {
+  DashboardAccountCurrencyFilter,
+  DashboardComparison,
+  DashboardDisplayCurrency,
+  DashboardValuation,
+} from '../../../../packages/contracts/src/dashboard.ts';
 import type { SupportedMonetaryUnitCode } from '@lukitas/domain';
 import type { PrismaService } from '../common/prisma.js';
 import { addDecimal, asString, fixedAmount, monetaryUnit, multiplyDecimal } from './p0-finance.js';
@@ -31,10 +36,15 @@ export async function dashboardComparison(
   userId: string,
   timezone: string,
   clock: Date,
+  accountCurrency?: DashboardAccountCurrencyFilter,
 ): Promise<DashboardComparison> {
   const previous = previousBalanceCutoff(clock, timezone);
   const accounts = await prisma.account.findMany({
-    where: { userId, createdAt: { lt: clock } },
+    where: {
+      userId,
+      createdAt: { lt: clock },
+      ...(accountCurrency ? { currencyCode: accountCurrency } : {}),
+    },
     select: { id: true, currencyCode: true, openingBalance: true, createdAt: true, archivedAt: true },
   });
   const entries = await prisma.ledgerEntry.findMany({

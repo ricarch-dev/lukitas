@@ -106,6 +106,7 @@ export const dashboardHarness = (baseCurrency = 'USD', timezone = 'UTC') => {
     userPreferences: { findUnique: async () => ({ baseCurrency, timezone }) },
     account: { findMany: async ({ where }) => copy(state.accounts.filter((account) =>
       account.userId === where.userId && (where.archivedAt === undefined || account.archivedAt === null) &&
+      (where.currencyCode === undefined || account.currencyCode === where.currencyCode) &&
       (where.createdAt === undefined || account.createdAt < where.createdAt.lt))) },
     ledgerEntry: { findMany: async ({ where }) => where.accountId
       ? copy(state.ledger.filter((entry) => entry.accountId === where.accountId)
@@ -120,7 +121,9 @@ export const dashboardHarness = (baseCurrency = 'USD', timezone = 'UTC') => {
       state.queries.push(take);
       const rows = state.transactions.filter((transaction) => transaction.userId === where.userId &&
         transaction.voidedAt === null && transaction.occurredAt >= where.occurredAt.gte &&
-        transaction.occurredAt <= where.occurredAt.lte).sort((a, b) => b.occurredAt - a.occurredAt);
+        transaction.occurredAt <= where.occurredAt.lte &&
+        (where.accountId?.in === undefined || where.accountId.in.includes(transaction.accountId)))
+        .sort((a, b) => b.occurredAt - a.occurredAt);
       return copy(take === undefined ? rows : rows.slice(0, take));
     } },
     fxRate: { findFirst: async ({ where }) => copy(state.rates.filter((rate) =>

@@ -45,6 +45,7 @@ export function BalanceSummary({ dashboard }: { dashboard: DashboardDto }) {
         Corte del mes anterior: {dashboard.comparison.previousCutoff} vs Valor actual:{' '}
         {dashboard.comparison.currentCutoff}
       </Text>
+      <Text selectable style={styles.summaryNote}>{summary.openingNote}</Text>
       {summary.evidence.length > 0 ? (
         <Text selectable style={styles.summaryNote}>
           {summary.evidence.join(' ')} Cotizaciones almacenadas; no son tasas en tiempo real.

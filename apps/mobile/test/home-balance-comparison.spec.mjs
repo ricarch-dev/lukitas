@@ -73,3 +73,10 @@ test('home keeps existing data and navigation while selection is accessible', ()
   assert.match(screen(), /dashboardShortcuts\.map/);
   assert.match(screen(), /href="\/informes"/);
 });
+
+test('decorative flow icons do not forward a non-boolean accessible prop to SVG', () => {
+  const source = screen();
+  assert.match(source, /<MoveUp aria-hidden=\{true\} size=\{17\}/);
+  assert.match(source, /<MoveDown aria-hidden=\{true\} size=\{17\}/);
+  assert.doesNotMatch(source, /<(?:MoveUp|MoveDown)\s+accessible=/);
+});

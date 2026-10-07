@@ -22,6 +22,7 @@ export default function RootLayout() {
           name="crear-cuenta"
           options={{ title: 'Crear cuenta', presentation: 'modal' }}
         />
+        <Stack.Screen name="cuentas" options={{ title: 'Cuentas' }} />
       </Stack>
       <StatusBar style="auto" />
     </SessionProvider>

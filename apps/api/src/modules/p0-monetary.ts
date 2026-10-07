@@ -15,6 +15,7 @@ import { IdempotencyService } from '../common/idempotency.js';
 import { AppError, notFound, validation } from '../common/errors.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 import { record, requiredString } from '../common/request-input.js';
+import type { DashboardAccountCurrencyFilter } from '../../../../packages/contracts/src/dashboard.ts';
 import { dashboardPeriod } from './dashboard-timezone.js';
 import { dashboardComparison } from './dashboard-valuation.js';
 import { accountDto } from './accounts.js';
@@ -42,6 +43,14 @@ const safeTimezone = (value: unknown): string => {
     validation('Unsupported timezone');
   }
   return timezone;
+};
+
+const dashboardAccountCurrency = (
+  value: unknown,
+): DashboardAccountCurrencyFilter | undefined => {
+  if (value === undefined) return undefined;
+  if (value === 'VES' || value === 'USD') return value;
+  validation('accountCurrency must be VES or USD');
 };
 
 @Injectable()
@@ -292,7 +301,14 @@ export class DashboardService {
       : undefined;
   }
 
-  async get(userId: string, fromValue?: string, toValue?: string, clock = new Date()) {
+  async get(
+    userId: string,
+    fromValue?: string,
+    toValue?: string,
+    clock = new Date(),
+    rawAccountCurrency?: unknown,
+  ) {
+    const accountCurrency = dashboardAccountCurrency(rawAccountCurrency);
     const preferences = await this.prisma.userPreferences.findUnique({ where: { userId } });
     const baseUnit = monetaryUnit(preferences?.baseCurrency ?? 'USD');
     const timezone = preferences?.timezone ?? 'UTC';
@@ -301,7 +317,11 @@ export class DashboardService {
       validation('from and to must be valid ISO instants');
     if (to < from) validation('to must be after from');
     const accounts = await this.prisma.account.findMany({
-      where: { userId, archivedAt: null },
+      where: {
+        userId,
+        archivedAt: null,
+        ...(accountCurrency ? { currencyCode: accountCurrency } : {}),
+      },
       include: { currency: true, bankGroup: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -320,8 +340,11 @@ export class DashboardService {
         );
       }),
     );
+    const accountScope = accountCurrency
+      ? { accountId: { in: accountDtos.map((account) => account.id) } }
+      : {};
     const periodTransactions = await this.prisma.transaction.findMany({
-      where: { userId, occurredAt: { gte: from, lte: to }, voidedAt: null },
+      where: { userId, ...accountScope, occurredAt: { gte: from, lte: to }, voidedAt: null },
       select: {
         amount: true,
         currencyCode: true,
@@ -332,7 +355,7 @@ export class DashboardService {
       },
     });
     const recentTransactions = await this.prisma.transaction.findMany({
-      where: { userId, occurredAt: { gte: from, lte: to }, voidedAt: null },
+      where: { userId, ...accountScope, occurredAt: { gte: from, lte: to }, voidedAt: null },
       include: { fxSnapshot: true },
       orderBy: { occurredAt: 'desc' },
       take: 50,
@@ -380,7 +403,13 @@ export class DashboardService {
         }
       }
     }
-    const comparison = await dashboardComparison(this.prisma, userId, timezone, clock);
+    const comparison = await dashboardComparison(
+      this.prisma,
+      userId,
+      timezone,
+      clock,
+      accountCurrency,
+    );
     return {
       baseCurrency: baseUnit.code,
       accounts: accountDtos,
@@ -442,7 +471,12 @@ export class DashboardController {
   constructor(private readonly dashboard: DashboardService) {}
 
   @Get()
-  get(@Req() req: AuthenticatedRequest, @Query('from') from?: string, @Query('to') to?: string) {
-    return this.dashboard.get(req.user.sub, from, to);
+  get(
+    @Req() req: AuthenticatedRequest,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('accountCurrency') accountCurrency?: unknown,
+  ) {
+    return this.dashboard.get(req.user.sub, from, to, undefined, accountCurrency);
   }
 }

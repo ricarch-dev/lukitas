@@ -15,6 +15,7 @@ export type {
   RecordTransactionRequest,
   TransferRequest,
 } from './ledger.ts';
+export type { DashboardAccountCurrencyFilter } from './dashboard.ts';
 export type { DashboardDto } from './dashboard.ts';
 export type { CategoryDto, CreateCategoryRequest, UpdateCategoryRequest } from './categories.ts';
 export type { BudgetDto, UpsertBudgetRequest } from './budgets.ts';

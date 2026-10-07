@@ -3,6 +3,7 @@ import type { TransactionDto } from './ledger.ts';
 import type { SupportedMonetaryUnitCode } from '@lukitas/domain';
 
 export type DashboardDisplayCurrency = 'VES' | 'USD' | 'EUR';
+export type DashboardAccountCurrencyFilter = 'VES' | 'USD';
 
 export interface DashboardValuation {
   /** A subtotal when partial; never treat it as a complete portfolio value. */
