@@ -61,3 +61,23 @@ test('Inicio floating action opens the protected account form route', () => {
   assert.match(layout, /name="crear-cuenta"/);
   assert.match(route, /RootNavigator/);
 });
+
+test('Inicio floating action clears the web tab bar without moving the native action', () => {
+  const root = join(import.meta.dirname, '..', 'src');
+  const home = readFileSync(join(root, 'features', 'screens.tsx'), 'utf8');
+  const styles = readFileSync(join(root, 'features', 'home-dashboard-styles.ts'), 'utf8');
+  const tabs = readFileSync(join(root, 'app', '(tabs)', '_layout.web.tsx'), 'utf8');
+  const offset = styles.match(/floatingAdd: \{[^\n]*bottom: process\.env\.EXPO_OS === 'web' \? (\d+) : (\d+)/);
+
+  assert.ok(offset, 'web and native offsets must be explicitly platform-specific');
+  const [, web, native] = offset.map(Number);
+  assert.equal(native, 20);
+  const tab = Number(tabs.match(/minHeight: (\d+), borderRadius: 26/)?.[1]);
+  const padding = Number(tabs.match(/padding: (\d+),/)?.[1]);
+  const border = Number(tabs.match(/borderWidth: (\d+),/)?.[1]);
+  const top = Number(tabs.match(/marginTop: (\d+),/)?.[1]);
+  const bottom = Number(tabs.match(/marginBottom: (\d+),/)?.[1]);
+  assert.ok(Number.isFinite(tab + padding + border + top + bottom));
+  assert.ok(web >= native + tab + padding * 2 + border * 2 + top + bottom);
+  assert.match(home, /<Link href="\/crear-cuenta" asChild>[\s\S]*?<Pressable[\s\S]*?style=\{\{ \.\.\.styles\.floatingAdd, position: 'absolute', right: gutter \}\}/);
+});

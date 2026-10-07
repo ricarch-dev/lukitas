@@ -40,9 +40,6 @@ export function balanceSummary(dashboard: DashboardDto, currency: DashboardDispl
   if (selected.previous.partial) {
     warnings.push(`Comparación con el mes anterior no disponible: faltan cotizaciones para ${selected.previous.missingCurrencies.join(', ')}.`);
   }
-  if (!selected.current.partial && !selected.previous.partial && selected.percentChange === null) {
-    warnings.push('Comparación no disponible: el saldo anterior es cero.');
-  }
   if (currency !== 'VES' && ves.partial) {
     warnings.push(`Equivalente en bolívares no disponible: faltan cotizaciones para ${ves.missingCurrencies.join(', ')} (subtotal parcial: ${ves.amount} VES).`);
   }
@@ -51,7 +48,6 @@ export function balanceSummary(dashboard: DashboardDto, currency: DashboardDispl
     amount: selected.current.amount,
     equivalent: currency === 'VES' || ves.partial ? null : ves.amount,
     percentChange: selected.current.partial || selected.previous.partial ? null : selected.percentChange,
-    openingNote: 'El saldo inicial se ubica en la fecha de creación de cada cuenta; es una aproximación, no la fecha real de apertura.',
     warnings,
     evidence,
   };

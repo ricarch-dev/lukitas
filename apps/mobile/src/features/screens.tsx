@@ -17,7 +17,7 @@ import {
 } from './home-dashboard-layout';
 import { APP_COLORS as colors } from './auth-screen-theme';
 import { styles } from './home-dashboard-styles';
-
+import { ArrowUpDown, Clock4, Ellipsis, MoveDown, MoveUp, Plus } from 'lucide-react-native';
 import { BalanceSummary } from '../modules/home/components/balance-summary';
 
 export { AuthScreen } from './auth-screen';
@@ -28,19 +28,19 @@ const dashboardShortcuts = [
     href: '/(tabs)/movimientos',
     label: 'Movimientos',
     hint: 'Abre la pestaña de movimientos recientes.',
-    glyph: '↕',
+    glyph: <ArrowUpDown />,
   },
   {
     href: '/(tabs)/planificacion',
     label: 'Planificación',
     hint: 'Abre la pestaña de planificación.',
-    glyph: '◷',
+    glyph: <Clock4 />,
   },
   {
     href: '/(tabs)/ajustes',
     label: 'Ajustes',
     hint: 'Abre la pestaña de ajustes.',
-    glyph: '•••',
+    glyph: <Ellipsis />,
   },
 ] as const;
 
@@ -148,9 +148,7 @@ export function DashboardScreen() {
                 <View style={[styles.flow, wide && styles.flowWide]}>
                   <View style={[styles.flowItem, wide && styles.flowItemWide]}>
                     <View style={styles.flowItemHeading}>
-                      <Text accessible={false} style={[styles.flowSymbol, styles.income]}>
-                        ↑
-                      </Text>
+                      <MoveUp accessible={false} size={17} color={colors.income} />
                       <Text style={styles.caption}>Ingresos del período</Text>
                     </View>
                     <Text selectable style={[styles.value, styles.income]}>
@@ -159,9 +157,7 @@ export function DashboardScreen() {
                   </View>
                   <View style={[styles.flowItem, wide && styles.flowItemWide]}>
                     <View style={styles.flowItemHeading}>
-                      <Text accessible={false} style={[styles.flowSymbol, styles.expense]}>
-                        ↓
-                      </Text>
+                      <MoveDown accessible={false} size={17} color={colors.expense} />
                       <Text style={styles.caption}>Gastos del período</Text>
                     </View>
                     <Text selectable style={[styles.value, styles.expense]}>
@@ -244,10 +240,7 @@ export function DashboardScreen() {
           accessibilityHint="Abre el formulario para registrar una cuenta manualmente."
           style={{ ...styles.floatingAdd, position: 'absolute', right: gutter }}
         >
-          <Text accessible={false} style={styles.floatingAddText}>
-            +
-          </Text>
-          <Text style={styles.floatingAddLabel}>Agregar cuenta</Text>
+          <Plus size={20} color="#fff" strokeWidth={2} />
         </Pressable>
       </Link>
     </View>
