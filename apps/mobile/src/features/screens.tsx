@@ -8,15 +8,15 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useDashboard } from './use-dashboard';
-import { dashboardDisclosure } from './financial-disclosure';
+import { useDashboard } from '../shared/hooks/use-dashboard';
+import { dashboardDisclosure } from '../shared/presentation/financial-disclosure';
 import {
   activeDashboardAccounts,
   groupedDashboardAccounts,
   homeDashboardLayout,
-} from './home-dashboard-layout';
-import { APP_COLORS as colors } from './auth-screen-theme';
-import { styles } from './home-dashboard-styles';
+} from '../shared/presentation/dashboard-layout';
+import { APP_COLORS as colors } from '../shared/theme/app-colors';
+import { styles } from '../modules/home/styles/home-dashboard-styles';
 import {
   ArrowUpDown,
   Clock4,
@@ -151,7 +151,9 @@ export function DashboardScreen() {
                       style={({ pressed }) => [styles.shortcut, pressed && styles.shortcutPressed]}
                     >
                       <View style={styles.shortcutIcon}>
-                        <Text accessible={false} style={styles.shortcutGlyph}>{shortcut.glyph}</Text>
+                        <Text accessible={false} style={styles.shortcutGlyph}>
+                          {shortcut.glyph}
+                        </Text>
                       </View>
                       <Text style={styles.shortcutLabel}>{shortcut.label}</Text>
                     </Pressable>

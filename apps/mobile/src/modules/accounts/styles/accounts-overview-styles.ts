@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { APP_COLORS as colors } from '../../features/auth-screen-theme';
+import { APP_COLORS as colors } from '../../../shared/theme/app-colors';
 
 export const styles = StyleSheet.create({
   page: {

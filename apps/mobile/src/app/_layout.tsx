@@ -1,7 +1,7 @@
 import { SessionProvider } from '../session/SessionContext';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { APP_COLORS } from '../features/auth-screen-theme';
+import { APP_COLORS } from '../shared/theme/app-colors';
 
 export default function RootLayout() {
   return (

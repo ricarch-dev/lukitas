@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { groupedDashboardAccounts } from '../src/features/home-dashboard-layout.ts';
+import { groupedDashboardAccounts } from '../src/shared/presentation/dashboard-layout.ts';
 import { AccountInputError, submitAccount } from '../src/features/create-account-submit.ts';
 
 test('mock account journey sends exact native VES and USD balances and groups on refresh', async () => {
@@ -65,7 +65,7 @@ test('Inicio floating action opens the protected account form route', () => {
 test('Inicio floating action clears the web tab bar without moving the native action', () => {
   const root = join(import.meta.dirname, '..', 'src');
   const home = readFileSync(join(root, 'features', 'screens.tsx'), 'utf8');
-  const styles = readFileSync(join(root, 'features', 'home-dashboard-styles.ts'), 'utf8');
+  const styles = readFileSync(join(root, 'modules', 'home', 'styles', 'home-dashboard-styles.ts'), 'utf8');
   const tabs = readFileSync(join(root, 'app', '(tabs)', '_layout.web.tsx'), 'utf8');
   const offset = styles.match(/floatingAdd: \{[\s\S]*?bottom: process\.env\.EXPO_OS === 'web' \? (\d+) : (\d+)/);
 

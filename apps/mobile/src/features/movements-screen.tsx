@@ -1,6 +1,6 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { APP_COLORS as colors } from './auth-screen-theme';
-import { useDashboard } from './use-dashboard';
+import { APP_COLORS as colors } from '../shared/theme/app-colors';
+import { useDashboard } from '../shared/hooks/use-dashboard';
 
 export function MovementsScreen() {
   const { dashboard, error } = useDashboard();

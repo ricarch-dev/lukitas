@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { dashboardDisclosure, reportDisclosure } from '../src/features/financial-disclosure.ts';
+import { dashboardDisclosure, reportDisclosure } from '../src/shared/presentation/financial-disclosure.ts';
 import type { DashboardDto, FinancialReportDto } from '@lukitas/contracts';
 
 const source = (relative: string) => readFileSync(fileURLToPath(new URL(`../src/app/${relative}`, import.meta.url)), 'utf8');

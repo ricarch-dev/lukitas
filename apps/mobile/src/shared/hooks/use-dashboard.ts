@@ -1,7 +1,7 @@
 import type { DashboardAccountCurrencyFilter, DashboardDto } from '@lukitas/contracts';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { useSession } from '../session/SessionContext';
+import { useSession } from '../../session/SessionContext';
 
 export function useDashboard(accountCurrency?: DashboardAccountCurrencyFilter) {
   const { client } = useSession();

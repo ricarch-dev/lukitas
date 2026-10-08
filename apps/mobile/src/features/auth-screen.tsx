@@ -19,7 +19,7 @@ import {
   getOtherAuthMode,
   type AuthMode,
 } from './auth-screen-logic';
-import { AUTH_COLORS } from './auth-screen-theme';
+import { AUTH_COLORS } from '../shared/theme/app-colors';
 
 const MODE_COPY = {
   'sign-in': {

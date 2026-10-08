@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useSession } from '../session/SessionContext';
-import { APP_COLORS as colors } from './auth-screen-theme';
+import { APP_COLORS as colors } from '../shared/theme/app-colors';
 
 export function PlanningScreen() {
   const { client } = useSession();

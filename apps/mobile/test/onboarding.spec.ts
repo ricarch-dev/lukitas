@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ApiClient } from '../src/api/client.ts';
 import { submitOnboarding } from '../src/features/onboarding-submit.ts';
-import { AUTH_COLORS } from '../src/features/auth-screen-theme.ts';
+import { AUTH_COLORS } from '../src/shared/theme/app-colors.ts';
 
 test('onboarding preserves USD payload, exact amounts, and retry identity', async () => {
   const original = globalThis.fetch;

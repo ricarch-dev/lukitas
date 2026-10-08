@@ -2,19 +2,19 @@ import { useState } from 'react';
 import { Link } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Plus } from 'lucide-react-native';
-import { dashboardDisclosure } from '../../../features/financial-disclosure';
-import { useDashboard } from '../../../features/use-dashboard';
+import { dashboardDisclosure } from '../../../shared/presentation/financial-disclosure';
+import { useDashboard } from '../../../shared/hooks/use-dashboard';
 import {
   activeDashboardAccounts,
   groupedDashboardAccounts,
-} from '../../../features/home-dashboard-layout';
-import { APP_COLORS as colors } from '../../../features/auth-screen-theme';
+} from '../../../shared/presentation/dashboard-layout';
+import { APP_COLORS as colors } from '../../../shared/theme/app-colors';
 import { BalanceSummary } from '../../home/components/balance-summary';
 import {
   ACCOUNT_CURRENCY_FILTERS,
   type AccountsCurrencySelection,
 } from '../presentation/accounts-overview';
-import { styles } from '../accounts-overview-styles';
+import { styles } from '../styles/accounts-overview-styles';
 
 export function AccountsScreen() {
   const [accountCurrency, setAccountCurrency] = useState<AccountsCurrencySelection>(null);

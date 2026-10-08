@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { DashboardDto } from '@lukitas/contracts';
-import { styles } from '../../../features/home-dashboard-styles';
+import { styles } from '../styles/home-dashboard-styles';
 import {
   balanceSummary,
   defaultDisplayCurrency,

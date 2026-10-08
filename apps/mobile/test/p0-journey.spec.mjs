@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { activeDashboardAccounts, homeDashboardLayout } from "../src/features/home-dashboard-layout.ts";
-import { APP_COLORS } from "../src/features/auth-screen-theme.ts";
+import { activeDashboardAccounts, homeDashboardLayout } from "../src/shared/presentation/dashboard-layout.ts";
+import { APP_COLORS } from "../src/shared/theme/app-colors.ts";
 
 const root = join(import.meta.dirname, "..");
 const app = readFileSync(join(root, "src", "app", "_layout.tsx"), "utf8");
@@ -113,7 +113,7 @@ test("home prioritizes shortcuts and native balances without unsupported referen
   const flowPosition = screens.indexOf("dashboard.flow.income");
   const accountsPosition = screens.indexOf("Mis balances");
   assert.ok(shortcutPosition > 0 && shortcutPosition < flowPosition && flowPosition < accountsPosition);
-  const homeStyles = readFileSync(join(root, "src", "features", "home-dashboard-styles.ts"), "utf8");
+  const homeStyles = readFileSync(join(root, "src", "modules", "home", "styles", "home-dashboard-styles.ts"), "utf8");
   assert.match(screens, /<ScrollView\s+horizontal[\s\S]*?accountBalances/);
   assert.match(screens, /href="\/crear-cuenta" asChild/);
   assert.match(screens, /accessibilityLabel="Agregar cuenta"/);

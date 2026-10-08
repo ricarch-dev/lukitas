@@ -2,8 +2,8 @@ import type { FinancialReportDto } from '@lukitas/contracts';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSession } from '../session/SessionContext';
-import { APP_COLORS as colors } from './auth-screen-theme';
-import { reportDisclosure } from './financial-disclosure';
+import { APP_COLORS as colors } from '../shared/theme/app-colors';
+import { reportDisclosure } from '../shared/presentation/financial-disclosure';
 
 export function ReportsScreen() {
   const { client } = useSession();

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { APP_COLORS as colors } from './auth-screen-theme';
+import { APP_COLORS as colors } from '../../../shared/theme/app-colors';
 
 export const styles = StyleSheet.create({
   dashboardRoot: { flex: 1, backgroundColor: colors.canvas },
@@ -89,7 +89,14 @@ export const styles = StyleSheet.create({
   section: { gap: 10 },
   sectionTitle: { color: colors.ink, fontSize: 19, fontWeight: '700' },
   shortcutRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', gap: 6 },
-  shortcut: { alignItems: 'center', flex: 1, gap: 6, minHeight: 74, minWidth: 72, paddingVertical: 4 },
+  shortcut: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 6,
+    minHeight: 74,
+    minWidth: 72,
+    paddingVertical: 4,
+  },
   shortcutPressed: { opacity: 0.72 },
   shortcutIcon: {
     alignItems: 'center',

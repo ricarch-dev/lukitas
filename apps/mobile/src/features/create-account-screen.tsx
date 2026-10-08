@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useSession } from '../session/SessionContext';
 import { AccountInputError, submitAccount } from './create-account-submit';
-import { APP_COLORS as colors } from './auth-screen-theme';
+import { APP_COLORS as colors } from '../shared/theme/app-colors';
 
 const currencies: readonly SupportedMonetaryUnitCode[] = ['VES', 'USD', 'USDT', 'EUR', 'GBP'];
 

@@ -13,7 +13,7 @@ test('account currency filters are all, VES and USD only', () => {
 
 test('accounts overview uses the filtered dashboard and preserves quote disclosures', () => {
   const screen = source('modules/accounts/screens/accounts-screen.tsx');
-  const hook = source('features/use-dashboard.ts');
+  const hook = source('shared/hooks/use-dashboard.ts');
   const summary = source('modules/home/components/balance-summary.tsx');
   const presentation = source('modules/home/presentation/balance-summary.ts');
   assert.match(screen, /useDashboard\(accountCurrency \?\? undefined\)/);
@@ -43,7 +43,7 @@ test('overview exposes accessible filters, account creation, and all request sta
 
 test('Inicio fits four shortcuts without forcing horizontal overflow', () => {
   const screen = source('features/screens.tsx');
-  const styles = source('features/home-dashboard-styles.ts');
+  const styles = source('modules/home/styles/home-dashboard-styles.ts');
   assert.match(screen, /label: 'Cuentas'/);
   assert.match(screen, /href: '\/cuentas'/);
   assert.match(styles, /shortcutRow: \{[^}]*flexWrap: 'wrap'/);

@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSession } from '../session/SessionContext';
-import { AUTH_COLORS as colors } from './auth-screen-theme';
+import { AUTH_COLORS as colors } from '../shared/theme/app-colors';
 import { OnboardingInputError, submitOnboarding } from './onboarding-submit';
 
 export function OnboardingScreen({ onComplete }: { readonly onComplete: () => void }) {

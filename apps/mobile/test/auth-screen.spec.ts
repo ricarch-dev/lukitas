@@ -8,7 +8,7 @@ import {
   getOtherAuthMode,
   type AuthMode,
 } from '../src/features/auth-screen-logic.ts';
-import { AUTH_COLORS } from '../src/features/auth-screen-theme.ts';
+import { AUTH_COLORS } from '../src/shared/theme/app-colors.ts';
 
 const screenSource = readFileSync(new URL('../src/features/auth-screen.tsx', import.meta.url), 'utf8');
 

@@ -64,9 +64,10 @@ The mobile app still has a flat `apps/mobile/src/features` area while `modules/h
   - Route: delegated direct writer.
   - Outcome: exported the dashboard contract surface, replaced deep source imports, and declared `@lukitas/contracts` as an API workspace dependency.
   - Checks: `pnpm --dir packages/contracts typecheck` passed; `pnpm --dir apps/api typecheck` passed; `git diff --check` passed; final source diff contains only the intended import changes.
-- [ ] ORG-02 — Consolidate mobile shared ownership and complete Home/Accounts module migration.
+- [x] ORG-02 — Consolidate mobile shared ownership and complete Home/Accounts module migration.
   - Route: delegated direct writer.
-  - Checks: `pnpm --dir apps/mobile typecheck`; focused mobile tests; `pnpm --dir apps/mobile test`.
+  - Outcome: moved shared theme, dashboard data/presentation, Home styles, and Accounts styles out of the flat feature area; updated production consumers and path-sensitive fixtures while preserving existing Cuentas/Inicio behavior changes.
+  - Checks: writer observed `pnpm --dir apps/mobile typecheck` passed, `pnpm --dir apps/mobile test` passed with 46/46, `pnpm --dir apps/mobile smoke` passed, stale-path scan passed, and mobile `git diff --check` passed. Parent spot-check: direct `tsc --noEmit -p apps/mobile/tsconfig.json` passed and confirmed no stale legacy path references. A parent rerun of the pnpm wrapper was interrupted by the environment with `^C`, so that wrapper rerun is recorded as interrupted rather than passed.
 - [ ] ORG-03 — Migrate Auth and Onboarding from the flat features area.
   - Route: delegated direct writer.
   - Checks: mobile typecheck and auth/onboarding tests.
@@ -85,10 +86,11 @@ The mobile app still has a flat `apps/mobile/src/features` area while `modules/h
 
 ## Progress
 
-- Status: ORG-01 complete; ORG-02 next.
+- Status: ORG-01 and ORG-02 complete; ORG-03 next.
 - Current route: delegated direct, one writer at a time.
 - Forecast: large refactor; keep work grouped by behavior-preserving boundary rather than by file type.
 - Baseline preserved: pre-existing mobile edits remain in `apps/mobile/src/modules/accounts/screens/accounts-screen.tsx`, `apps/mobile/src/modules/home/components/balance-summary.tsx`, `apps/mobile/src/modules/home/presentation/balance-summary.ts`, and related mobile tests.
+- Environment note: the parent `pnpm --dir apps/mobile typecheck` rerun was interrupted with `^C`; direct TypeScript compilation passed, and the delegated writer observed the pnpm wrapper passing before handoff.
 - Commit evidence: pending; no commit authorization was provided.
 
 ## Verification evidence
@@ -97,4 +99,4 @@ To be filled after each task with exact command and observed result. Failed, una
 
 ## Next step
 
-Complete ORG-01, then migrate the mobile modules before splitting the API implementation facades.
+Complete ORG-03 and ORG-04 to remove the remaining mobile capability implementation from `features/`, then split the API implementation facades.
