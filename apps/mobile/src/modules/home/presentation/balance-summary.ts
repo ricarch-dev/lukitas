@@ -23,35 +23,43 @@ function quoteEvidence(valuation: DashboardValuation, period: string, target: Da
   );
 }
 
-export function balanceSummary(dashboard: DashboardDto, currency: DashboardDisplayCurrency) {
+export function balanceSummary(
+  dashboard: DashboardDto,
+  currency: DashboardDisplayCurrency,
+  showMonthlyComparison: boolean = true,
+) {
   const { comparison } = dashboard;
   const selected = comparison.valuations[currency];
   const ves = comparison.valuations.VES.current;
+  const hasCompleteMonthlyComparison = showMonthlyComparison &&
+    !selected.current.partial && !selected.previous.partial;
   const warnings: string[] = [];
   const evidence = [
     ...quoteEvidence(selected.current, 'Actual', currency),
-    ...quoteEvidence(selected.previous, 'Mes anterior', currency),
+    ...(showMonthlyComparison ? quoteEvidence(selected.previous, 'Mes anterior', currency) : []),
     ...(currency !== 'VES' ? quoteEvidence(ves, 'Equivalente en bolívares', 'VES') : []),
   ];
 
   if (selected.current.partial) {
     warnings.push(`Saldo actual parcial: faltan cotizaciones para ${selected.current.missingCurrencies.join(', ')}.`);
   }
-  if (selected.previous.partial) {
+  if (showMonthlyComparison && selected.previous.partial) {
     warnings.push(`Comparación con el mes anterior no disponible: faltan cotizaciones para ${selected.previous.missingCurrencies.join(', ')}.`);
   }
   if (currency !== 'VES' && ves.partial) {
     warnings.push(`Equivalente en bolívares no disponible: faltan cotizaciones para ${ves.missingCurrencies.join(', ')} (subtotal parcial: ${ves.amount} VES).`);
   }
-  if (!selected.current.partial && !selected.previous.partial && selected.percentChange === null) {
+  if (hasCompleteMonthlyComparison && selected.percentChange === null) {
     warnings.push('No se puede calcular el cambio porcentual porque el saldo anterior es cero.');
   }
 
   return {
     amount: selected.current.amount,
     equivalent: currency === 'VES' || ves.partial ? null : ves.amount,
-    percentChange: selected.current.partial || selected.previous.partial ? null : selected.percentChange,
-    openingNote: 'Los saldos iniciales se ubican en la fecha de creación de cada cuenta como aproximación.',
+    percentChange: hasCompleteMonthlyComparison ? selected.percentChange : null,
+    openingNote: showMonthlyComparison
+      ? 'Los saldos iniciales se ubican en la fecha de creación de cada cuenta como aproximación.'
+      : null,
     warnings,
     evidence,
   };

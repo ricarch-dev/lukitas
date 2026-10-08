@@ -14,6 +14,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@lukitas/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@lukitas/domain':
         specifier: workspace:*
         version: link:../../packages/domain

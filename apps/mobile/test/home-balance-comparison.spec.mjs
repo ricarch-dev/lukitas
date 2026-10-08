@@ -62,8 +62,44 @@ test('prior gaps, zero prior and unavailable VES equivalent remain explicit', ()
   assert.equal(loss.percentChange, '-50.00');
 });
 
+test('Cuentas can hide monthly comparison while retaining current balance and FX evidence', () => {
+  const currentQuotes = [{ baseCurrency: 'EUR', source: 'MANUAL', effectiveAt: '2026-10-06T12:00:00Z' }];
+  const previousQuotes = [{ baseCurrency: 'GBP', source: 'MARKET', effectiveAt: '2026-09-30T12:00:00Z' }];
+  const complete = balanceSummary(
+    dashboard(valuation('10.00', false, [], currentQuotes), valuation('8.00', false, [], previousQuotes), '25.00'),
+    'USD',
+    false,
+  );
+  assert.equal(complete.percentChange, null);
+  assert.equal(complete.openingNote, null);
+  assert.match(complete.evidence.join(' '), /Actual: EUR a USD/);
+  assert.doesNotMatch(complete.evidence.join(' '), /Mes anterior: GBP/);
+
+  const partial = balanceSummary(
+    dashboard(
+      valuation('12.00', true, ['CAD'], currentQuotes),
+      valuation('8.00', true, ['GBP'], previousQuotes),
+      '25.00',
+      valuation('400.00', true, ['USD'], [
+        { baseCurrency: 'USD', source: 'MARKET', effectiveAt: '2026-10-06T12:00:00Z' },
+      ]),
+    ),
+    'USD',
+    false,
+  );
+  assert.match(partial.warnings.join(' '), /Saldo actual parcial.*CAD/);
+  assert.match(partial.warnings.join(' '), /Equivalente en bolívares.*USD/);
+  assert.doesNotMatch(partial.warnings.join(' '), /mes anterior|saldo anterior es cero/i);
+  assert.match(partial.evidence.join(' '), /Actual: EUR a USD/);
+  assert.match(partial.evidence.join(' '), /Equivalente en bolívares: USD a VES/);
+  assert.doesNotMatch(partial.evidence.join(' '), /Mes anterior: GBP/);
+
+  const zeroPrior = balanceSummary(dashboard(valuation('10.00'), valuation('0.00'), null), 'USD', false);
+  assert.doesNotMatch(zeroPrior.warnings.join(' '), /saldo anterior es cero/i);
+});
+
 test('home keeps existing data and navigation while selection is accessible', () => {
-  assert.match(screen(), /<BalanceSummary dashboard={dashboard}/);
+  assert.match(screen(), /<BalanceSummary dashboard={dashboard} \/>/);
   assert.match(component(), /accessibilityRole="radiogroup"/);
   assert.match(component(), /accessibilityRole="radio"/);
   assert.match(component(), /accessibilityState=\{\{ selected:/);

@@ -9,13 +9,21 @@ import {
   type DashboardDisplayCurrency,
 } from '../presentation/balance-summary';
 
-export function BalanceSummary({ dashboard }: { dashboard: DashboardDto }) {
+type BalanceSummaryProps = {
+  dashboard: DashboardDto;
+  showMonthlyComparison?: boolean;
+};
+
+export function BalanceSummary({
+  dashboard,
+  showMonthlyComparison = true,
+}: BalanceSummaryProps) {
   // Local display preference only; never changes dashboard base currency or account data.
   const [choice, setChoice] = useState<DashboardDisplayCurrency>(() =>
     defaultDisplayCurrency(dashboard.baseCurrency),
   );
   const currency = choice;
-  const summary = balanceSummary(dashboard, currency);
+  const summary = balanceSummary(dashboard, currency, showMonthlyComparison);
 
   return (
     <View style={styles.summary}>
@@ -41,11 +49,15 @@ export function BalanceSummary({ dashboard }: { dashboard: DashboardDto }) {
           Equivalente en bolívares: {summary.equivalent} VES
         </Text>
       ) : null}
-      <Text selectable style={styles.summaryNote}>
-        Corte del mes anterior: {dashboard.comparison.previousCutoff} vs Valor actual:{' '}
-        {dashboard.comparison.currentCutoff}
-      </Text>
-      <Text selectable style={styles.summaryNote}>{summary.openingNote}</Text>
+      {showMonthlyComparison ? (
+        <Text selectable style={styles.summaryNote}>
+          Corte del mes anterior: {dashboard.comparison.previousCutoff} vs Valor actual:{' '}
+          {dashboard.comparison.currentCutoff}
+        </Text>
+      ) : null}
+      {summary.openingNote !== null ? (
+        <Text selectable style={styles.summaryNote}>{summary.openingNote}</Text>
+      ) : null}
       {summary.evidence.length > 0 ? (
         <Text selectable style={styles.summaryNote}>
           {summary.evidence.join(' ')} Cotizaciones almacenadas; no son tasas en tiempo real.

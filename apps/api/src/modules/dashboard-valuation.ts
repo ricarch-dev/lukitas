@@ -4,7 +4,7 @@ import type {
   DashboardComparison,
   DashboardDisplayCurrency,
   DashboardValuation,
-} from '../../../../packages/contracts/src/dashboard.ts';
+} from '@lukitas/contracts';
 import type { SupportedMonetaryUnitCode } from '@lukitas/domain';
 import type { PrismaService } from '../common/prisma.js';
 import { addDecimal, asString, fixedAmount, monetaryUnit, multiplyDecimal } from './p0-finance.js';

@@ -18,8 +18,10 @@ test('accounts overview uses the filtered dashboard and preserves quote disclosu
   const presentation = source('modules/home/presentation/balance-summary.ts');
   assert.match(screen, /useDashboard\(accountCurrency \?\? undefined\)/);
   assert.match(hook, /accountCurrency=\$\{accountCurrency\}/);
-  assert.match(screen, /<BalanceSummary dashboard=\{dashboard\}/);
+  assert.match(screen, /<BalanceSummary dashboard=\{dashboard\} showMonthlyComparison=\{false\} \/>/);
+  assert.match(summary, /\{showMonthlyComparison \? \([\s\S]*Corte del mes anterior:[\s\S]*\) : null\}/);
   assert.match(summary, /summary\.openingNote/);
+  assert.match(summary, /summary\.openingNote !== null/);
   assert.match(presentation, /fecha de creación de cada cuenta como aproximación/i);
   assert.match(screen, /dashboard\.totals\.warnings/);
   assert.doesNotMatch(screen, /disclosure\.flow|dashboard\.flow\.warnings/);

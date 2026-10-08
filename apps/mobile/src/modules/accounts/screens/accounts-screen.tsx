@@ -83,7 +83,7 @@ export function AccountsScreen() {
           </View>
         ) : (
           <>
-            <BalanceSummary dashboard={dashboard} />
+            <BalanceSummary dashboard={dashboard} showMonthlyComparison={false} />
             {disclosure?.balance || dashboard.totals.warnings.length ? (
               <View style={styles.warnings}>
                 {disclosure?.balance ? (

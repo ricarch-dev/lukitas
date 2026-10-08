@@ -15,7 +15,7 @@ import { IdempotencyService } from '../common/idempotency.js';
 import { AppError, notFound, validation } from '../common/errors.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 import { record, requiredString } from '../common/request-input.js';
-import type { DashboardAccountCurrencyFilter } from '../../../../packages/contracts/src/dashboard.ts';
+import type { DashboardAccountCurrencyFilter } from '@lukitas/contracts';
 import { dashboardPeriod } from './dashboard-timezone.js';
 import { dashboardComparison } from './dashboard-valuation.js';
 import { accountDto } from './accounts.js';
