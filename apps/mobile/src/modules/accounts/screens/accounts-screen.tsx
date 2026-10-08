@@ -153,7 +153,6 @@ export function AccountsScreen() {
           style={{ ...styles.addLink, bottom: Math.max(insets.bottom, 16) }}
         >
           <Plus size={18} color={colors.surface} />
-          <Text style={styles.addLinkText}>Agregar cuenta</Text>
         </Pressable>
       </Link>
     </View>
