@@ -8,7 +8,10 @@ const root = join(import.meta.dirname, '..');
 const source = (relative) => readFileSync(join(root, 'src', relative), 'utf8');
 
 test('account currency filters are all, VES and USD only', () => {
-  assert.deepEqual(ACCOUNT_CURRENCY_FILTERS.map(({ value }) => value), [null, 'VES', 'USD']);
+  assert.deepEqual(
+    ACCOUNT_CURRENCY_FILTERS.map(({ value }) => value),
+    [null, 'VES', 'USD'],
+  );
 });
 
 test('accounts overview uses the filtered dashboard and preserves quote disclosures', () => {
@@ -18,8 +21,14 @@ test('accounts overview uses the filtered dashboard and preserves quote disclosu
   const presentation = source('modules/home/presentation/balance-summary.ts');
   assert.match(screen, /useDashboard\(accountCurrency \?\? undefined\)/);
   assert.match(hook, /accountCurrency=\$\{accountCurrency\}/);
-  assert.match(screen, /<BalanceSummary dashboard=\{dashboard\} showMonthlyComparison=\{false\} \/>/);
-  assert.match(summary, /\{showMonthlyComparison \? \([\s\S]*Corte del mes anterior:[\s\S]*\) : null\}/);
+  assert.match(
+    screen,
+    /<BalanceSummary dashboard=\{dashboard\} showMonthlyComparison=\{false\} \/>/,
+  );
+  assert.match(
+    summary,
+    /\{showMonthlyComparison \? \([\s\S]*Corte del mes anterior:[\s\S]*\) : null\}/,
+  );
   assert.match(summary, /summary\.openingNote/);
   assert.match(summary, /summary\.openingNote !== null/);
   assert.match(presentation, /fecha de creación de cada cuenta como aproximación/i);
@@ -42,7 +51,7 @@ test('overview exposes accessible filters, account creation, and all request sta
 });
 
 test('Inicio fits four shortcuts without forcing horizontal overflow', () => {
-  const screen = source('features/screens.tsx');
+  const screen = source('modules/home/screens/dashboard-screen.tsx');
   const styles = source('modules/home/styles/home-dashboard-styles.ts');
   assert.match(screen, /label: 'Cuentas'/);
   assert.match(screen, /href: '\/cuentas'/);

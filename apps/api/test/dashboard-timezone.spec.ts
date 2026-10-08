@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dashboardPeriod, startOfMonthInTimezone, previousBalanceCutoff } from '../src/modules/dashboard-timezone.ts';
+import {
+  dashboardPeriod,
+  startOfMonthInTimezone,
+  previousBalanceCutoff,
+} from '../src/modules/dashboard/dashboard-timezone.ts';
 
 test('dashboard uses the preference timezone for the start of the current month', () => {
   const clock = new Date('2026-09-01T03:30:00.000Z');
@@ -19,8 +23,12 @@ test('dashboard uses the preference timezone for the start of the current month'
 });
 
 test('previous balance cutoff is the local month boundary even across DST and year changes', () => {
-  assert.equal(previousBalanceCutoff(new Date('2026-11-20T10:00:00Z'), 'America/New_York').toISOString(),
-    '2026-11-01T04:00:00.000Z');
-  assert.equal(previousBalanceCutoff(new Date('2026-01-01T01:00:00Z'), 'Asia/Tokyo').toISOString(),
-    '2025-12-31T15:00:00.000Z');
+  assert.equal(
+    previousBalanceCutoff(new Date('2026-11-20T10:00:00Z'), 'America/New_York').toISOString(),
+    '2026-11-01T04:00:00.000Z',
+  );
+  assert.equal(
+    previousBalanceCutoff(new Date('2026-01-01T01:00:00Z'), 'Asia/Tokyo').toISOString(),
+    '2025-12-31T15:00:00.000Z',
+  );
 });

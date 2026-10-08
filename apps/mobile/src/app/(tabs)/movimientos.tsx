@@ -1,3 +1,3 @@
-import { MovementsScreen } from '../../features/movements-screen';
+import { MovementsScreen } from '../../modules/movements/screens/movements-screen';
 
 export default MovementsScreen;

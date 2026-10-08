@@ -1,3 +1,3 @@
-import { PlanningScreen } from '../../features/planning-screens';
+import { PlanningScreen } from '../../modules/planning/screens/planning-screen';
 
 export default PlanningScreen;

@@ -1,4 +1,4 @@
-import { ReportsScreen } from '../features/reports-screens';
+import { ReportsScreen } from '../modules/reports/screens/reports-screen';
 import { RootNavigator } from '../navigation/RootNavigator';
 
 export default function ReportRoute() {

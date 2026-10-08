@@ -4,7 +4,8 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useSession } from '../session/SessionContext';
 import { clearSessionForLogin } from './session-recovery';
-import { AuthScreen, OnboardingScreen } from '../features/screens';
+import { AuthScreen } from '../modules/auth/screens/auth-screen';
+import { OnboardingScreen } from '../modules/onboarding/screens/onboarding-screen';
 
 export function RootNavigator({ children }: { readonly children?: React.ReactNode }) {
   const { ready, tokens, client, setTokens } = useSession();

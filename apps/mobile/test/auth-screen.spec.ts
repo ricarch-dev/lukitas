@@ -7,10 +7,13 @@ import {
   getAuthErrorMessage,
   getOtherAuthMode,
   type AuthMode,
-} from '../src/features/auth-screen-logic.ts';
+} from '../src/modules/auth/presentation/auth-screen-logic.ts';
 import { AUTH_COLORS } from '../src/shared/theme/app-colors.ts';
 
-const screenSource = readFileSync(new URL('../src/features/auth-screen.tsx', import.meta.url), 'utf8');
+const screenSource = readFileSync(
+  new URL('../src/modules/auth/screens/auth-screen.tsx', import.meta.url),
+  'utf8',
+);
 
 function relativeLuminance(hex: string): number {
   const channels = [0, 1, 2].map((index) => {
@@ -23,8 +26,10 @@ function relativeLuminance(hex: string): number {
 function contrastRatio(first: string, second: string): number {
   const firstLuminance = relativeLuminance(first);
   const secondLuminance = relativeLuminance(second);
-  return (Math.max(firstLuminance, secondLuminance) + 0.05) /
-    (Math.min(firstLuminance, secondLuminance) + 0.05);
+  return (
+    (Math.max(firstLuminance, secondLuminance) + 0.05) /
+    (Math.min(firstLuminance, secondLuminance) + 0.05)
+  );
 }
 
 test('auth mode selection maps to the existing login and registration actions', () => {
@@ -39,14 +44,26 @@ test('auth mode selection maps to the existing login and registration actions', 
 
 test('auth errors use actionable Spanish copy for local validation', () => {
   const mode: AuthMode = 'create-account';
-  assert.equal(getAuthErrorMessage(new Error('A valid email is required'), mode), 'Ingresa un correo electrónico válido.');
-  assert.equal(getAuthErrorMessage(new Error('Password must contain at least 8 characters'), mode), 'La contraseña debe tener al menos 8 caracteres.');
-  assert.equal(getAuthErrorMessage(new Error('Password is required'), mode), 'Ingresa tu contraseña.');
+  assert.equal(
+    getAuthErrorMessage(new Error('A valid email is required'), mode),
+    'Ingresa un correo electrónico válido.',
+  );
+  assert.equal(
+    getAuthErrorMessage(new Error('Password must contain at least 8 characters'), mode),
+    'La contraseña debe tener al menos 8 caracteres.',
+  );
+  assert.equal(
+    getAuthErrorMessage(new Error('Password is required'), mode),
+    'Ingresa tu contraseña.',
+  );
 });
 
 test('auth errors explain duplicate accounts, rejected credentials, and connectivity', () => {
   assert.match(
-    getAuthErrorMessage(new ApiError('CONFLICT', 'Unable to create account', 409), 'create-account'),
+    getAuthErrorMessage(
+      new ApiError('CONFLICT', 'Unable to create account', 409),
+      'create-account',
+    ),
     /Ya existe una cuenta con este correo/,
   );
   assert.match(
@@ -81,7 +98,10 @@ test('auth palette maintains readable text and control contrast', () => {
 test('auth form keeps passwords hidden by default and exposes busy state accessibly', () => {
   assert.match(screenSource, /const \[passwordVisible, setPasswordVisible\] = useState\(false\)/);
   assert.match(screenSource, /secureTextEntry=\{!passwordVisible\}/);
-  assert.match(screenSource, /accessibilityState=\{\{ busy: isSubmitting, disabled: isSubmitting \}\}/);
+  assert.match(
+    screenSource,
+    /accessibilityState=\{\{ busy: isSubmitting, disabled: isSubmitting \}\}/,
+  );
   assert.match(screenSource, /onFocus=\{\(\) => setFocusedControl\('submit'\)\}/);
   assert.match(screenSource, /focusedControl === 'submit' \? styles\.controlFocused/);
   assert.match(screenSource, /accessibilityRole="alert"/);
