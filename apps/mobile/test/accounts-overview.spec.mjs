@@ -44,10 +44,30 @@ test('overview exposes accessible filters, account creation, and all request sta
   assert.match(screen, /accessibilityRole="radio"/);
   assert.match(screen, /accessibilityState=\{\{ selected \}\}/);
   assert.match(screen, /<Link href="\/crear-cuenta" asChild>/);
-  assert.match(screen, /style=\{styles\.addLink\}/);
+  assert.match(screen, /style=\{\{ \.\.\.styles\.addLink, bottom: Math\.max\(insets\.bottom, 16\) \}\}/);
+  assert.doesNotMatch(screen, /style=\{\[styles\.addLink,/);
   assert.match(screen, /accessibilityRole="alert"/);
   assert.match(screen, /isLoading \|\| !dashboard/);
   assert.match(screen, /No hay cuentas para este filtro/);
+});
+
+test('account creation floats above the safe area without obscuring the final account', () => {
+  const screen = source('modules/accounts/screens/accounts-screen.tsx');
+  const styles = source('modules/accounts/styles/accounts-overview-styles.ts');
+  const link = '<Link href="/crear-cuenta" asChild>';
+
+  assert.equal(screen.match(/<Link href="\/crear-cuenta" asChild>/g)?.length, 1);
+  assert.ok(screen.indexOf('</ScrollView>') < screen.indexOf(link));
+  assert.match(screen, /useSafeAreaInsets/);
+  assert.match(screen, /bottom: Math\.max\(insets\.bottom, 16\)/);
+  assert.match(screen, /style=\{\{ \.\.\.styles\.addLink, bottom: Math\.max\(insets\.bottom, 16\) \}\}/);
+  assert.match(screen, /accessibilityLabel="Agregar cuenta"/);
+  assert.match(screen, /Abre el formulario para registrar una cuenta manualmente\./);
+  assert.match(screen, /<Plus size=\{18\} color=\{colors\.surface\} \/>/);
+  assert.match(screen, /<Text style=\{styles\.addLinkText\}>Agregar cuenta<\/Text>/);
+  assert.match(styles, /addLink: \{[\s\S]*position: 'absolute'[\s\S]*right: 20/);
+  assert.match(styles, /paddingBottom: 128/);
+  assert.doesNotMatch(screen, /styles\.header/);
 });
 
 test('Inicio fits four shortcuts without forcing horizontal overflow', () => {
