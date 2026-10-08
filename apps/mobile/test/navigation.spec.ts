@@ -25,6 +25,16 @@ describe('native navigation routes', () => {
   });
 });
 
+describe('session API configuration', () => {
+  it('passes the Expo public API URL to ApiClient', () => {
+    const session = readFileSync(
+      fileURLToPath(new URL('../src/session/SessionContext.tsx', import.meta.url)),
+      'utf8',
+    );
+    assert.match(session, /new ApiClient\(\{\s*baseUrl:\s*process\.env\.EXPO_PUBLIC_API_URL\s*,/);
+  });
+});
+
 describe('web navigation routes', () => {
   it('registers the tab list directly under Tabs so Expo Router discovers its screens', () => {
     const tabs = source('(tabs)/_layout.web.tsx');
