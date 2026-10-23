@@ -15,6 +15,7 @@ mitm_mcp_traffic.db
 .kiro
 .claude
 .agents
+.env
 # Versioned project-local Codex skills
 !.agents/
 .agents/*

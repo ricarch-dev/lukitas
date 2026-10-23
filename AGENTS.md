@@ -59,6 +59,21 @@ Load the exact project skill that matches the change before implementation:
 - `refactorable-source` — `.agents/skills/refactorable-source/SKILL.md`
 - `technology-documentation` — `.agents/skills/technology-documentation/SKILL.md`
 
+## Mobile application organization
+
+- In `apps/mobile/src`, organize application code by product capability under `modules/` (for example, `home`, `auth`, `onboarding`, `accounts`, `movements`, `planning`, `reports`, and `settings`). Prefer this over a flat, catch-all `features/` directory.
+- Keep Expo Router route declarations and layouts in `app/`, and navigation orchestration in `navigation/`. These layers should compose screens from their owning modules rather than accumulate feature implementation details.
+- Inside a module, create only the directories its code needs:
+  - `screens/` for route-level screen components.
+  - `components/` for UI components owned by that module.
+  - `hooks/` for custom React hooks; follow the Rules of Hooks and use the `use` prefix.
+  - `actions/` for form submissions and other user-triggered workflows that validate input or perform side effects such as API calls and persistence. Do not classify these as generic utilities.
+  - `presentation/` for feature-specific, side-effect-free selectors, layout calculations, formatting, and other values derived for display.
+  - Keep styles and theme values near their owning module; create a `styles/` directory only when it improves clarity.
+- Put code in `shared/` only when at least two real modules consume the same behavior or UI and its semantics are genuinely shared. Keep single-module code with its owner; do not create a catch-all `utils/` directory.
+- Use descriptive kebab-case file names. A screen remains a React component technically, but organize it by its screen role; extract a separate component when it has a clear reusable responsibility.
+- Do not create empty or boilerplate subdirectories. Migrate the existing flat `features/` code incrementally as related work is done; do not mass-move files solely to rename the directory. Preserve behavior and update imports and focused tests with each bounded move.
+
 ## Definition of done
 
 A change is not ready when it merely works. It is ready only when it is strongly typed, normalized around canonical sources, split into understandable reusable units, verified against current official technology documentation, and covered by the relevant checks.

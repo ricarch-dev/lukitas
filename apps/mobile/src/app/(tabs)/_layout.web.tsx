@@ -1,7 +1,7 @@
 import type { TabTriggerSlotProps } from 'expo-router/ui';
 import { Tabs, TabList, TabSlot, TabTrigger } from 'expo-router/ui';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { APP_COLORS } from '../../features/auth-screen-theme';
+import { APP_COLORS } from '../../shared/theme/app-colors';
 import { RootNavigator } from '../../navigation/RootNavigator';
 
 function WebTab({ children, isFocused, style: _style, ...props }: TabTriggerSlotProps) {

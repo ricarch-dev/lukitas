@@ -1,5 +1,5 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { APP_COLORS } from '../../features/auth-screen-theme';
+import { APP_COLORS } from '../../shared/theme/app-colors';
 import { RootNavigator } from '../../navigation/RootNavigator';
 
 export default function TabsLayout() {

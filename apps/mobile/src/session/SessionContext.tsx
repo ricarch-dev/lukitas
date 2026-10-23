@@ -22,7 +22,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setReady(true);
     });
   }, []);
-  const client = useMemo(() => new ApiClient({ getTokens: () => tokens, setTokens }), [tokens]);
+  const client = useMemo(
+    () =>
+      new ApiClient({
+        baseUrl: process.env.EXPO_PUBLIC_API_URL,
+        getTokens: () => tokens,
+        setTokens,
+      }),
+    [tokens],
+  );
   return (
     <Context.Provider value={{ tokens, ready, client, setTokens }}>{children}</Context.Provider>
   );
