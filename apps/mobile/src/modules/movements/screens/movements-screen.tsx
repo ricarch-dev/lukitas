@@ -1,5 +1,5 @@
 import type { AccountDto, TransactionDto } from '@lukitas/contracts';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   ArrowDown,
@@ -30,15 +30,10 @@ import {
   movementsCsv,
 } from '../presentation/movements';
 import { saveMovementsCsv } from '../actions/download-movements';
+import { loadMovementsData, type MovementCategory, type MovementReport } from '../actions/load-movements';
 import { styles } from './movements-styles';
 
-type Report = {
-  readonly items: TransactionDto[];
-  readonly baseCurrency: string;
-  readonly timezone: string;
-};
 type SearchPage = { readonly items: TransactionDto[]; readonly hasMore: boolean };
-type Category = { readonly id: string; readonly name: string };
 type FormMode = 'INCOME' | 'EXPENSE' | 'TRANSFER' | null;
 const monthNow = () => {
   const date = new Date();
@@ -54,14 +49,18 @@ const searchPath = (search: string, kind?: string, categoryId?: string, skip = 0
 export function MovementsScreen() {
   const { client } = useSession();
   const [month, setMonth] = useState(monthNow);
-  const [report, setReport] = useState<Report | null>(null);
+  const [report, setReport] = useState<MovementReport | null>(null);
   const [loadedMonth, setLoadedMonth] = useState('');
   const [accounts, setAccounts] = useState<AccountDto[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<MovementCategory[]>([]);
+  const [categoriesUnavailable, setCategoriesUnavailable] = useState(false);
   const [search, setSearch] = useState('');
   const [scope, setScope] = useState<'month' | 'all'>('month');
   const [searchPage, setSearchPage] = useState<SearchPage | null>(null);
   const [searchBusy, setSearchBusy] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const searchGeneration = useRef(0);
+  const pageLock = useRef(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [kind, setKind] = useState<'INCOME' | 'EXPENSE' | undefined>();
   const [categoryId, setCategoryId] = useState<string | undefined>();
@@ -77,17 +76,14 @@ export function MovementsScreen() {
       let active = true;
       setLoading(true);
       setError('');
-      Promise.all([
-        client.get<Report>(`/reports?month=${encodeURIComponent(month)}`),
-        client.get<AccountDto[]>('/accounts'),
-        client.categories(),
-      ])
-        .then(([nextReport, nextAccounts, nextCategories]) => {
+      loadMovementsData(client, month)
+        .then(({ report: nextReport, accounts: nextAccounts, categories: nextCategories, categoriesUnavailable: missing }) => {
           if (!active) return;
           setReport(nextReport);
           setLoadedMonth(month);
           setAccounts(nextAccounts);
           setCategories(nextCategories);
+          setCategoriesUnavailable(missing);
         })
         .catch(() => {
           if (active) {
@@ -107,24 +103,27 @@ export function MovementsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      const generation = ++searchGeneration.current;
       if (scope !== 'all') {
         setSearchPage(null);
+        setSearchError('');
         return;
       }
       let active = true;
       setSearchPage(null);
+      setSearchError('');
       setSearchBusy(true);
       const timer = setTimeout(() => {
         client
           .get<SearchPage>(searchPath(search, kind, categoryId))
           .then((page) => {
-            if (active) setSearchPage(page);
+            if (active && generation === searchGeneration.current) setSearchPage(page);
           })
           .catch(() => {
-            if (active) setError('No pudimos buscar movimientos. Intenta de nuevo.');
+            if (active && generation === searchGeneration.current) setSearchError('No pudimos buscar movimientos. Intenta de nuevo.');
           })
           .finally(() => {
-            if (active) setSearchBusy(false);
+            if (active && generation === searchGeneration.current) setSearchBusy(false);
           });
       }, 250);
       return () => {
@@ -182,17 +181,22 @@ export function MovementsScreen() {
   }
 
   async function loadMore() {
-    if (!searchPage?.hasMore || searchBusy) return;
+    if (!searchPage?.hasMore || searchBusy || pageLock.current) return;
+    const generation = searchGeneration.current;
+    pageLock.current = true;
     setSearchBusy(true);
     try {
       const next = await client.get<SearchPage>(
         searchPath(search, kind, categoryId, searchPage.items.length),
       );
-      setSearchPage({ items: [...searchPage.items, ...next.items], hasMore: next.hasMore });
+      if (generation === searchGeneration.current)
+        setSearchPage({ items: [...searchPage.items, ...next.items], hasMore: next.hasMore });
     } catch {
-      setError('No pudimos cargar más movimientos. Intenta de nuevo.');
+      if (generation === searchGeneration.current)
+        setSearchError('No pudimos cargar más movimientos. Intenta de nuevo.');
     } finally {
-      setSearchBusy(false);
+      pageLock.current = false;
+      if (generation === searchGeneration.current) setSearchBusy(false);
     }
   }
 
@@ -282,6 +286,7 @@ export function MovementsScreen() {
                 ))}
               </View>
               <Text style={styles.sectionTitle}>Categoría</Text>
+              {categoriesUnavailable ? <Text style={styles.muted}>Las categorías no están disponibles por ahora.</Text> : null}
               <View style={styles.pills}>
                 <Pressable
                   accessibilityRole="button"
@@ -402,6 +407,7 @@ export function MovementsScreen() {
               </Text>
             </Pressable>
           ) : null}
+          {scope === 'all' && searchError ? <Text accessibilityRole="alert" style={styles.error}>{searchError}</Text> : null}
           {loading || (scope === 'all' && searchBusy && !searchPage) ? (
             <View style={styles.empty}>
               <ActivityIndicator color={colors.primary} />
