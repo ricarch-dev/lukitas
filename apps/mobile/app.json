@@ -3,14 +3,7 @@
     "name": "lukitas-mobile",
     "slug": "lukitas-mobile",
     "scheme": "lukitas",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
-    "plugins": [
-      "expo-router",
-      "expo-secure-store"
-    ]
+    "platforms": ["ios", "android", "web"],
+    "plugins": ["expo-router", "expo-secure-store", "expo-sharing"]
   }
 }
