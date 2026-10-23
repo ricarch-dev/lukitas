@@ -1,0 +1,28 @@
+# Movements screen
+
+Objective: Implement the movements screen and working actions shown in the supplied seven reference images, without the guided tour.
+Branch: `feat/movements-screen`; delivery: feature-branch-chain (local slices only; no PR authorized); runner: pnpm / Node test; Engram mirror: `odd/movements-screen/tasks`.
+
+## Specs
+
+- S1: "neecsitamos modificar ahora la base de movimientos asi como estas vistas"; screen shows month navigation, income/expense summary, search, filters, create movement, transfer, monthly download, list/calendar history and empty state as in supplied images. Acceptance: controls operate on real account movements rather than dashboard's truncated recent activity; visual style follows existing Lukitas tokens, with references as layout guidance.
+- S2: "solo la pnatalla y las funciones"; exclude the guided tour and its overlay. Acceptance: opening the screen never launches a tutorial.
+- S3: Image copy: "Buscar movimiento...", "Ingresos", "Egresos", "Historial", "Sin movimientos", "Aquí verás todos tus ingresos y egresos registrados." Acceptance: actions, loading, filtering and errors have understandable Spanish feedback. Assumption: monthly download means a CSV compatible with Excel and Google Sheets, as explicitly explained in the reference images.
+
+## Tasks
+
+- T1 [S1,S3] inline — implemented, checked, commit pending — report-backed month history and user-scoped paginated global search, exact-currency flow and CSV model; route inline (no writer trigger). Risk: item 2, authenticated global search.
+- T2 [S1,S2,S3] inline — implemented, checked, commit pending — screen, list/calendar, filters, forms, browser download and native CSV file share; route inline (no writer trigger). Risk: item 5, native export dependency.
+- T3 [S1,S2,S3] inline — checking, commit pending — suites, independent security/dependency verifier, candidate assessment and review; route inline (no writer trigger).
+
+## Log
+
+- L1: neecsitamos modificar ahora la base de movimientos asi como estas vistas [Image 1] [Image 2] [Image 3] [Image 4] [Image 5] [Image 6] [Image 7] (seven attached images of the same movements screen, six with walkthrough overlays and one without).
+- L2 (2026-10-23): solo la pnatalla y las funciones
+- L3: Existing screen reads only 50 dashboard recent activity entries; reports endpoint returns all month items but omits notes and transfer identity. Existing API accepts transaction and transfer writes. Staged, unrelated BCV changes predate this feature and must remain untouched. Engram mirror pending because mem_current_project resolved a different cwd. Forecast ~550 authored lines; delivery strategy ask-on-risk, chain choice needed before exceeding ~400 authored lines.
+- L4: RED witnessed for missing report note/transferId, missing global search and missing mobile presentation module. Focused API and mobile presentation tests GREEN (5 each), both typechecks GREEN. Existing staged BCV files untouched. Offline pnpm installation of expo-sharing failed (ERR_PNPM_NO_OFFLINE_META); no online registry access authorized. Native export currently only shares CSV text, not a downloadable file: NOT COMPLETE. Await explicit authorization for registry package retrieval before finishing mobile file export. Suite, independent verification, candidate assessment, and work-unit commits remain pending.
+- L5 (2026-10-23): Si adelante
+- L6: Explicit anonymous HTTPS registry.npmjs.org authorization allowed `expo install expo-file-system expo-sharing` for SDK 57; packages 57.0.7 and 57.0.24 installed and lockfile/app.json updated. Native CSV now uses File cache and expo-sharing, deleting cache in finally; browser download uses Blob. Verifier identified three change-caused blockers, fixed in one batch: amount search, stale-month export and all-month calendar. Scoped recheck fixed structurally; isolated scratch pnpm runner could not start (`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`), while workspace focused tests pass (7 API, 7 mobile) and both typechecks pass. Post-fix suites: API 100/100, mobile 62/63 with unchanged baseline account-overview Text expectation; contracts passed. Post-refactor web smoke passed with Expo dotenv and inline env disabled; native device QA unavailable. Independent verifier temp scratch directories removed by parent. `prettier` repository-local executable absent; changed files cannot be formatted per newly added project skill without an additional install authorization. Other actor concurrently committed BCV changes as `8955222` on this branch, changing current HEAD/baseline; preserve them. Other actor also changed `.gitignore`, `AGENTS.md`, and added formatting skill; exclude these from this feature's commits. Forecast/running authored lines exceed ~400: ask-on-risk chain strategy choice required before first feature commit.
+- L7 (2026-10-23): continua
+- L8: Engram project resolution succeeded when called without Windows path argument (project `lukitas`). Refactored the movements screen under 500 handwritten lines by extracting styles, calendar, and header into their owning files, preserving UX; typecheck, 7 API and 7 mobile focused tests, contracts test, and post-refactor web smoke pass. Local Prettier binary is still unavailable; formatter check is blocked, and visual/native-device QA remains unavailable.
+- L9 (2026-10-23): User selected "Cadena de rama (recomendada)". Use feature-branch-chain; no PR, push or merge authorized. Plan one API-auth search work unit and one mobile UI/export work unit, report UI slice overage rather than shrink code or move tests/docs away from behavior; isolate concurrent BCV commit from any future PR. Formatter remains unavailable locally.
