@@ -9,7 +9,7 @@ import type { ApiClient } from '../../../api/client.ts';
 
 export class AccountInputError extends Error {}
 
-export async function submitAccount(
+export function prepareAccountInput(
   input: {
     name: string;
     balance: string;
@@ -17,9 +17,7 @@ export async function submitAccount(
     bankName?: string;
     bankGroupId?: string;
   },
-  post: ApiClient['post'],
-  idempotencyKey: string,
-): Promise<AccountDto> {
+): CreateAccountRequest {
   const name = input.name.trim();
   if (!name) throw new AccountInputError('Escribe un nombre para la cuenta.');
   const balance = input.balance.trim().replace(',', '.');
@@ -44,5 +42,13 @@ export async function submitAccount(
     ...(bankName ? { bankName } : {}),
     ...(input.bankGroupId ? { bankGroupId: input.bankGroupId } : {}),
   };
-  return post<AccountDto>('/accounts', request, idempotencyKey);
+  return request;
+}
+
+export async function submitAccount(
+  input: Parameters<typeof prepareAccountInput>[0],
+  post: ApiClient['post'],
+  idempotencyKey: string,
+): Promise<AccountDto> {
+  return post<AccountDto>('/accounts', prepareAccountInput(input), idempotencyKey);
 }

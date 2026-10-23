@@ -23,7 +23,7 @@ import {
   verifyPassword,
 } from '../../common/crypto.js';
 import { record } from '../../common/request-input.js';
-import { now } from '../finance/amounts.js';
+import { currencyData, now } from '../finance/amounts.js';
 
 const normalizeEmail = (email: unknown): string => {
   const normalized = normalizeAuthEmail(email);
@@ -75,8 +75,26 @@ export class AuthService {
       validation('Password must contain at least 8 characters');
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) throw new AppError('CONFLICT', 'Unable to create account', 409);
-    const user = await this.prisma.user.create({
-      data: { email, passwordHash: await hashPassword(password) },
+    const currency = currencyData('USD');
+    const passwordHash = await hashPassword(password);
+    const user = await this.prisma.$transaction(async (tx) => {
+      await tx.currency.upsert({
+        where: { code: currency.code },
+        create: currency,
+        update: currency,
+      });
+      return tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          accounts: {
+            create: { name: 'Efectivo', currencyCode: currency.code, openingBalance: '0' },
+          },
+          preferences: {
+            create: { baseCurrency: currency.code, timezone: 'UTC', onboardingComplete: true },
+          },
+        },
+      });
     });
     return this.issue(user);
   }
