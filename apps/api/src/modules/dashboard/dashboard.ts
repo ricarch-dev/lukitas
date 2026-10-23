@@ -4,7 +4,8 @@ import type { AuthenticatedRequest } from '../../common/types.js';
 import { PrismaService } from '../../common/prisma.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { validation } from '../../common/errors.js';
-import { dashboardPeriod } from './dashboard-timezone.js';
+import { dashboardPeriod, previousBalanceCutoff } from './dashboard-timezone.js';
+import { BcvRateSync } from '../finance/bcv-rate-sync.js';
 import { dashboardComparison } from './dashboard-valuation.js';
 import { accountDto } from '../accounts/account-mapper.js';
 import {
@@ -34,7 +35,8 @@ type FlowTransaction = {
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,
+    private readonly bcv: BcvRateSync) {}
 
   private async flowAmount(transaction: FlowTransaction, baseCurrency: string) {
     const sourceCode = monetaryUnit(transaction.currencyCode).code;
@@ -73,6 +75,7 @@ export class DashboardService {
     if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime()))
       validation('from and to must be valid ISO instants');
     if (to < from) validation('to must be after from');
+    await this.bcv?.refresh(clock, previousBalanceCutoff(clock, timezone));
     const accounts = await this.prisma.account.findMany({
       where: {
         userId,

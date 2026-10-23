@@ -120,3 +120,11 @@ test('current as-of quote accepts an exact cutoff timestamp without admitting a 
   assert.deepEqual(result.valuations.USD.current.quotes, [{ baseCurrency: 'USDT',
     effectiveAt: clock.toISOString(), source: 'MARKET' }]);
 });
+
+test('invalid dashboard dates are rejected before requesting or storing BCV quotes', async () => {
+  const harness = dashboardHarness();
+  let refreshes = 0;
+  harness.dashboard.bcv = { refresh: async () => { refreshes++; } };
+  await assert.rejects(() => harness.dashboard.get('owner', 'invalid-date', undefined, clock));
+  assert.equal(refreshes, 0);
+});
