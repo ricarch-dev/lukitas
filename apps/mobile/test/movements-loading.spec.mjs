@@ -6,10 +6,26 @@ test('a categories outage preserves the loaded monthly history and accounts', as
   const report = { items: [{ id: 'one' }], timezone: 'UTC', baseCurrency: 'USD' };
   const accounts = [{ id: 'cash' }];
   const client = {
-    get: async (path) => path.startsWith('/reports?') ? report : accounts,
-    categories: async () => { throw new Error('categories unavailable'); },
+    get: async (path) => (path.startsWith('/reports?') ? report : accounts),
+    categories: async () => {
+      throw new Error('categories unavailable');
+    },
   };
   assert.deepEqual(await loadMovementsData(client, '2026-10'), {
-    report, accounts, categories: [], categoriesUnavailable: true,
+    report,
+    accounts,
+    categories: [],
+    categoriesUnavailable: true,
   });
+});
+
+test('a failed monthly report cannot be presented as a successful load', async () => {
+  const client = {
+    get: async (path) => {
+      if (path.startsWith('/reports?')) throw new Error('report unavailable');
+      return [{ id: 'cash' }];
+    },
+    categories: async () => [],
+  };
+  await assert.rejects(loadMovementsData(client, '2026-10'), /report unavailable/);
 });

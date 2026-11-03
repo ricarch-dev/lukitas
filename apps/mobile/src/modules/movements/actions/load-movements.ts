@@ -1,7 +1,11 @@
 import type { AccountDto, TransactionDto } from '@lukitas/contracts';
 import type { ApiClient } from '../../../api/client';
 
-export type MovementReport = { readonly items: TransactionDto[]; readonly baseCurrency: string; readonly timezone: string };
+export type MovementReport = {
+  readonly items: TransactionDto[];
+  readonly baseCurrency: string;
+  readonly timezone: string;
+};
 export type MovementCategory = { readonly id: string; readonly name: string };
 
 export async function loadMovementsData(client: ApiClient, month: string) {

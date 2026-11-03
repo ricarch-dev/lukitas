@@ -30,10 +30,14 @@ import {
   movementsCsv,
 } from '../presentation/movements';
 import { saveMovementsCsv } from '../actions/download-movements';
-import { loadMovementsData, type MovementCategory, type MovementReport } from '../actions/load-movements';
+import {
+  loadMovementsData,
+  type MovementCategory,
+  type MovementReport,
+} from '../actions/load-movements';
 import { styles } from './movements-styles';
+import { appendSearchPage, type MovementSearchPage } from '../presentation/search-page';
 
-type SearchPage = { readonly items: TransactionDto[]; readonly hasMore: boolean };
 type FormMode = 'INCOME' | 'EXPENSE' | 'TRANSFER' | null;
 const monthNow = () => {
   const date = new Date();
@@ -56,7 +60,7 @@ export function MovementsScreen() {
   const [categoriesUnavailable, setCategoriesUnavailable] = useState(false);
   const [search, setSearch] = useState('');
   const [scope, setScope] = useState<'month' | 'all'>('month');
-  const [searchPage, setSearchPage] = useState<SearchPage | null>(null);
+  const [searchPage, setSearchPage] = useState<MovementSearchPage | null>(null);
   const [searchBusy, setSearchBusy] = useState(false);
   const [searchError, setSearchError] = useState('');
   const searchGeneration = useRef(0);
@@ -77,14 +81,22 @@ export function MovementsScreen() {
       setLoading(true);
       setError('');
       loadMovementsData(client, month)
-        .then(({ report: nextReport, accounts: nextAccounts, categories: nextCategories, categoriesUnavailable: missing }) => {
-          if (!active) return;
-          setReport(nextReport);
-          setLoadedMonth(month);
-          setAccounts(nextAccounts);
-          setCategories(nextCategories);
-          setCategoriesUnavailable(missing);
-        })
+        .then(
+          ({
+            report: nextReport,
+            accounts: nextAccounts,
+            categories: nextCategories,
+            categoriesUnavailable: missing,
+          }) => {
+            if (!active) return;
+            setReport(nextReport);
+            setLoadedMonth(month);
+            setAccounts(nextAccounts);
+            setCategories(nextCategories);
+            setCategoriesUnavailable(missing);
+            if (missing) setCategoryId(undefined);
+          },
+        )
         .catch(() => {
           if (active) {
             setReport(null);
@@ -115,12 +127,13 @@ export function MovementsScreen() {
       setSearchBusy(true);
       const timer = setTimeout(() => {
         client
-          .get<SearchPage>(searchPath(search, kind, categoryId))
+          .get<MovementSearchPage>(searchPath(search, kind, categoryId))
           .then((page) => {
             if (active && generation === searchGeneration.current) setSearchPage(page);
           })
           .catch(() => {
-            if (active && generation === searchGeneration.current) setSearchError('No pudimos buscar movimientos. Intenta de nuevo.');
+            if (active && generation === searchGeneration.current)
+              setSearchError('No pudimos buscar movimientos. Intenta de nuevo.');
           })
           .finally(() => {
             if (active && generation === searchGeneration.current) setSearchBusy(false);
@@ -128,6 +141,7 @@ export function MovementsScreen() {
       }, 250);
       return () => {
         active = false;
+        searchGeneration.current++;
         clearTimeout(timer);
       };
     }, [client, scope, search, kind, categoryId, revision]),
@@ -186,11 +200,12 @@ export function MovementsScreen() {
     pageLock.current = true;
     setSearchBusy(true);
     try {
-      const next = await client.get<SearchPage>(
+      const next = await client.get<MovementSearchPage>(
         searchPath(search, kind, categoryId, searchPage.items.length),
       );
-      if (generation === searchGeneration.current)
-        setSearchPage({ items: [...searchPage.items, ...next.items], hasMore: next.hasMore });
+      setSearchPage((current) =>
+        appendSearchPage(current, next, generation, searchGeneration.current),
+      );
     } catch {
       if (generation === searchGeneration.current)
         setSearchError('No pudimos cargar más movimientos. Intenta de nuevo.');
@@ -286,7 +301,9 @@ export function MovementsScreen() {
                 ))}
               </View>
               <Text style={styles.sectionTitle}>Categoría</Text>
-              {categoriesUnavailable ? <Text style={styles.muted}>Las categorías no están disponibles por ahora.</Text> : null}
+              {categoriesUnavailable ? (
+                <Text style={styles.muted}>Las categorías no están disponibles por ahora.</Text>
+              ) : null}
               <View style={styles.pills}>
                 <Pressable
                   accessibilityRole="button"
@@ -407,7 +424,11 @@ export function MovementsScreen() {
               </Text>
             </Pressable>
           ) : null}
-          {scope === 'all' && searchError ? <Text accessibilityRole="alert" style={styles.error}>{searchError}</Text> : null}
+          {scope === 'all' && searchError ? (
+            <Text accessibilityRole="alert" style={styles.error}>
+              {searchError}
+            </Text>
+          ) : null}
           {loading || (scope === 'all' && searchBusy && !searchPage) ? (
             <View style={styles.empty}>
               <ActivityIndicator color={colors.primary} />
