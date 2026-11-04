@@ -61,6 +61,7 @@ export function BalanceSummary({
       {summary.evidence.length > 0 ? (
         <Text selectable style={styles.summaryNote}>
           {summary.evidence.join(' ')} Cotizaciones almacenadas; no son tasas en tiempo real.
+          {' '}DolarApi (https://dolarapi.com) proporciona cotizaciones del BCV; otras tasas de mercado pueden tener fuentes distintas.
         </Text>
       ) : null}
       <View

@@ -58,6 +58,7 @@ Load the exact project skill that matches the change before implementation:
 - `normalized-reuse` — `.agents/skills/normalized-reuse/SKILL.md`
 - `refactorable-source` — `.agents/skills/refactorable-source/SKILL.md`
 - `technology-documentation` — `.agents/skills/technology-documentation/SKILL.md`
+- `format-changed-files` — `.agents/skills/format-changed-files/SKILL.md` (load whenever creating or modifying a file)
 
 ## Mobile application organization
 

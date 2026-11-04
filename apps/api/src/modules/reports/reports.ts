@@ -1,4 +1,5 @@
 import { Controller, Get, Injectable, Query, Req, UseGuards } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import type { AuthenticatedRequest } from '../../common/types.js';
 import { PrismaService } from '../../common/prisma.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
@@ -7,10 +8,69 @@ import { record } from '../../common/request-input.js';
 import { dashboardPeriod } from '../dashboard/dashboard-timezone.js';
 import { validatedMonthBounds } from '../planning/planning-time.js';
 import { add, asString, currencyDefaults, fixed } from '../planning/planning-support.js';
+import { transactionDto } from '../finance/amounts.js';
 
 @Injectable()
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async search(userId: string, rawQuery: unknown) {
+    const query = record(rawQuery);
+    const skip = query.skip === undefined ? 0 : Number(query.skip);
+    if (!Number.isSafeInteger(skip) || skip < 0 || skip > 10000)
+      validation('Invalid search offset');
+    const search = query.search === undefined ? '' : query.search;
+    if (typeof search !== 'string' || search.length > 100) validation('Invalid search text');
+    if (query.kind !== undefined && query.kind !== 'INCOME' && query.kind !== 'EXPENSE')
+      validation('Invalid movement kind');
+    if (
+      query.categoryId !== undefined &&
+      (typeof query.categoryId !== 'string' || !query.categoryId)
+    )
+      validation('Invalid category');
+    const term = search.trim();
+    const searchedKind = term.toUpperCase();
+    const period = /^\d{4}-\d{2}(?:-\d{2})?$/.test(term)
+      ? new Date(`${term}${term.length === 7 ? '-01' : ''}T00:00:00Z`)
+      : null;
+    const periodEnd =
+      period && Number.isFinite(period.getTime())
+        ? new Date(
+            Date.UTC(
+              period.getUTCFullYear(),
+              period.getUTCMonth() + (term.length === 7 ? 1 : 0),
+              period.getUTCDate() + (term.length === 10 ? 1 : 0),
+            ),
+          )
+        : null;
+    const matches: Prisma.TransactionWhereInput[] = [
+      { note: { contains: term, mode: 'insensitive' } },
+      { currencyCode: { contains: term, mode: 'insensitive' } },
+    ];
+    if (/^\d{1,12}(?:\.\d{1,8})?$/.test(term)) matches.push({ amount: term });
+    if (searchedKind === 'INCOME' || searchedKind === 'EXPENSE' || searchedKind === 'OPENING')
+      matches.push({ kind: searchedKind });
+    if (period && periodEnd) matches.push({ occurredAt: { gte: period, lt: periodEnd } });
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        userId,
+        voidedAt: null,
+        ...(term ? { OR: matches } : {}),
+        ...(query.kind ? { kind: query.kind } : {}),
+        ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+      },
+      orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
+      skip,
+      take: 101,
+    });
+    return {
+      items: transactions.slice(0, 100).map((transaction) => ({
+        ...transactionDto(transaction),
+        transferId: transaction.transferId ?? undefined,
+      })),
+      hasMore: transactions.length > 100,
+    };
+  }
 
   async get(userId: string, rawQuery: unknown) {
     const query = record(rawQuery);
@@ -71,12 +131,15 @@ export class ReportsService {
         amount: fixed(transaction.amount, currencyDefaults[transaction.currencyCode] ?? 2),
         currencyCode: transaction.currencyCode,
         occurredAt: new Date(transaction.occurredAt).toISOString(),
+        note: transaction.note ?? undefined,
+        transferId: transaction.transferId ?? undefined,
       };
     });
     return {
       from: from.toISOString(),
       to: to.toISOString(),
       baseCurrency: prefs.baseCurrency,
+      timezone: prefs.timezone,
       items,
       nativeTotals,
       baseTotal: partial ? undefined : baseTotal,
@@ -91,6 +154,11 @@ export class ReportsService {
 @UseGuards(AuthGuard)
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
+
+  @Get('search')
+  search(@Req() req: AuthenticatedRequest, @Query() query: unknown) {
+    return this.reports.search(req.user.sub, query);
+  }
 
   @Get()
   get(@Req() req: AuthenticatedRequest, @Query() query: unknown) {

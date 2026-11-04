@@ -7,6 +7,7 @@ import { AccountsController, AccountsService } from './accounts/accounts.js';
 import { DashboardController, DashboardService } from './dashboard/dashboard.js';
 import { OnboardingController, OnboardingService } from './onboarding/onboarding.js';
 import { TransfersController, TransfersService } from './transfers/transfers.js';
+import { BcvRateSync } from './finance/bcv-rate-sync.js';
 
 export {
   AuthController,
@@ -15,6 +16,7 @@ export {
   AuditService,
   DashboardController,
   DashboardService,
+  BcvRateSync,
   OnboardingController,
   OnboardingService,
   TransfersController,
