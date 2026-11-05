@@ -31,4 +31,9 @@ test('API startup loads local configuration while explicit process environment w
   const supplied = run({ ...env, DATABASE_URL: 'postgresql://example.invalid/supplied' });
   assert.equal(supplied.status, 0, supplied.stderr);
   assert.equal(JSON.parse(supplied.stdout), 'postgresql://example.invalid/supplied');
+  const empty = run({ ...env, DATABASE_URL: '' });
+  assert.equal(empty.status, 0, empty.stderr);
+  assert.equal(JSON.parse(empty.stdout), '');
+  assert.equal(readFileSync(join(scratch, '.env'), 'utf8'), 'DATABASE_URL=postgresql://example.invalid/base\n');
+  assert.equal(readFileSync(join(scratch, '.env.local'), 'utf8'), 'DATABASE_URL=postgresql://example.invalid/local\n');
 });

@@ -5,7 +5,7 @@
   "scripts": {
     "postinstall": "prisma generate --schema prisma/schema.prisma",
     "build": "tsc -p tsconfig.json",
-    "start": "pnpm run build && node dist/apps/api/src/main.js",
+    "start": "pnpm run build && node --env-file-if-exists=.env --env-file-if-exists=.env.local dist/apps/api/src/main.js",
     "smoke": "node test/smoke.mjs",
     "test": "node --test --experimental-strip-types test/*.spec.*",
     "typecheck": "tsc --noEmit -p tsconfig.json"

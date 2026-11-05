@@ -1,6 +1,9 @@
 # Agent-generated local indexes
 .atl/
 node_modules/
+.env
+.env.*
+!.env.example
 .pnpm-store/
 dist/
 .tmp-api-smoke-*/

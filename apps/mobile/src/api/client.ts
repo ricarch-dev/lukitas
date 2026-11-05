@@ -23,7 +23,7 @@ export class ApiClient {
   private readonly options: ApiClientOptions;
   constructor(options: ApiClientOptions = {}) {
     this.options = options;
-    this.baseUrl = options.baseUrl ?? 'http://127.0.0.1:3000/v1';
+    this.baseUrl = options.baseUrl ?? process.env.EXPO_PUBLIC_API_URL ?? 'http://127.0.0.1:3000/v1';
   }
   async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const headers = new Headers(init.headers);
