@@ -28,8 +28,8 @@ describe('web navigation routes', () => {
     const stack: string[] = [];
     const directLists: string[] = [];
     let directTriggers = 0;
-    // Match the layout's JSX tags in document order and check parentage, not mere presence.
-    for (const [, closing, name, tail] of tabs.matchAll(/<(\/)?([A-Z][A-Za-z]*)\b([^>]*?)>/g)) {
+    // JSX names end at whitespace, /, or >; generic type arguments are not JSX tags.
+    for (const [, closing, name, tail] of tabs.matchAll(/<(\/)?([A-Z][A-Za-z]*)(?=[\s/>])([^>]*?)>/g)) {
       if (closing) {
         assert.equal(stack.pop(), name, `unexpected closing tag for ${name}`);
       } else {

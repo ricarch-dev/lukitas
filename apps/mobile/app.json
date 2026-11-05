@@ -9,7 +9,9 @@
       "web"
     ],
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store",
+      "expo-status-bar"
     ]
   }
 }

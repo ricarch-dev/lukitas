@@ -1,4 +1,4 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/native-tabs';
 import { APP_COLORS } from '../../features/auth-screen-theme';
 import { RootNavigator } from '../../navigation/RootNavigator';
 

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -63,7 +64,7 @@ export function AuthScreen() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionLock = useRef(false);
-  const passwordInput = useRef<TextInput | null>(null);
+  const passwordInput = useRef<TextInputInstance | null>(null);
   const copy = MODE_COPY[mode];
 
   const chooseMode = (nextMode: AuthMode) => {
