@@ -18,6 +18,7 @@ mitm_mcp_traffic.db
 .kiro
 .claude
 .agents
+.env
 # Versioned project-local Codex skills
 !.agents/
 .agents/*
@@ -31,3 +32,5 @@ mitm_mcp_traffic.db
 !.agents/skills/refactorable-source/SKILL.md
 !.agents/skills/technology-documentation/
 !.agents/skills/technology-documentation/SKILL.md
+!.agents/skills/format-changed-files/
+!.agents/skills/format-changed-files/SKILL.md

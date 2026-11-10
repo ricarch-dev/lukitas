@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { dashboardDisclosure, reportDisclosure } from '../src/features/financial-disclosure.ts';
+import { dashboardDisclosure, reportDisclosure } from '../src/shared/presentation/financial-disclosure.ts';
 import type { DashboardDto, FinancialReportDto } from '@lukitas/contracts';
 
 const source = (relative: string) => readFileSync(fileURLToPath(new URL(`../src/app/${relative}`, import.meta.url)), 'utf8');
@@ -17,8 +17,21 @@ describe('native navigation routes', () => {
     assert.equal((tabs.match(/<NativeTabs.Trigger name=/g) ?? []).length, 4);
     assert.equal((tabs.match(/\.Trigger\.Icon sf=/g) ?? []).length, 4);
     assert.match(source('informes.tsx'), /ReportsScreen/);
+    assert.match(source('cuentas.tsx'), /AccountsScreen/);
+    assert.match(source('cuentas.tsx'), /<RootNavigator>/);
+    assert.match(source('_layout.tsx'), /<Stack\.Screen name="cuentas" options=\{\{ title: 'Cuentas' \}\} \/>/);
     assert.match(source('index.tsx'), /RootNavigator/);
     assert.match(tabs, /<RootNavigator>/);
+  });
+});
+
+describe('session API configuration', () => {
+  it('passes the Expo public API URL to ApiClient', () => {
+    const session = readFileSync(
+      fileURLToPath(new URL('../src/session/SessionContext.tsx', import.meta.url)),
+      'utf8',
+    );
+    assert.match(session, /new ApiClient\(\{\s*baseUrl:\s*process\.env\.EXPO_PUBLIC_API_URL\s*,/);
   });
 });
 

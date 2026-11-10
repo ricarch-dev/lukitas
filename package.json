@@ -15,6 +15,7 @@
     "test:all": "pnpm --dir packages/domain test && pnpm --dir packages/contracts test && pnpm --dir packages/config test && pnpm --dir apps/api test"
   },
   "devDependencies": {
+    "prettier": "3.9.4",
     "typescript": "7.0.2"
   }
 }

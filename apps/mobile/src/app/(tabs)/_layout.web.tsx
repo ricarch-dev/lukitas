@@ -2,7 +2,7 @@ import type { TabTriggerSlotProps } from 'expo-router/ui';
 import type { ComponentProps } from 'react';
 import { Tabs, TabList, TabSlot, TabTrigger } from 'expo-router/ui';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { APP_COLORS } from '../../features/auth-screen-theme';
+import { APP_COLORS } from '../../shared/theme/app-colors';
 import { RootNavigator } from '../../navigation/RootNavigator';
 
 // Router's slot ref still names the View component rather than its host instance.

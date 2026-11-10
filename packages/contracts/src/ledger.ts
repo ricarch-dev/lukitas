@@ -11,6 +11,7 @@ export interface TransactionDto {
   readonly note?: string;
   readonly voidedAt?: string;
   readonly categoryId?: string;
+  readonly transferId?: string;
 }
 export interface RecordTransactionRequest {
   readonly kind: TransactionKindDto;

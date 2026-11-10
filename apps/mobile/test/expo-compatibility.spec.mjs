@@ -9,11 +9,12 @@ import { fileURLToPath } from 'node:url';
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const manifest = JSON.parse(read('../package.json'));
 const require = createRequire(new URL('../package.json', import.meta.url));
-const run = (args) => spawnSync(process.execPath, [require.resolve('expo/bin/cli'), ...args], {
-  cwd: fileURLToPath(new URL('../', import.meta.url)),
-  encoding: 'utf8',
-  env: { ...process.env, EXPO_OFFLINE: '1' },
-});
+const run = (args) =>
+  spawnSync(process.execPath, [require.resolve('expo/bin/cli'), ...args], {
+    cwd: fileURLToPath(new URL('../', import.meta.url)),
+    encoding: 'utf8',
+    env: { ...process.env, EXPO_OFFLINE: '1' },
+  });
 
 test('starts in Expo Go on LAN without the unsupported non-interactive option', () => {
   assert.equal(manifest.scripts.start, 'expo start --go --lan --port 19006');
@@ -46,7 +47,12 @@ test('public configuration preserves application identity, platforms and secure 
   assert.equal(config.slug, 'lukitas-mobile');
   assert.equal(config.scheme, 'lukitas');
   assert.deepEqual(config.platforms, ['ios', 'android', 'web']);
-  assert.deepEqual(config.plugins, ['expo-router', 'expo-secure-store', 'expo-status-bar']);
+  assert.deepEqual(config.plugins, [
+    'expo-router',
+    'expo-secure-store',
+    'expo-status-bar',
+    'expo-sharing',
+  ]);
 });
 
 test('a rejected configuration query leaves manifests and lockfile unchanged', () => {

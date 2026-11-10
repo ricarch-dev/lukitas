@@ -1,6 +1,10 @@
-import { CreateAccountScreen } from '../features/create-account-screen';
+import { CreateAccountScreen } from '../modules/accounts/screens/create-account-screen';
 import { RootNavigator } from '../navigation/RootNavigator';
 
 export default function CreateAccountRoute() {
-  return <RootNavigator><CreateAccountScreen /></RootNavigator>;
+  return (
+    <RootNavigator>
+      <CreateAccountScreen />
+    </RootNavigator>
+  );
 }

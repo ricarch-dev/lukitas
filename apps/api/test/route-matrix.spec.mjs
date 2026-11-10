@@ -25,23 +25,33 @@ const {
   TransfersController,
   DashboardController,
 } = await import('../src/modules/p0.module.ts');
-const { AccountsController, AccountsService } = await import('../src/modules/accounts.ts');
+const { AccountsController, AccountsService } = await import('../src/modules/accounts/accounts.ts');
 const { AuthGuard } = await import('../src/common/guards/auth.guard.ts');
 const { OnboardingService, TransfersService, DashboardService } =
   await import('../src/modules/p0-monetary.ts');
 
 const protectedRoutes = [
-  [OnboardingController, OnboardingService, 'onboarding', [
-    ['complete', RequestMethod.POST, '/'],
-    ['get', RequestMethod.GET, '/'],
-  ]],
-  [AccountsController, AccountsService, 'accounts', [
-    ['list', RequestMethod.GET, '/'],
-    ['create', RequestMethod.POST, '/'],
-    ['update', RequestMethod.PATCH, ':id'],
-    ['archive', RequestMethod.POST, ':id/archive'],
-    ['transaction', RequestMethod.POST, ':id/transactions'],
-  ]],
+  [
+    OnboardingController,
+    OnboardingService,
+    'onboarding',
+    [
+      ['complete', RequestMethod.POST, '/'],
+      ['get', RequestMethod.GET, '/'],
+    ],
+  ],
+  [
+    AccountsController,
+    AccountsService,
+    'accounts',
+    [
+      ['list', RequestMethod.GET, '/'],
+      ['create', RequestMethod.POST, '/'],
+      ['update', RequestMethod.PATCH, ':id'],
+      ['archive', RequestMethod.POST, ':id/archive'],
+      ['transaction', RequestMethod.POST, ':id/transactions'],
+    ],
+  ],
   [TransfersController, TransfersService, 'transfers', [['create', RequestMethod.POST, '/']]],
   [AuditController, AuditService, 'transactions', [['void', RequestMethod.POST, ':id/void']]],
   [DashboardController, DashboardService, 'dashboard', [['get', RequestMethod.GET, '/']]],
@@ -67,14 +77,13 @@ function assertProtectedRegistration(controllers, providers) {
   assert.equal(Reflect.getMetadata(PATH_METADATA, AuthController), 'auth');
   for (const [name, method, route] of authRoutes) {
     const handler = AuthController.prototype[name];
-    assert.equal(
-      Reflect.getMetadata(METHOD_METADATA, handler),
-      method,
-      `auth/${name} HTTP method`,
-    );
+    assert.equal(Reflect.getMetadata(METHOD_METADATA, handler), method, `auth/${name} HTTP method`);
     assert.equal(Reflect.getMetadata(PATH_METADATA, handler), route, `auth/${name} route`);
     if (name === 'logout' || name === 'me') {
-      assert.ok(Reflect.getMetadata(GUARDS_METADATA, handler)?.includes(AuthGuard), `auth/${name} auth guard`);
+      assert.ok(
+        Reflect.getMetadata(GUARDS_METADATA, handler)?.includes(AuthGuard),
+        `auth/${name} auth guard`,
+      );
     }
   }
   for (const [controller, provider, path, routes] of protectedRoutes) {
@@ -95,7 +104,11 @@ function assertProtectedRegistration(controllers, providers) {
     );
     for (const [name, method, route] of routes) {
       const handler = controller.prototype[name];
-      assert.equal(Reflect.getMetadata(METHOD_METADATA, handler), method, `${path}/${name} HTTP method`);
+      assert.equal(
+        Reflect.getMetadata(METHOD_METADATA, handler),
+        method,
+        `${path}/${name} HTTP method`,
+      );
       assert.equal(Reflect.getMetadata(PATH_METADATA, handler), route, `${path}/${name} route`);
     }
   }
@@ -115,10 +128,11 @@ test('extracted financial controllers and providers are registered once with gua
 
 test('registration checks reject missing providers, duplicate controllers, and unguarded moved controllers', () => {
   assert.throws(
-    () => assertProtectedRegistration(
-      p0Controllers,
-      p0Providers.filter((provider) => provider !== TransfersService),
-    ),
+    () =>
+      assertProtectedRegistration(
+        p0Controllers,
+        p0Providers.filter((provider) => provider !== TransfersService),
+      ),
     /transfers provider registration/,
   );
   assert.throws(
@@ -128,7 +142,10 @@ test('registration checks reject missing providers, duplicate controllers, and u
   const originalGuards = Reflect.getOwnMetadata(GUARDS_METADATA, TransfersController);
   try {
     Reflect.deleteMetadata(GUARDS_METADATA, TransfersController);
-    assert.throws(() => assertProtectedRegistration(p0Controllers, p0Providers), /transfers auth guard/);
+    assert.throws(
+      () => assertProtectedRegistration(p0Controllers, p0Providers),
+      /transfers auth guard/,
+    );
   } finally {
     Reflect.defineMetadata(GUARDS_METADATA, originalGuards, TransfersController);
   }
