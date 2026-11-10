@@ -1,6 +1,6 @@
 import type { AccountDto, TransactionDto } from '@lukitas/contracts';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ArrowDown,
   ArrowLeft,
@@ -51,6 +51,8 @@ const searchPath = (search: string, kind?: string, categoryId?: string, skip = 0
   `/reports/search?${new URLSearchParams({ search: search.trim(), ...(kind ? { kind } : {}), ...(categoryId ? { categoryId } : {}), skip: String(skip) }).toString()}`;
 
 export function MovementsScreen() {
+  const router = useRouter();
+  const { create } = useLocalSearchParams<{ create?: string }>();
   const { client } = useSession();
   const [month, setMonth] = useState(monthNow);
   const [report, setReport] = useState<MovementReport | null>(null);
@@ -74,6 +76,15 @@ export function MovementsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [exporting, setExporting] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (create === 'TRANSFER' || create === 'EXPENSE') {
+        setForm(create);
+        router.setParams({ create: undefined });
+      }
+    }, [create, router]),
+  );
 
   useFocusEffect(
     useCallback(() => {

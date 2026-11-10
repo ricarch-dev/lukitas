@@ -129,8 +129,16 @@ test('home prioritizes shortcuts and native balances without unsupported referen
     'utf8',
   );
   assert.match(screens, /<ScrollView\s+horizontal[\s\S]*?accountBalances/);
-  assert.match(screens, /href="\/crear-cuenta" asChild/);
-  assert.match(screens, /accessibilityLabel="Agregar cuenta"/);
+  const quickActions = readFileSync(
+    join(root, 'src', 'modules', 'home', 'components', 'quick-actions-menu.tsx'),
+    'utf8',
+  );
+  assert.match(screens, /<QuickActionsMenu gutter=\{gutter\}/);
+  assert.match(
+    quickActions,
+    /accessibilityLabel=\{visible \? 'Cerrar acciones' : 'Abrir acciones'\}/,
+  );
+  assert.match(quickActions, /router\.push\('\/crear-cuenta'\)/);
   assert.match(homeStyles, /shortcutIcon: \{[\s\S]*?borderRadius: 24/);
   assert.match(homeStyles, /flow: \{[\s\S]*?flexDirection: 'row'/);
   assert.doesNotMatch(screens, /donaci[oó]n|gr[aá]fic[oa]|calculadora|transferir/i);

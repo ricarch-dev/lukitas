@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'expo-router';
 import {
   ActivityIndicator,
@@ -17,16 +16,9 @@ import {
 } from '../../../shared/presentation/dashboard-layout';
 import { APP_COLORS as colors } from '../../../shared/theme/app-colors';
 import { styles } from '../styles/home-dashboard-styles';
-import {
-  ArrowUpDown,
-  Clock4,
-  Ellipsis,
-  MoveDown,
-  MoveUp,
-  Plus,
-  WalletCards,
-} from 'lucide-react-native';
+import { ArrowUpDown, Clock4, Ellipsis, MoveDown, MoveUp, WalletCards } from 'lucide-react-native';
 import { BalanceSummary } from '../components/balance-summary';
+import { QuickActionsMenu } from '../components/quick-actions-menu';
 
 const dashboardShortcuts = [
   {
@@ -246,16 +238,7 @@ export function DashboardScreen() {
           </View>
         </View>
       </ScrollView>
-      <Link href="/crear-cuenta" asChild>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="Agregar cuenta"
-          accessibilityHint="Abre el formulario para registrar una cuenta manualmente."
-          style={{ ...styles.floatingAdd, position: 'absolute', right: gutter }}
-        >
-          <Plus size={20} color="#fff" strokeWidth={2} />
-        </Pressable>
-      </Link>
+      <QuickActionsMenu gutter={gutter} />
     </View>
   );
 }

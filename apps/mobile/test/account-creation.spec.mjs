@@ -90,11 +90,15 @@ test('Inicio floating action opens the protected account form route', () => {
   );
   const layout = readFileSync(join(root, 'app', '_layout.tsx'), 'utf8');
   const route = readFileSync(join(root, 'app', 'crear-cuenta.tsx'), 'utf8');
-  assert.match(home, /href="\/crear-cuenta"/);
-  assert.match(home, /position: 'absolute'/);
+  const actions = readFileSync(
+    join(root, 'modules', 'home', 'components', 'quick-actions-menu.tsx'),
+    'utf8',
+  );
+  assert.match(actions, /router\.push\('\/crear-cuenta'\)/);
+  assert.match(home, /<QuickActionsMenu gutter=\{gutter\}/);
   assert.match(
-    home,
-    /accessibilityLabel="Agregar cuenta"[\s\S]*?style=\{\{ \.\.\.styles\.floatingAdd, position: 'absolute', right: gutter \}\}/,
+    actions,
+    /accessibilityLabel=\{visible \? 'Cerrar acciones' : 'Abrir acciones'\}[\s\S]*?style=\{\{ \.\.\.styles\.floatingAdd, position: 'absolute', right: gutter \}\}/,
   );
   assert.match(layout, /name="crear-cuenta"/);
   assert.match(route, /RootNavigator/);
@@ -104,6 +108,10 @@ test('Inicio floating action clears the web tab bar without moving the native ac
   const root = join(import.meta.dirname, '..', 'src');
   const home = readFileSync(
     join(root, 'modules', 'home', 'screens', 'dashboard-screen.tsx'),
+    'utf8',
+  );
+  const actions = readFileSync(
+    join(root, 'modules', 'home', 'components', 'quick-actions-menu.tsx'),
     'utf8',
   );
   const styles = readFileSync(
@@ -124,7 +132,8 @@ test('Inicio floating action clears the web tab bar without moving the native ac
   );
   assert.match(tabs, /shell: \{ flex: 1,[^\n]*\}[\s\S]*?content: \{ flex: 1, minHeight: 0 \}/);
   assert.match(
-    home,
-    /<Link href="\/crear-cuenta" asChild>[\s\S]*?<Pressable[\s\S]*?style=\{\{ \.\.\.styles\.floatingAdd, position: 'absolute', right: gutter \}\}/,
+    actions,
+    /<Pressable[\s\S]*?accessibilityLabel=\{visible \? 'Cerrar acciones' : 'Abrir acciones'\}[\s\S]*?style=\{\{ \.\.\.styles\.floatingAdd, position: 'absolute', right: gutter \}\}/,
   );
+  assert.match(home, /<QuickActionsMenu gutter=\{gutter\}/);
 });

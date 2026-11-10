@@ -224,4 +224,26 @@ export const styles = StyleSheet.create({
   },
   floatingAddText: { color: colors.surface, fontSize: 26, fontWeight: '600', lineHeight: 32 },
   floatingAddLabel: { color: colors.surface, fontSize: 14, fontWeight: '700' },
+  quickActionsBackdrop: { ...StyleSheet.absoluteFill },
+  quickActionsAnchor: {
+    position: 'absolute',
+    width: '85%',
+    maxWidth: 340,
+  },
+  quickActionsPanel: {
+    alignSelf: 'stretch',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+  },
+  quickActionsItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 56,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+  quickActionsLabel: { color: colors.ink, fontSize: 16, fontWeight: '500', flexShrink: 1 },
 });
