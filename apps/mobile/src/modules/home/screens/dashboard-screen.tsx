@@ -118,7 +118,7 @@ export function DashboardScreen() {
           <View style={[styles.columns, wide && styles.columnsWide]}>
             <View style={styles.primaryColumn}>
               <View style={[styles.summary, { paddingBottom: 0 }]}>
-                <BalanceSummary dashboard={dashboard} />
+                <BalanceSummary dashboard={dashboard} compactDetails />
                 {disclosure.balance ? (
                   <Text selectable style={styles.warning}>
                     En {dashboard.baseCurrency}: {disclosure.balance}

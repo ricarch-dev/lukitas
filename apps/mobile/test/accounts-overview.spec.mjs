@@ -27,7 +27,7 @@ test('accounts overview uses the filtered dashboard and preserves quote disclosu
   );
   assert.match(
     summary,
-    /\{showMonthlyComparison \? \([\s\S]*Corte del mes anterior:[\s\S]*\) : null\}/,
+    /\{!compactDetails && showMonthlyComparison \? \([\s\S]*Corte del mes anterior:[\s\S]*\) : null\}/,
   );
   assert.match(summary, /summary\.openingNote/);
   assert.match(summary, /summary\.openingNote !== null/);
@@ -44,7 +44,10 @@ test('overview exposes accessible filters, account creation, and all request sta
   assert.match(screen, /accessibilityRole="radio"/);
   assert.match(screen, /accessibilityState=\{\{ selected \}\}/);
   assert.match(screen, /<Link href="\/crear-cuenta" asChild>/);
-  assert.match(screen, /style=\{\{ \.\.\.styles\.addLink, bottom: Math\.max\(insets\.bottom, 16\) \}\}/);
+  assert.match(
+    screen,
+    /style=\{\{ \.\.\.styles\.addLink, bottom: Math\.max\(insets\.bottom, 16\) \}\}/,
+  );
   assert.doesNotMatch(screen, /style=\{\[styles\.addLink,/);
   assert.match(screen, /accessibilityRole="alert"/);
   assert.match(screen, /isLoading \|\| !dashboard/);
@@ -60,7 +63,10 @@ test('account creation floats above the safe area without obscuring the final ac
   assert.ok(screen.indexOf('</ScrollView>') < screen.indexOf(link));
   assert.match(screen, /useSafeAreaInsets/);
   assert.match(screen, /bottom: Math\.max\(insets\.bottom, 16\)/);
-  assert.match(screen, /style=\{\{ \.\.\.styles\.addLink, bottom: Math\.max\(insets\.bottom, 16\) \}\}/);
+  assert.match(
+    screen,
+    /style=\{\{ \.\.\.styles\.addLink, bottom: Math\.max\(insets\.bottom, 16\) \}\}/,
+  );
   assert.match(screen, /accessibilityLabel="Agregar cuenta"/);
   assert.match(screen, /Abre el formulario para registrar una cuenta manualmente\./);
   assert.match(screen, /<Plus size=\{18\} color=\{colors\.surface\} \/>/);

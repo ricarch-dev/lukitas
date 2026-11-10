@@ -36,6 +36,7 @@ export const styles = StyleSheet.create({
   brandCaption: { color: colors.muted, fontSize: 12 },
   pageLabel: { color: colors.body, fontSize: 14, fontWeight: '600' },
   summary: { alignItems: 'center', gap: 7, paddingVertical: 16 },
+  summaryCompact: { gap: 10, paddingTop: 26, paddingBottom: 12 },
   sectionLabel: { color: colors.body, fontSize: 14, fontWeight: '600' },
   total: {
     color: colors.ink,
@@ -45,6 +46,7 @@ export const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     textAlign: 'center',
   },
+  totalCompact: { fontSize: 42, lineHeight: 51 },
   totalCurrency: { color: colors.body, fontSize: 17, fontWeight: '600' },
   currencySelector: {
     flexDirection: 'row',
@@ -72,6 +74,9 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
+  comparisonCompact: { fontSize: 14, fontWeight: '600' },
+  comparisonNegative: { color: colors.expense },
+  comparisonNeutral: { color: colors.body },
   equivalent: {
     color: colors.body,
     fontSize: 14,
@@ -79,6 +84,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     fontVariant: ['tabular-nums'],
   },
+  equivalentCompact: { fontSize: 13, fontWeight: '500' },
   summaryNote: {
     color: colors.body,
     fontSize: 12,
@@ -86,6 +92,17 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'stretch',
   },
+  balanceDetails: { alignSelf: 'stretch', alignItems: 'center', gap: 8 },
+  balanceDetailsButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16 },
+  balanceDetailsButtonText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+  balanceDetailsContent: {
+    alignSelf: 'stretch',
+    gap: 8,
+    padding: 14,
+    backgroundColor: colors.subtleSurface,
+    borderRadius: 12,
+  },
+  balanceDetailsText: { color: colors.body, fontSize: 13, lineHeight: 19 },
   section: { gap: 10 },
   sectionTitle: { color: colors.ink, fontSize: 19, fontWeight: '700' },
   shortcutRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', gap: 6 },

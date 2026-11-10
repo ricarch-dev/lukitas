@@ -137,7 +137,7 @@ test('Cuentas can hide monthly comparison while retaining current balance and FX
 });
 
 test('home keeps existing data and navigation while selection is accessible', () => {
-  assert.match(screen(), /<BalanceSummary dashboard={dashboard} \/>/);
+  assert.match(screen(), /<BalanceSummary dashboard={dashboard} compactDetails \/>/);
   assert.match(component(), /accessibilityRole="radiogroup"/);
   assert.match(component(), /accessibilityRole="radio"/);
   assert.match(component(), /accessibilityState=\{\{ selected:/);
@@ -146,6 +146,26 @@ test('home keeps existing data and navigation while selection is accessible', ()
   assert.match(screen(), /dashboardDisclosure\(dashboard\)/);
   assert.match(screen(), /dashboardShortcuts\.map/);
   assert.match(screen(), /href="\/informes"/);
+});
+
+test('home shows a readable balance first and puts cutoff and FX evidence behind an accessible details toggle', () => {
+  const home = component();
+  assert.match(home, /compactDetails \? 'Mi balance' : 'Mi balance total'/);
+  assert.match(home, /% vs\. mes pasado/);
+  assert.match(home, /≈ Bs/);
+  assert.match(home, /summary\.percentChange\.startsWith\('-'\) && styles\.comparisonNegative/);
+  assert.match(home, /Number\(summary\.percentChange\) === 0 && styles\.comparisonNeutral/);
+  assert.match(
+    home,
+    /accessibilityLabel=\{\s*detailsOpen \? 'Ocultar detalles del balance' : 'Ver detalles del balance'\s*\}/,
+  );
+  assert.match(home, /accessibilityState=\{\{ expanded: detailsOpen \}\}/);
+  assert.match(home, /formatBalanceCutoff\(dashboard\.comparison\.previousCutoff\)/);
+  assert.match(home, /summary\.openingNote !== null/);
+  assert.match(home, /summary\.evidence\.length > 0/);
+  assert.ok(home.indexOf('styles.currencySelector') < home.indexOf('Ver detalles del balance'));
+  assert.ok(home.indexOf('summary.warnings.map') < home.indexOf('Ver detalles del balance'));
+  assert.match(home, /!compactDetails && showMonthlyComparison/);
 });
 
 test('decorative flow icons do not forward a non-boolean accessible prop to SVG', () => {
