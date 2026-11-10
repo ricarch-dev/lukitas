@@ -31,6 +31,7 @@ export const p0Providers = [
   AccountsService,
   TransfersService,
   AuditService,
+  BcvRateSync,
   DashboardService,
   AuthGuard,
 ];
