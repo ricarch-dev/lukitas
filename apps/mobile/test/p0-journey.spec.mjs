@@ -47,7 +47,8 @@ test('mobile P0 journey has auth, setup, dashboard and session restore boundarie
   assert.match(screens, /dashboard\.flow\.income/);
   assert.match(screens, /dashboard\.flow\.expense/);
   assert.match(screens, /activeDashboardAccounts\(dashboard\)/);
-  assert.match(screens, /<ScrollView\s+horizontal/);
+  assert.match(screens, /currencyAccountBalances\(accounts\)/);
+  assert.match(screens, /pathname: '\/cuentas', params: \{ moneda: balance\.code \}/);
   assert.match(screens, /dashboardDisclosure/);
   assert.match(screens, /dashboard\.totals\.warnings/);
   assert.match(screens, /dashboard\.flow\.warnings/);
@@ -80,7 +81,8 @@ test('home presents only active native-currency accounts', () => {
     ],
   };
   assert.deepEqual(activeDashboardAccounts(dashboard), [dashboard.accounts[0]]);
-  assert.match(screens, /account\.balance} {account\.currency\.code}/);
+  assert.match(screens, /currencyAccountBalances\(accounts\)/);
+  assert.match(screens, /\{balance\.amount\}/);
   assert.match(screens, /disclosure\.balance[\s\S]*dashboard\.totals\.warnings/);
   assert.match(screens, /disclosure\.flow[\s\S]*dashboard\.flow\.warnings/);
 });
@@ -128,7 +130,7 @@ test('home prioritizes shortcuts and native balances without unsupported referen
     join(root, 'src', 'modules', 'home', 'styles', 'home-dashboard-styles.ts'),
     'utf8',
   );
-  assert.match(screens, /<ScrollView\s+horizontal[\s\S]*?accountBalances/);
+  assert.match(screens, /<View style=\{styles\.currencyCards\}[\s\S]*?accountBalances\.map/);
   const quickActions = readFileSync(
     join(root, 'src', 'modules', 'home', 'components', 'quick-actions-menu.tsx'),
     'utf8',

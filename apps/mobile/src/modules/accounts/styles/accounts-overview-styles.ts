@@ -110,6 +110,7 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'right',
   },
+  accountChevron: { color: colors.muted, fontSize: 24 },
   emptyState: { backgroundColor: colors.softSurface, borderRadius: 12, gap: 8, padding: 18 },
   emptyTitle: { color: colors.ink, fontSize: 16, fontWeight: '600' },
   emptyCopy: { color: colors.body, fontSize: 14, lineHeight: 21 },

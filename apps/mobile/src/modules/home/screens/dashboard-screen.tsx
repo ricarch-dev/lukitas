@@ -11,9 +11,9 @@ import { useDashboard } from '../../../shared/hooks/use-dashboard';
 import { dashboardDisclosure } from '../../../shared/presentation/financial-disclosure';
 import {
   activeDashboardAccounts,
-  groupedDashboardAccounts,
   homeDashboardLayout,
 } from '../../../shared/presentation/dashboard-layout';
+import { currencyAccountBalances } from '../../accounts/presentation/currency-balances';
 import { APP_COLORS as colors } from '../../../shared/theme/app-colors';
 import { styles } from '../styles/home-dashboard-styles';
 import { ArrowUpDown, Clock4, Ellipsis, MoveDown, MoveUp, WalletCards } from 'lucide-react-native';
@@ -68,31 +68,7 @@ export function DashboardScreen() {
     );
   const accounts = activeDashboardAccounts(dashboard);
   const disclosure = dashboardDisclosure(dashboard);
-  const accountBalances = groupedDashboardAccounts(accounts).map((group) => (
-    <View key={group.id} style={[styles.accountGroup, wide && styles.accountGroupWide]}>
-      {group.name ? (
-        <Text accessibilityRole="header" style={styles.bankName}>
-          {group.name}
-        </Text>
-      ) : null}
-      {group.accounts.map((account) => (
-        <View key={account.id} style={[styles.account, wide && styles.accountWide]}>
-          <View style={styles.accountHeader}>
-            <Text style={styles.accountName} numberOfLines={1}>
-              {account.name}
-            </Text>
-            <View style={styles.accountCurrencyTag}>
-              <Text style={styles.accountCurrencyTagText}>{account.currency.code}</Text>
-            </View>
-          </View>
-          <Text style={styles.caption}>Saldo</Text>
-          <Text selectable style={styles.value}>
-            {account.balance} {account.currency.code}
-          </Text>
-        </View>
-      ))}
-    </View>
-  ));
+  const accountBalances = currencyAccountBalances(accounts);
   return (
     <View style={styles.dashboardRoot}>
       <ScrollView
@@ -188,29 +164,51 @@ export function DashboardScreen() {
                   <Text accessibilityRole="header" style={styles.sectionTitle}>
                     Mis balances
                   </Text>
-                  <Text style={styles.accountCount}>{accounts.length}</Text>
+                  <Text style={styles.accountCount}>
+                    {accountBalances.reduce((count, balance) => count + balance.count, 0)}
+                  </Text>
                 </View>
-                {accounts.length && wide ? (
-                  <View
-                    style={styles.accountListWide}
-                    accessibilityLabel="Saldos de tus cuentas activas"
-                  >
-                    {accountBalances}
+                {accountBalances.length ? (
+                  <View style={styles.currencyCards} accessibilityLabel="Balances por moneda">
+                    {accountBalances.map((balance) => (
+                      <Link
+                        key={balance.code}
+                        href={{ pathname: '/cuentas', params: { moneda: balance.code } }}
+                        asChild
+                      >
+                        <Pressable
+                          accessibilityRole="link"
+                          accessibilityLabel={`Ver cuentas en ${balance.label}`}
+                          style={({ pressed }) => [
+                            styles.currencyCard,
+                            pressed && styles.shortcutPressed,
+                          ]}
+                        >
+                          <Text style={styles.currencyCardTitle}>
+                            {balance.code === 'VES' ? '🇻🇪' : '🇺🇸'} {balance.label}
+                          </Text>
+                          <Text selectable style={styles.currencyCardAmount}>
+                            {balance.code === 'VES' ? 'Bs ' : '$ '}
+                            {balance.amount}
+                          </Text>
+                          <View style={styles.currencyCardFooter}>
+                            <Text style={styles.currencyCardHint}>
+                              {balance.count} {balance.count === 1 ? 'cuenta' : 'cuentas'} · Ver
+                              detalles
+                            </Text>
+                            <Text accessible={false} style={styles.reportsChevron}>
+                              ›
+                            </Text>
+                          </View>
+                        </Pressable>
+                      </Link>
+                    ))}
                   </View>
-                ) : accounts.length ? (
-                  <ScrollView
-                    horizontal
-                    nestedScrollEnabled
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.accountList}
-                    accessibilityLabel="Saldos de tus cuentas activas"
-                  >
-                    {accountBalances}
-                  </ScrollView>
                 ) : (
                   <Text style={styles.caption}>
-                    Todavía no tienes cuentas activas. Cuando registres una cuenta, verás su saldo
-                    aquí.
+                    {accounts.length
+                      ? 'No tienes cuentas activas en bolívares o dólares.'
+                      : 'Todavía no tienes cuentas activas. Cuando registres una cuenta, verás su saldo aquí.'}
                   </Text>
                 )}
               </View>

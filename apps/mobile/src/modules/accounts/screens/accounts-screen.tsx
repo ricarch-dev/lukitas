@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus } from 'lucide-react-native';
@@ -19,7 +19,11 @@ import { BalanceSummary } from '../../home/components/balance-summary';
 
 export function AccountsScreen() {
   const insets = useSafeAreaInsets();
-  const [accountCurrency, setAccountCurrency] = useState<AccountsCurrencySelection>(null);
+  const { moneda } = useLocalSearchParams<{ moneda?: string }>();
+  const routeCurrency: AccountsCurrencySelection =
+    moneda === 'VES' || moneda === 'USD' ? moneda : null;
+  const [accountCurrency, setAccountCurrency] = useState<AccountsCurrencySelection>(routeCurrency);
+  useEffect(() => setAccountCurrency(routeCurrency), [routeCurrency]);
   const { dashboard, error, isLoading } = useDashboard(accountCurrency ?? undefined);
   const accounts = dashboard ? activeDashboardAccounts(dashboard) : [];
   const groups = groupedDashboardAccounts(accounts);
@@ -111,23 +115,34 @@ export function AccountsScreen() {
                           </Text>
                         ) : null}
                         {group.accounts.map((account, index) => (
-                          <View
+                          <Link
                             key={account.id}
-                            style={[
-                              styles.accountRow,
-                              index < group.accounts.length - 1 && styles.accountRowDivider,
-                            ]}
+                            href={{ pathname: '/cuenta/[id]', params: { id: account.id } }}
+                            asChild
                           >
-                            <View style={styles.accountInfo}>
-                              <Text numberOfLines={1} style={styles.accountName}>
-                                {account.name}
+                            <Pressable
+                              accessibilityRole="link"
+                              accessibilityLabel={`Ver detalle de ${account.name} en ${account.currency.code}`}
+                              style={({ pressed }) => [
+                                styles.accountRow,
+                                index < group.accounts.length - 1 && styles.accountRowDivider,
+                                pressed && styles.pressed,
+                              ]}
+                            >
+                              <View style={styles.accountInfo}>
+                                <Text numberOfLines={1} style={styles.accountName}>
+                                  {account.name}
+                                </Text>
+                                <Text style={styles.accountCurrency}>{account.currency.code}</Text>
+                              </View>
+                              <Text selectable style={styles.accountBalance}>
+                                {account.balance} {account.currency.code}
                               </Text>
-                              <Text style={styles.accountCurrency}>{account.currency.code}</Text>
-                            </View>
-                            <Text selectable style={styles.accountBalance}>
-                              {account.balance} {account.currency.code}
-                            </Text>
-                          </View>
+                              <Text accessible={false} style={styles.accountChevron}>
+                                ›
+                              </Text>
+                            </Pressable>
+                          </Link>
                         ))}
                       </View>
                     ))}
