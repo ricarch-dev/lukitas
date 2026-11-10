@@ -19,7 +19,7 @@ export async function saveMovementsCsv(csv: string, filename: string): Promise<v
   const file = new File(Paths.cache, filename);
   file.create({ overwrite: true });
   try {
-    file.write(csv);
+    await file.write(csv);
     await Sharing.shareAsync(file.uri, {
       mimeType: 'text/csv',
       UTI: 'public.comma-separated-values-text',

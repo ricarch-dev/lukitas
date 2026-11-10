@@ -10,7 +10,7 @@ const tsc = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 't
 
 test('start explicitly builds before executing the emitted entrypoint', () => {
   const { scripts } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  assert.equal(scripts.start, `pnpm run build && node dist/apps/api/src/main.js`);
+  assert.equal(scripts.start, 'pnpm run build && node --env-file-if-exists=.env --env-file-if-exists=.env.local dist/apps/api/src/main.js');
 });
 
 test('TypeScript build emits the PrismaService constructor token for health', async () => {

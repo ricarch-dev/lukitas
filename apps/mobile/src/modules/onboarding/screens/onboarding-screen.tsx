@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -25,7 +26,7 @@ export function OnboardingScreen({ onComplete }: { readonly onComplete: () => vo
   const [busy, setBusy] = useState(false);
   const [focus, setFocus] = useState<'name' | 'balance' | 'submit' | null>(null);
   const lock = useRef(false);
-  const balanceInput = useRef<TextInput | null>(null);
+  const balanceInput = useRef<TextInputInstance | null>(null);
   const attemptKey = useRef<string | null>(null);
   const lastInput = useRef('');
 

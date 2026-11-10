@@ -4,6 +4,6 @@
     "slug": "lukitas-mobile",
     "scheme": "lukitas",
     "platforms": ["ios", "android", "web"],
-    "plugins": ["expo-router", "expo-secure-store", "expo-sharing"]
+    "plugins": ["expo-router", "expo-secure-store", "expo-status-bar", "expo-sharing"]
   }
 }
