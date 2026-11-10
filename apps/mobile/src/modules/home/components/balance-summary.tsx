@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { DashboardDto } from '@lukitas/contracts';
 import { styles } from '../styles/home-dashboard-styles';
 import {
+  balanceConversionNote,
   balanceSummary,
   defaultDisplayCurrency,
   DISPLAY_CURRENCIES,
@@ -18,8 +19,8 @@ type BalanceSummaryProps = {
 function formatBalanceCutoff(iso: string): string {
   const date = new Date(iso);
   return Number.isNaN(date.getTime())
-    ? iso
-    : `${new Intl.DateTimeFormat('es-VE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }).format(date)} UTC`;
+    ? 'Fecha no disponible'
+    : new Intl.DateTimeFormat('es-VE', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
 export function BalanceSummary({
@@ -34,10 +35,7 @@ export function BalanceSummary({
   const currency = choice;
   const summary = balanceSummary(dashboard, currency, showMonthlyComparison);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const evidenceDescription =
-    summary.evidence.length > 0
-      ? `${summary.evidence.join(' ')} Cotizaciones almacenadas; no son tasas en tiempo real. DolarApi (https://dolarapi.com) proporciona cotizaciones del BCV; otras tasas de mercado pueden tener fuentes distintas.`
-      : null;
+  const conversionNote = balanceConversionNote(dashboard, currency);
 
   return (
     <View style={[styles.summary, compactDetails && styles.summaryCompact]}>
@@ -101,9 +99,9 @@ export function BalanceSummary({
           {summary.openingNote}
         </Text>
       ) : null}
-      {!compactDetails && evidenceDescription !== null ? (
+      {!compactDetails && conversionNote !== null ? (
         <Text selectable style={styles.summaryNote}>
-          {evidenceDescription}
+          {conversionNote}
         </Text>
       ) : null}
       <View
@@ -169,9 +167,9 @@ export function BalanceSummary({
                   {summary.openingNote}
                 </Text>
               ) : null}
-              {evidenceDescription !== null ? (
+              {conversionNote !== null ? (
                 <Text selectable style={styles.balanceDetailsText}>
-                  {evidenceDescription}
+                  {conversionNote}
                 </Text>
               ) : null}
             </View>

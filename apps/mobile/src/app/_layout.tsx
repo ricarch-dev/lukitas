@@ -20,7 +20,7 @@ export default function RootLayout() {
         <Stack.Screen name="informes" options={{ title: 'Informes' }} />
         <Stack.Screen
           name="crear-cuenta"
-          options={{ title: 'Crear cuenta', presentation: 'modal' }}
+          options={{ title: 'Nueva cuenta', presentation: 'modal' }}
         />
         <Stack.Screen name="cuentas" options={{ title: 'Cuentas' }} />
         <Stack.Screen name="cuenta/[id]" options={{ title: 'Detalle de cuenta' }} />

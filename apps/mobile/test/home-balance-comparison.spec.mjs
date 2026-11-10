@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   balanceSummary,
+  balanceConversionNote,
   defaultDisplayCurrency,
 } from '../src/modules/home/presentation/balance-summary.ts';
 
@@ -181,10 +182,39 @@ test('home shows a readable balance first and puts cutoff and FX evidence behind
   assert.match(home, /accessibilityState=\{\{ expanded: detailsOpen \}\}/);
   assert.match(home, /formatBalanceCutoff\(dashboard\.comparison\.previousCutoff\)/);
   assert.match(home, /summary\.openingNote !== null/);
-  assert.match(home, /summary\.evidence\.length > 0/);
+  assert.match(home, /conversionNote !== null/);
   assert.ok(home.indexOf('styles.currencySelector') < home.indexOf('Ver detalles del balance'));
   assert.ok(home.indexOf('summary.warnings.map') < home.indexOf('Ver detalles del balance'));
   assert.match(home, /!compactDetails && showMonthlyComparison/);
+});
+
+test('home explains conversion in plain language without exposing quote provenance or provider URLs', () => {
+  const quote = { baseCurrency: 'VES', source: 'MARKET', effectiveAt: '2026-11-10T12:00:00Z' };
+  const withQuote = dashboard(valuation('10.00', false, [], [quote]), valuation('8.00'), '25.00');
+  assert.equal(
+    balanceConversionNote(withQuote, 'USD'),
+    'Conversión estimada con la tasa del 10 de noviembre de 2026.',
+  );
+  assert.equal(
+    balanceConversionNote(dashboard(valuation('10.00'), valuation('8.00'), '25.00'), 'USD'),
+    null,
+  );
+  assert.match(component(), /const conversionNote = balanceConversionNote\(dashboard, currency\)/);
+  assert.match(component(), /\{conversionNote\}/);
+});
+
+test('accounts shows the same plain-language conversion note without raw provenance below the balance', () => {
+  const accounts = readFileSync(
+    join(root, 'src/modules/accounts/screens/accounts-screen.tsx'),
+    'utf8',
+  );
+  const summary = component();
+  assert.match(
+    accounts,
+    /<BalanceSummary dashboard=\{dashboard\} showMonthlyComparison=\{false\} \/>/,
+  );
+  assert.match(summary, /!compactDetails && conversionNote !== null/);
+  assert.doesNotMatch(summary, /DolarApi|Cotizaciones almacenadas|summary\.evidence\.join/);
 });
 
 test('decorative flow icons do not forward a non-boolean accessible prop to SVG', () => {

@@ -5,21 +5,33 @@ type DashboardValuation = DashboardDto['comparison']['valuations']['VES']['curre
 
 export const DISPLAY_CURRENCIES: readonly DashboardDisplayCurrency[] = ['VES', 'USD', 'EUR'];
 
-export function defaultDisplayCurrency(baseCurrency: DashboardDto['baseCurrency']): DashboardDisplayCurrency {
+export function defaultDisplayCurrency(
+  baseCurrency: DashboardDto['baseCurrency'],
+): DashboardDisplayCurrency {
   return baseCurrency === 'VES' || baseCurrency === 'EUR' ? baseCurrency : 'USD';
 }
 
 function dateEvidence(iso: string): string {
   const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? iso : new Intl.DateTimeFormat('es-VE', {
-    timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric',
-  }).format(date);
+  return Number.isNaN(date.getTime())
+    ? iso
+    : new Intl.DateTimeFormat('es-VE', {
+        timeZone: 'UTC',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(date);
 }
 
-function quoteEvidence(valuation: DashboardValuation, period: string, target: DashboardDisplayCurrency): string[] {
-  return valuation.quotes.map((quote) =>
-    `${period}: ${quote.baseCurrency} a ${target}, cotización del ${dateEvidence(quote.effectiveAt)} (UTC), ` +
-    `fuente ${quote.source === 'MANUAL' ? 'manual' : 'mercado'}.`,
+function quoteEvidence(
+  valuation: DashboardValuation,
+  period: string,
+  target: DashboardDisplayCurrency,
+): string[] {
+  return valuation.quotes.map(
+    (quote) =>
+      `${period}: ${quote.baseCurrency} a ${target}, cotización del ${dateEvidence(quote.effectiveAt)} (UTC), ` +
+      `fuente ${quote.source === 'MANUAL' ? 'manual' : 'mercado'}.`,
   );
 }
 
@@ -31,8 +43,8 @@ export function balanceSummary(
   const { comparison } = dashboard;
   const selected = comparison.valuations[currency];
   const ves = comparison.valuations.VES.current;
-  const hasCompleteMonthlyComparison = showMonthlyComparison &&
-    !selected.current.partial && !selected.previous.partial;
+  const hasCompleteMonthlyComparison =
+    showMonthlyComparison && !selected.current.partial && !selected.previous.partial;
   const warnings: string[] = [];
   const evidence = [
     ...quoteEvidence(selected.current, 'Actual', currency),
@@ -41,13 +53,19 @@ export function balanceSummary(
   ];
 
   if (selected.current.partial) {
-    warnings.push(`Saldo actual parcial: faltan cotizaciones para ${selected.current.missingCurrencies.join(', ')}.`);
+    warnings.push(
+      `Saldo actual parcial: faltan cotizaciones para ${selected.current.missingCurrencies.join(', ')}.`,
+    );
   }
   if (showMonthlyComparison && selected.previous.partial) {
-    warnings.push(`Comparación con el mes anterior no disponible: faltan cotizaciones para ${selected.previous.missingCurrencies.join(', ')}.`);
+    warnings.push(
+      `Comparación con el mes anterior no disponible: faltan cotizaciones para ${selected.previous.missingCurrencies.join(', ')}.`,
+    );
   }
   if (currency !== 'VES' && ves.partial) {
-    warnings.push(`Equivalente en bolívares no disponible: faltan cotizaciones para ${ves.missingCurrencies.join(', ')} (subtotal parcial: ${ves.amount} VES).`);
+    warnings.push(
+      `Equivalente en bolívares no disponible: faltan cotizaciones para ${ves.missingCurrencies.join(', ')} (subtotal parcial: ${ves.amount} VES).`,
+    );
   }
   if (hasCompleteMonthlyComparison && selected.percentChange === null) {
     warnings.push('No se puede calcular el cambio porcentual porque el saldo anterior es cero.');
@@ -63,4 +81,27 @@ export function balanceSummary(
     warnings,
     evidence,
   };
+}
+
+export function balanceConversionNote(
+  dashboard: DashboardDto,
+  currency: DashboardDisplayCurrency,
+): string | null {
+  const selected = dashboard.comparison.valuations[currency].current;
+  const ves = dashboard.comparison.valuations.VES.current;
+  const quotes = currency === 'VES' ? selected.quotes : [...selected.quotes, ...ves.quotes];
+  if (quotes.length === 0) return null;
+
+  const dates = new Set(quotes.map((quote) => quote.effectiveAt.slice(0, 10)));
+  const onlyDate = dates.size === 1 ? new Date(quotes[0].effectiveAt) : null;
+  if (onlyDate && !Number.isNaN(onlyDate.getTime())) {
+    const date = new Intl.DateTimeFormat('es-VE', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(onlyDate);
+    return `Conversión estimada con la tasa del ${date}.`;
+  }
+  return 'Conversión estimada con tasas de distintas fechas.';
 }
