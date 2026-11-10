@@ -123,11 +123,13 @@ export function AccountsScreen() {
                             <Pressable
                               accessibilityRole="link"
                               accessibilityLabel={`Ver detalle de ${account.name} en ${account.currency.code}`}
-                              style={({ pressed }) => [
-                                styles.accountRow,
-                                index < group.accounts.length - 1 && styles.accountRowDivider,
-                                pressed && styles.pressed,
-                              ]}
+                              android_ripple={{ color: colors.subtleSurface }}
+                              style={{
+                                ...styles.accountRow,
+                                ...(index < group.accounts.length - 1
+                                  ? styles.accountRowDivider
+                                  : {}),
+                              }}
                             >
                               <View style={styles.accountInfo}>
                                 <Text numberOfLines={1} style={styles.accountName}>

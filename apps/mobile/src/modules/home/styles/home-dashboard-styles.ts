@@ -183,7 +183,6 @@ export const styles = StyleSheet.create({
     flexBasis: 165,
     flexGrow: 1,
     gap: 14,
-    minHeight: 164,
     padding: 16,
   },
   currencyCardTitle: { color: colors.ink, fontSize: 16, fontWeight: '700' },

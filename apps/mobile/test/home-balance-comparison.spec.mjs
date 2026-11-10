@@ -148,6 +148,25 @@ test('home keeps existing data and navigation while selection is accessible', ()
   assert.match(screen(), /href="\/informes"/);
 });
 
+test('linked balance and report cards keep their surface and content on the pressable', () => {
+  const home = screen();
+  const styles = readFileSync(
+    join(root, 'src/modules/home/styles/home-dashboard-styles.ts'),
+    'utf8',
+  );
+  assert.match(home, /<Link\s+key=\{balance\.code\}\s+href=\{\{ pathname: '\/cuentas'/);
+  assert.match(home, /style=\{styles\.currencyCard\}/);
+  assert.match(home, /<Link href="\/informes" asChild>/);
+  assert.match(home, /style=\{styles\.reportsLink\}/);
+  assert.match(home, /<Text style=\{styles\.reportsTitle\}>Informes<\/Text>/);
+  assert.match(
+    home,
+    /<Text style=\{styles\.reportsHint\}>Consulta tus informes del período\.<\/Text>/,
+  );
+  assert.doesNotMatch(home, /currencyCardContent|reportsLinkContent/);
+  assert.doesNotMatch(styles, /minHeight: 164/);
+});
+
 test('home shows a readable balance first and puts cutoff and FX evidence behind an accessible details toggle', () => {
   const home = component();
   assert.match(home, /compactDetails \? 'Mi balance' : 'Mi balance total'/);

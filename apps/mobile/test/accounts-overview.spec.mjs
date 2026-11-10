@@ -38,6 +38,26 @@ test('accounts overview uses the filtered dashboard and preserves quote disclosu
   assert.match(screen, /group\.name/);
 });
 
+test('linked account rows keep the horizontal layout and dividers on Android', () => {
+  const screen = source('modules/accounts/screens/accounts-screen.tsx');
+  const styles = source('modules/accounts/styles/accounts-overview-styles.ts');
+  assert.match(screen, /<Link\s+key=\{account\.id\}[\s\S]*?pathname: '\/cuenta\/\[id\]'/);
+  assert.match(screen, /style=\{\{\s*\.\.\.styles\.accountRow,/);
+  assert.match(
+    screen,
+    /index < group\.accounts\.length - 1\s*\? styles\.accountRowDivider\s*: \{\}/,
+  );
+  assert.match(screen, /<Text accessible=\{false\} style=\{styles\.accountChevron\}>/);
+  assert.match(styles, /accountRow: \{[\s\S]*?flexDirection: 'row'/);
+});
+
+test('ungrouped account rows have balanced top and bottom spacing', () => {
+  const styles = source('modules/accounts/styles/accounts-overview-styles.ts');
+  assert.match(styles, /accountGroup: \{ paddingHorizontal: 16 \}/);
+  assert.match(styles, /bankGroupName: \{[^}]*paddingTop: 14/);
+  assert.match(styles, /accountRow: \{[^}]*paddingVertical: 12/);
+});
+
 test('overview exposes accessible filters, account creation, and all request states', () => {
   const screen = source('modules/accounts/screens/accounts-screen.tsx');
   assert.match(screen, /accessibilityRole="radiogroup"/);

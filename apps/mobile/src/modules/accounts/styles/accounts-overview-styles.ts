@@ -88,8 +88,14 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
   },
-  accountGroup: { paddingHorizontal: 16, paddingTop: 14 },
-  bankGroupName: { color: colors.primary, fontSize: 13, fontWeight: '700', paddingBottom: 4 },
+  accountGroup: { paddingHorizontal: 16 },
+  bankGroupName: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: '700',
+    paddingTop: 14,
+    paddingBottom: 4,
+  },
   accountRow: {
     alignItems: 'center',
     flexDirection: 'row',

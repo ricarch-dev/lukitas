@@ -179,10 +179,8 @@ export function DashboardScreen() {
                         <Pressable
                           accessibilityRole="link"
                           accessibilityLabel={`Ver cuentas en ${balance.label}`}
-                          style={({ pressed }) => [
-                            styles.currencyCard,
-                            pressed && styles.shortcutPressed,
-                          ]}
+                          android_ripple={{ color: colors.subtleSurface }}
+                          style={styles.currencyCard}
                         >
                           <Text style={styles.currencyCardTitle}>
                             {balance.code === 'VES' ? '🇻🇪' : '🇺🇸'} {balance.label}
@@ -216,7 +214,8 @@ export function DashboardScreen() {
                 <Pressable
                   accessibilityRole="link"
                   accessibilityHint="Abre los informes del período."
-                  style={({ pressed }) => [styles.reportsLink, pressed && styles.shortcutPressed]}
+                  android_ripple={{ color: colors.subtleSurface }}
+                  style={styles.reportsLink}
                 >
                   <View style={styles.reportsMark}>
                     <Text accessible={false} style={styles.reportsMarkText}>
