@@ -5,19 +5,19 @@ Branch: `feat/sqlite-local-api` | Delivery: ask-on-risk / stacked-to-main (forec
 
 ## Specs
 
-- S1. User request: "hagamos algo esto me crea friccion y no puedo asi, total esto es un proyecto personal propio que lo usare solo yo migremos a sqlite como base de datos". Scope: the API database provider, schema, migrations, runtime adapter, and affected checks; the mobile API network path is not changed by this migration.
+- S1. User request: `hagamos algo esto me crea friccion y no puedo asi, total esto es un proyecto personal propio que lo usare solo yo migremos a sqlite  como base de datos`. Scope: the API database provider, schema, migrations, runtime adapter, and affected checks; the mobile API network path is not changed by this migration.
 - S2. Data decision: "es mejor empezar con una vacia no hay problema". Acceptance: create a new SQLite database with a forward initialization path; do not import data or delete the old PostgreSQL database/volume.
 - S3. Preserve the API's existing observable behavior and exact financial values. Check: API focused tests, migration on an isolated fresh SQLite database, smoke and workspace tests, and typecheck/build. This is an implementation invariant, not a new product feature.
 
 ## Tasks
 
-- [x] T1 (S1-S2): inline; schema/config/initial migration and dependencies verified with fresh SQLite migration and frozen lockfile-only check; commit pending. Risk: items 1, 5.
-- [x] T2 (S1-S3): inline; runtime adapter, exact-value storage, unique-key FX sync and search checked with SQLite probe and API suite; commit pending. Risk: items 3, 4.
-- [x] T3 (S1-S3): inline; setup, tests and docs checked with default-file startup, smoke, typecheck and workspace checks; commit pending. Risk: item 5.
+- [x] T1 (S1-S2): inline; schema/config/initial migration and dependencies verified with fresh SQLite migration and frozen lockfile-only check; commit 68925fd. Risk: items 1, 5.
+- [x] T2 (S1-S3): inline; runtime adapter, exact-value storage, unique-key FX sync and search checked with SQLite probe and API suite; commit 68925fd. Risk: items 3, 4.
+- [x] T3 (S1-S3): inline; setup, tests and docs checked with default-file startup, smoke, typecheck and workspace checks; commit 68925fd. Risk: item 5.
 
 ## Log
 
-- L1 (2026-11-12): "hagamos algo esto me crea friccion y no puedo asi, total esto es un proyecto personal propio que lo usare solo yo migremos a sqlite como base de datos"
+- L1 (2026-11-12): `hagamos algo esto me crea friccion y no puedo asi, total esto es un proyecto personal propio que lo usare solo yo migremos a sqlite  como base de datos`
 - L2 (2026-11-12): "es mejor empezar con una vacia no hay problema"
 - L3: Mapping: Prisma 7.10.0 currently uses PostgreSQL-native schema attributes, four PostgreSQL SQL migrations, PrismaPg, and a PostgreSQL advisory lock in BCV rate sync. Keep old PostgreSQL files/data intact and add a SQLite migration path. Android-to-API connectivity is a separate issue.
 - L4: T1 RED observed in `node --test test/schema.spec.mjs`; the schema was converted to SQLite and `prisma validate` passed. Offline installation of the required SQLite adapter/driver failed because the pnpm cache has no metadata for `better-sqlite3`; no PostgreSQL data was touched. Awaiting explicit authorization for anonymous npm registry downloads before continuing and verifying T1.
@@ -31,3 +31,5 @@ Branch: `feat/sqlite-local-api` | Delivery: ask-on-risk / stacked-to-main (forec
 - L12: User chose "Apilados hacia main" for any later PR delivery. The SQLite schema and runtime adapter form one dependent behavioral unit; do not separate code from its tests solely to meet the approximate review budget. No PR publication was authorized. If this one unit cannot be sliced coherently below 400 authored lines, report the size-exception need before PR creation.
 - L13: After adding the real SQLite rejected-write hash probe, a parallel test run passed 105/106 but timed out in the existing `prisma generate` test at 30 seconds during contention. A bounded serial recheck with `node --test --experimental-strip-types --test-concurrency=1 test/*.spec.*` passed 106/106; Prisma generation finished in 8.1 seconds. API typecheck, workspace checks, and smoke were separately successful. Keep this test-order limitation visible rather than claiming the parallel run passed.
 - L14: `pnpm --dir apps/api start` applied the default SQLite migration and returned HTTP 200 with database `up` on isolated port 3218; its owned process tree was stopped. The default file had five currencies and zero users. Tasks are checked against observed local proof with the user's independent-verification reservation; commit identity and native candidate review remain pending.
+- L15: The cohesive SQLite migration was committed locally as `68925fd` (`feat(api): migrate local persistence to SQLite`), 1454 changed lines including generated migration. Native assessment marked the committed range high risk. The user granted candidate-scoped review for target `sha256:1aab05389f9348d90697fac7688721e2b43faaa18cb2fc3766560eb010db9727`, lineage `review-b6f1c3ff10ce8e82`. The exact consent-granted START invocation timed out without an envelope; its outcome is unknown. Do not repeat START or assume review authority. This task-file-only log update is intentionally uncommitted pending a documented native recovery; no push or PR occurred.
+- L16: User explicitly requested checking in all remaining local changes. Commit this task-log-only update separately under ordinary Git policy; this is not a native review acknowledgement or an authorization to push, publish, or re-enter the unknown review transaction. The original review target and lineage remain unresolved.
