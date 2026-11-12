@@ -91,6 +91,16 @@ for (const migration of migrationDirectories) {
     `${migration} must contain migration.sql`,
   );
 }
+const sqliteMigration = join(
+  root,
+  'apps/api/prisma/migrations-sqlite/20261112180000_initial/migration.sql',
+);
+expect(
+  'workspace.sqlite-migration',
+  existsSync(sqliteMigration) &&
+    read('apps/api/prisma/migrations-sqlite/migration_lock.toml').includes('provider = "sqlite"'),
+  'SQLite must have a forward initial migration and a provider lock',
+);
 
 const nestedGit = [];
 const scan = (dir) => {

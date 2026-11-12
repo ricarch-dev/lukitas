@@ -46,25 +46,28 @@ Never store database credentials or other secrets in an `EXPO_PUBLIC_` variable.
 An explicit `ApiClient({ baseUrl })` takes precedence over this environment
 setting; the existing loopback fallback is retained when neither is supplied.
 
-The project's development database runs separately from native PostgreSQL:
+The API stores data in a local SQLite file. No Docker database is needed:
 
 ```sh
-docker compose --project-name lukitas -f infra/docker/compose.yml up --detach --wait postgres
 pnpm --dir apps/api start
 ```
 
-The Compose database uses host port `5433` and the development credentials
-declared in `infra/docker/compose.yml`, matching the API's existing fallback.
-Schema initialization is separate: never reset or migrate an existing database
-merely to resolve a connection error. A new database has no application users;
-create a Lukitas account in the app, separate from your Expo account.
+The start command applies the forward SQLite migration before starting the API.
+The default file is `apps/api/prisma/dev.db` (git-ignored). The database begins
+with currency metadata but no application users; create a Lukitas account in
+the app, separate from your Expo account. Monetary amounts and rates are stored
+as exact decimal strings. Existing PostgreSQL data and migration files remain
+untouched; they are not imported into SQLite.
 
-For other existing databases, set `DATABASE_URL` in the API terminal or create
-`apps/api/.env.local` yourself. API `start` loads optional `.env`, then
-`.env.local` from `apps/api`; existing process variables override both. This
-loading does not automatically apply to Prisma CLI commands. Local env files
-are git-ignored and may be protected from agent edits by your OpenCode policy.
+To use a different SQLite file, set `DATABASE_URL=file:<path>` in the API
+terminal or `apps/api/.env.local`. API `start` loads optional `.env`, then
+`.env.local` from `apps/api` for both migrations and the server; process
+variables override both. Standalone Prisma CLI commands use the default path
+or an explicit `DATABASE_URL` (they do not load `.env.local` automatically).
+Local env files are git-ignored. Do not delete the SQLite file to troubleshoot
+connectivity; back it up before moving it or changing paths.
 
-Open `http://<computer-wifi-ip>:3000/health` on the iPhone to check connectivity.
+Open `http://<computer-wifi-ip>:3000/health` on the phone to check connectivity.
 A healthy database returns `{"ok":true,"database":"up"}`. Allow API port `3000`
 only on your trusted private network if a firewall blocks the connection.
+SQLite removes the PostgreSQL setup, not the need for phone-to-API network access.
