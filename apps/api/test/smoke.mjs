@@ -12,8 +12,8 @@ const tsc =
   process.platform === 'win32'
     ? join(root, 'node_modules', '.bin', 'tsc.cmd')
     : join(root, 'node_modules', '.bin', 'tsc');
-const databaseUrl =
-  process.env.DATABASE_URL ?? 'postgresql://lukitas:lukitas@127.0.0.1:5433/lukitas?schema=public';
+const buildDir = mkdtempSync(join(root, '.tmp-api-smoke-'));
+const databaseUrl = `file:${join(buildDir, 'smoke.db').replaceAll('\\', '/')}`;
 const schemaPath = join(root, 'prisma', 'schema.prisma');
 const schema = readFileSync(schemaPath, 'utf8');
 if (!/^\s*model\s+User\s+/m.test(schema) || !/^\s*model\s+LedgerEntry\s+/m.test(schema)) {
@@ -23,6 +23,7 @@ if (!/^\s*model\s+User\s+/m.test(schema) || !/^\s*model\s+LedgerEntry\s+/m.test(
 for (const args of [
   ['exec', 'prisma', 'validate', '--schema', 'prisma/schema.prisma'],
   ['exec', 'prisma', 'generate', '--schema', 'prisma/schema.prisma'],
+  ['exec', 'prisma', 'migrate', 'deploy'],
 ]) {
   const result = spawnSync(prisma, args.slice(2), {
     cwd: root,
@@ -31,12 +32,12 @@ for (const args of [
     env: { ...process.env, CI: '1', DATABASE_URL: databaseUrl },
   });
   if (result.status !== 0) {
+    rmSync(buildDir, { force: true, recursive: true });
     throw new Error(result.stderr || result.stdout || `command failed: ${args.join(' ')}`);
   }
 }
 
 const port = 3217;
-const buildDir = mkdtempSync(join(root, '.tmp-api-smoke-'));
 const build = spawnSync(tsc, ['-p', 'tsconfig.json', '--outDir', buildDir], {
   cwd: root,
   encoding: 'utf8',
@@ -50,7 +51,13 @@ if (build.status !== 0) {
 const child = spawn(process.execPath, [join(buildDir, 'apps', 'api', 'src', 'main.js')], {
   cwd: root,
   encoding: 'utf8',
-  env: { ...process.env, CI: '1', NODE_ENV: 'development', PORT: String(port), DATABASE_URL: databaseUrl },
+  env: {
+    ...process.env,
+    CI: '1',
+    NODE_ENV: 'development',
+    PORT: String(port),
+    DATABASE_URL: databaseUrl,
+  },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 
@@ -92,7 +99,9 @@ try {
 
     if (!healthPassed) {
       try {
-        const response = await fetch(`${healthUrl}?probe=${privateQuery}&token=fake_access_token&password=fake_password`);
+        const response = await fetch(
+          `${healthUrl}?probe=${privateQuery}&token=fake_access_token&password=fake_password`,
+        );
         if (response.ok) {
           const payload = await response.json();
           healthPassed = payload.ok === true && payload.database === 'up';
@@ -108,9 +117,13 @@ try {
       startupLines.every((line) => buffers.stdout.split(/\r?\n/).includes(line))
     ) {
       const unauthorized = await fetch(`http://127.0.0.1:${port}/v1/auth/me`);
-      const missing = await fetch(`http://127.0.0.1:${port}/${privateSegment}?probe=${privateQuery}`);
+      const missing = await fetch(
+        `http://127.0.0.1:${port}/${privateSegment}?probe=${privateQuery}`,
+      );
       if (unauthorized.status !== 401 || missing.status !== 404) {
-        throw new Error(`Unexpected HTTP statuses: protected=${unauthorized.status}, missing=${missing.status}`);
+        throw new Error(
+          `Unexpected HTTP statuses: protected=${unauthorized.status}, missing=${missing.status}`,
+        );
       }
       responsesChecked = true;
     }
@@ -121,7 +134,9 @@ try {
       responseLog('GET', '/v1/auth/me', 401).test(buffers.stdout) &&
       responseLog('GET', '<unmatched>', 404).test(buffers.stdout)
     ) {
-      const lines = buffers.stdout.split(/\r?\n/).filter((line) => line.startsWith('api.response '));
+      const lines = buffers.stdout
+        .split(/\r?\n/)
+        .filter((line) => line.startsWith('api.response '));
       if (
         lines.some((line) =>
           [privateQuery, privateSegment, 'fake_access_token', 'fake_password', '?'].some((secret) =>
@@ -151,7 +166,13 @@ try {
   await waitForClose();
   const production = spawn(process.execPath, [join(buildDir, 'apps', 'api', 'src', 'main.js')], {
     cwd: root,
-    env: { ...process.env, CI: '1', NODE_ENV: 'production', PORT: String(port), DATABASE_URL: databaseUrl },
+    env: {
+      ...process.env,
+      CI: '1',
+      NODE_ENV: 'production',
+      PORT: String(port),
+      DATABASE_URL: databaseUrl,
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let productionStdout = '';
@@ -173,7 +194,9 @@ try {
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
     if (!productionResponded || productionStdout.includes('api.response ')) {
-      throw new Error('Production response telemetry was emitted or the isolated API did not respond');
+      throw new Error(
+        'Production response telemetry was emitted or the isolated API did not respond',
+      );
     }
     console.log('api.smoke production telemetry: disabled');
   } finally {

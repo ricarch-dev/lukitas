@@ -25,25 +25,37 @@ test('Prisma generates the client without a database URL', () => {
   assert.match(result.stdout, /Generated Prisma Client/);
 });
 
-test('Prisma refuses a database command without a datasource URL', () => {
-  const result = runPrisma(['migrate', 'status']);
+test('Prisma has a local file URL when none is supplied', () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      '--experimental-strip-types',
+      '--input-type=module',
+      '-e',
+      "import assert from 'node:assert/strict'; import config from './prisma.config.ts'; assert.equal(config.datasource?.url, 'file:./prisma/dev.db');",
+    ],
+    { cwd: root, env, encoding: 'utf8', timeout: 30_000 },
+  );
   assert.equal(result.error, undefined);
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr + result.stdout, /datasource.*url|url.*datasource/i);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
 });
 
 test('Prisma config retains a supplied URL without connecting to it', () => {
-  const result = spawnSync(process.execPath, [
-    '--experimental-strip-types',
-    '--input-type=module',
-    '-e',
-    "import assert from 'node:assert/strict'; import config from './prisma.config.ts'; assert.equal(config.datasource?.url, process.env.DATABASE_URL);",
-  ], {
-    cwd: root,
-    env: { ...env, DATABASE_URL: 'postgresql://127.0.0.1:1/unused' },
-    encoding: 'utf8',
-    timeout: 30_000,
-  });
+  const result = spawnSync(
+    process.execPath,
+    [
+      '--experimental-strip-types',
+      '--input-type=module',
+      '-e',
+      "import assert from 'node:assert/strict'; import config from './prisma.config.ts'; assert.equal(config.datasource?.url, process.env.DATABASE_URL);",
+    ],
+    {
+      cwd: root,
+      env: { ...env, DATABASE_URL: 'file:./unused.db' },
+      encoding: 'utf8',
+      timeout: 30_000,
+    },
+  );
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stderr || result.stdout);
 });

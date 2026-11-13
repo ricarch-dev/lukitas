@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 enum TransactionKind {
@@ -24,11 +24,11 @@ enum RecurrenceCadence {
 }
 
 model User {
-  id              String               @id @default(uuid()) @db.Uuid
+  id              String               @id @default(uuid())
   email           String               @unique
   passwordHash    String
-  createdAt       DateTime             @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime             @updatedAt @db.Timestamptz(3)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
   preferences     UserPreferences?
   accounts        Account[]
   bankGroups      BankGroup[]
@@ -44,9 +44,9 @@ model User {
 }
 
 model UserPreferences {
-  id                 String   @id @default(uuid()) @db.Uuid
-  userId             String   @unique @db.Uuid
-  baseCurrency       String   @db.VarChar(4)
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  baseCurrency       String
   timezone           String
   onboardingComplete Boolean  @default(false)
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -54,7 +54,7 @@ model UserPreferences {
 }
 
 model Currency {
-  code         String            @id @db.VarChar(4)
+  code         String            @id
   precision    Int
   active       Boolean           @default(true)
   preferences  UserPreferences[]
@@ -66,15 +66,15 @@ model Currency {
 }
 
 model Account {
-  id                   String          @id @default(uuid()) @db.Uuid
-  userId               String          @db.Uuid
+  id                   String          @id @default(uuid())
+  userId               String
   name                 String
-  bankGroupId          String?         @db.Uuid
-  currencyCode         String          @db.VarChar(4)
-  openingBalance       Decimal         @db.Decimal(20, 8)
-  archivedAt           DateTime?       @db.Timestamptz(3)
-  createdAt            DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt            DateTime        @updatedAt @db.Timestamptz(3)
+  bankGroupId          String?
+  currencyCode         String
+  openingBalance       String
+  archivedAt           DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
   user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   bankGroup            BankGroup?      @relation(fields: [bankGroupId, userId], references: [id, userId])
   currency             Currency        @relation(fields: [currencyCode], references: [code])
@@ -88,8 +88,8 @@ model Account {
 }
 
 model BankGroup {
-  id             String    @id @default(uuid()) @db.Uuid
-  userId         String    @db.Uuid
+  id             String    @id @default(uuid())
+  userId         String
   name           String
   normalizedName String
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -100,19 +100,19 @@ model BankGroup {
 }
 
 model Transaction {
-  id           String                 @id @default(uuid()) @db.Uuid
-  userId       String                 @db.Uuid
-  accountId    String                 @db.Uuid
+  id           String                 @id @default(uuid())
+  userId       String
+  accountId    String
   kind         TransactionKind
-  amount       Decimal                @db.Decimal(20, 8)
-  currencyCode String                 @db.VarChar(4)
-  occurredAt   DateTime               @db.Timestamptz(3)
+  amount       String
+  currencyCode String
+  occurredAt   DateTime
   note         String?
-  voidedAt     DateTime?              @db.Timestamptz(3)
+  voidedAt     DateTime?
   voidReason   String?
-  transferId   String?                @db.Uuid
-  categoryId   String?                @db.Uuid
-  createdAt    DateTime               @default(now()) @db.Timestamptz(3)
+  transferId   String?
+  categoryId   String?
+  createdAt    DateTime               @default(now())
   user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   account      Account                @relation(fields: [accountId], references: [id], onDelete: Cascade)
   currency     Currency               @relation(fields: [currencyCode], references: [code])
@@ -128,13 +128,13 @@ model Transaction {
 }
 
 model Category {
-  id             String          @id @default(uuid()) @db.Uuid
-  userId         String          @db.Uuid
+  id             String          @id @default(uuid())
+  userId         String
   name           String
   normalizedName String
-  archivedAt     DateTime?       @db.Timestamptz(3)
-  createdAt      DateTime        @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime        @updatedAt @db.Timestamptz(3)
+  archivedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions   Transaction[]
   budgets        Budget[]
@@ -145,15 +145,15 @@ model Category {
 }
 
 model Budget {
-  id           String   @id @default(uuid()) @db.Uuid
-  userId       String   @db.Uuid
-  categoryId   String   @db.Uuid
-  monthKey     String   @db.VarChar(7)
+  id           String   @id @default(uuid())
+  userId       String
+  categoryId   String
+  monthKey     String
   timezone     String
-  currencyCode String   @db.VarChar(4)
-  limit        Decimal  @db.Decimal(20, 8)
-  createdAt    DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  currencyCode String
+  limit        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category     Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   currency     Currency @relation(fields: [currencyCode], references: [code])
@@ -163,22 +163,22 @@ model Budget {
 }
 
 model RecurringRule {
-  id             String                @id @default(uuid()) @db.Uuid
-  userId         String                @db.Uuid
-  accountId      String                @db.Uuid
-  categoryId     String?               @db.Uuid
+  id             String                @id @default(uuid())
+  userId         String
+  accountId      String
+  categoryId     String?
   kind           TransactionKind
-  amount         Decimal               @db.Decimal(20, 8)
-  currencyCode   String                @db.VarChar(4)
+  amount         String
+  currencyCode   String
   note           String?
   cadence        RecurrenceCadence
   timezone       String
-  startAt        DateTime              @db.Timestamptz(3)
-  endAt          DateTime?             @db.Timestamptz(3)
-  nextOccurrence DateTime              @db.Timestamptz(3)
+  startAt        DateTime
+  endAt          DateTime?
+  nextOccurrence DateTime
   active         Boolean               @default(true)
-  createdAt      DateTime              @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime              @updatedAt @db.Timestamptz(3)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
   user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   account        Account               @relation(fields: [accountId], references: [id], onDelete: Restrict)
   category       Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -188,11 +188,11 @@ model RecurringRule {
 }
 
 model RecurringOccurrence {
-  id            String        @id @default(uuid()) @db.Uuid
-  ruleId        String        @db.Uuid
-  occurrenceAt  DateTime      @db.Timestamptz(3)
-  transactionId String        @unique @db.Uuid
-  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  id            String        @id @default(uuid())
+  ruleId        String
+  occurrenceAt  DateTime
+  transactionId String        @unique
+  createdAt     DateTime      @default(now())
   rule          RecurringRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
   transaction   Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
@@ -201,27 +201,27 @@ model RecurringOccurrence {
 }
 
 model TransactionFxSnapshot {
-  id             String      @id @default(uuid()) @db.Uuid
-  transactionId  String      @unique @db.Uuid
-  sourceCurrency String      @db.VarChar(4)
-  baseCurrency   String      @db.VarChar(4)
-  sourceAmount   Decimal     @db.Decimal(20, 8)
-  baseAmount     Decimal     @db.Decimal(20, 8)
-  rate           Decimal     @db.Decimal(24, 12)
-  effectiveAt    DateTime    @db.Timestamptz(3)
+  id             String      @id @default(uuid())
+  transactionId  String      @unique
+  sourceCurrency String
+  baseCurrency   String
+  sourceAmount   String
+  baseAmount     String
+  rate           String
+  effectiveAt    DateTime
   source         FxSource
-  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+  createdAt      DateTime    @default(now())
   transaction    Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@index([baseCurrency, effectiveAt])
 }
 
 model LedgerEntry {
-  id            String      @id @default(uuid()) @db.Uuid
-  transactionId String      @db.Uuid
-  accountId     String      @db.Uuid
-  signedAmount  Decimal     @db.Decimal(20, 8)
-  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+  id            String      @id @default(uuid())
+  transactionId String
+  accountId     String
+  signedAmount  String
+  createdAt     DateTime    @default(now())
   transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   account       Account     @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
@@ -229,17 +229,17 @@ model LedgerEntry {
 }
 
 model Transfer {
-  id                   String        @id @default(uuid()) @db.Uuid
-  userId               String        @db.Uuid
-  sourceAccountId      String        @db.Uuid
-  destinationAccountId String        @db.Uuid
-  sourceAmount         Decimal       @db.Decimal(20, 8)
-  destinationAmount    Decimal       @db.Decimal(20, 8)
-  sourceCurrency       String        @db.VarChar(4)
-  destinationCurrency  String        @db.VarChar(4)
-  feeAmount            Decimal?      @db.Decimal(20, 8)
-  occurredAt           DateTime      @db.Timestamptz(3)
-  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+  id                   String        @id @default(uuid())
+  userId               String
+  sourceAccountId      String
+  destinationAccountId String
+  sourceAmount         String
+  destinationAmount    String
+  sourceCurrency       String
+  destinationCurrency  String
+  feeAmount            String?
+  occurredAt           DateTime
+  createdAt            DateTime      @default(now())
   user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   sourceAccount        Account       @relation("TransferSource", fields: [sourceAccountId], references: [id])
   destinationAccount   Account       @relation("TransferDestination", fields: [destinationAccountId], references: [id])
@@ -250,82 +250,82 @@ model Transfer {
 }
 
 model FxRate {
-  id          String   @id @default(uuid()) @db.Uuid
-  baseCode    String   @db.VarChar(4)
-  quoteCode   String   @db.VarChar(4)
-  rate        Decimal  @db.Decimal(24, 12)
-  effectiveAt DateTime @db.Timestamptz(3)
+  id          String   @id @default(uuid())
+  baseCode    String
+  quoteCode   String
+  rate        String
+  effectiveAt DateTime
   source      FxSource
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  createdAt   DateTime @default(now())
   base        Currency @relation("FxBase", fields: [baseCode], references: [code])
   quote       Currency @relation("FxQuote", fields: [quoteCode], references: [code])
 
-  @@index([baseCode, quoteCode, effectiveAt])
+  @@unique([baseCode, quoteCode, effectiveAt])
 }
 
 model FxSnapshot {
-  id          String           @id @default(uuid()) @db.Uuid
-  transferId  String           @unique @db.Uuid
-  effectiveAt DateTime         @db.Timestamptz(3)
+  id          String           @id @default(uuid())
+  transferId  String           @unique
+  effectiveAt DateTime
   source      FxSource
-  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+  createdAt   DateTime         @default(now())
   transfer    Transfer         @relation(fields: [transferId], references: [id], onDelete: Cascade)
   rates       FxSnapshotRate[]
 }
 
 model FxSnapshotRate {
-  id         String     @id @default(uuid()) @db.Uuid
-  snapshotId String     @db.Uuid
-  baseCode   String     @db.VarChar(4)
-  quoteCode  String     @db.VarChar(4)
-  rate       Decimal    @db.Decimal(24, 12)
+  id         String     @id @default(uuid())
+  snapshotId String
+  baseCode   String
+  quoteCode  String
+  rate       String
   snapshot   FxSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
 
   @@unique([snapshotId, baseCode, quoteCode])
 }
 
 model RefreshSession {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
-  familyId  String    @db.Uuid
+  id        String    @id @default(uuid())
+  userId    String
+  familyId  String
   tokenHash String    @unique
-  expiresAt DateTime  @db.Timestamptz(3)
-  revokedAt DateTime? @db.Timestamptz(3)
-  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, familyId])
 }
 
 model PasswordResetToken {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
+  id        String    @id @default(uuid())
+  userId    String
   tokenHash String    @unique
-  expiresAt DateTime  @db.Timestamptz(3)
-  usedAt    DateTime? @db.Timestamptz(3)
+  expiresAt DateTime
+  usedAt    DateTime?
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AuditEvent {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
+  id        String   @id @default(uuid())
+  userId    String
   action    String
   targetId  String
   reason    String?
   metadata  Json?
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
 }
 
 model IdempotencyKey {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @db.Uuid
+  id          String   @id @default(uuid())
+  userId      String
   key         String
   fingerprint String
   response    Json
-  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, key])

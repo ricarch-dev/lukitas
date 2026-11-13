@@ -1,5 +1,6 @@
 import { Controller, Get, Injectable, Query, Req, UseGuards } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
+import { decimalToString, parseDecimal, scaleUp } from '@lukitas/domain';
 import type { AuthenticatedRequest } from '../../common/types.js';
 import { PrismaService } from '../../common/prisma.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
@@ -44,25 +45,62 @@ export class ReportsService {
           )
         : null;
     const matches: Prisma.TransactionWhereInput[] = [
-      { note: { contains: term, mode: 'insensitive' } },
-      { currencyCode: { contains: term, mode: 'insensitive' } },
+      { note: { contains: term } },
+      { currencyCode: { contains: term } },
     ];
-    if (/^\d{1,12}(?:\.\d{1,8})?$/.test(term)) matches.push({ amount: term });
+    if (/^\d{1,12}(?:\.\d{1,8})?$/.test(term)) {
+      const amount = parseDecimal(term);
+      matches.push({
+        amount: {
+          in: Array.from({ length: 9 - amount.scale }, (_, offset) => {
+            const scale = amount.scale + offset;
+            return decimalToString(scaleUp(amount, scale), scale);
+          }),
+        },
+      });
+    }
     if (searchedKind === 'INCOME' || searchedKind === 'EXPENSE' || searchedKind === 'OPENING')
       matches.push({ kind: searchedKind });
     if (period && periodEnd) matches.push({ occurredAt: { gte: period, lt: periodEnd } });
-    const transactions = await this.prisma.transaction.findMany({
-      where: {
-        userId,
-        voidedAt: null,
-        ...(term ? { OR: matches } : {}),
-        ...(query.kind ? { kind: query.kind } : {}),
-        ...(query.categoryId ? { categoryId: query.categoryId } : {}),
-      },
-      orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }],
-      skip,
-      take: 101,
-    });
+    const where: Prisma.TransactionWhereInput = {
+      userId,
+      voidedAt: null,
+      ...(term ? { OR: matches } : {}),
+      ...(query.kind ? { kind: query.kind } : {}),
+      ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+    };
+    const orderBy: Prisma.TransactionOrderByWithRelationInput[] = [
+      { occurredAt: 'desc' },
+      { id: 'desc' },
+    ];
+    let transactions;
+    if (/[^\x00-\x7f]/.test(term)) {
+      // SQLite LIKE folds ASCII only; apply Unicode case folding before paginating results.
+      const folded = term.toLocaleLowerCase();
+      const matching: Awaited<ReturnType<typeof this.prisma.transaction.findMany>> = [];
+      let offset = 0;
+      for (;;) {
+        const batch = await this.prisma.transaction.findMany({
+          where: { ...where, OR: undefined },
+          orderBy,
+          skip: offset,
+          take: 250,
+        });
+        for (const row of batch) {
+          if (
+            row.note?.toLocaleLowerCase().includes(folded) ||
+            row.currencyCode.toLocaleLowerCase().includes(folded)
+          )
+            matching.push(row);
+          if (matching.length > skip + 100) break;
+        }
+        if (matching.length > skip + 100 || batch.length < 250) break;
+        offset += batch.length;
+      }
+      transactions = matching.slice(skip, skip + 101);
+    } else {
+      transactions = await this.prisma.transaction.findMany({ where, orderBy, skip, take: 101 });
+    }
     return {
       items: transactions.slice(0, 100).map((transaction) => ({
         ...transactionDto(transaction),
