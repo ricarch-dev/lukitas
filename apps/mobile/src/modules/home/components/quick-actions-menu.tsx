@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ArrowLeftRight, Plus, WalletCards } from 'lucide-react-native';
-import { AccessibilityInfo, Animated, BackHandler, Pressable, Text, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Animated,
+  BackHandler,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-screens/experimental';
 import { APP_COLORS as colors } from '../../../shared/theme/app-colors';
 import { styles } from '../styles/home-dashboard-styles';
 
@@ -67,85 +76,87 @@ export function QuickActionsMenu({ gutter }: { gutter: number }) {
   }
 
   return (
-    <>
-      {visible ? (
+    <SafeAreaView pointerEvents="box-none" edges={{ bottom: true }} style={StyleSheet.absoluteFill}>
+      <View pointerEvents="box-none" style={{ flex: 1 }}>
+        {visible ? (
+          <Pressable
+            style={styles.quickActionsBackdrop}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar menú de acciones"
+            onPress={close}
+          />
+        ) : null}
+        {mounted ? (
+          <Animated.View
+            accessibilityElementsHidden={!visible}
+            importantForAccessibility={visible ? 'yes' : 'no-hide-descendants'}
+            style={[
+              styles.quickActionsAnchor,
+              { right: gutter, bottom: process.env.EXPO_OS === 'web' ? 100 : 88 },
+              {
+                opacity: progress,
+                transform: [
+                  {
+                    translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.quickActionsPanel}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Crear cuenta"
+                onPress={() => open('account')}
+                style={styles.quickActionsItem}
+              >
+                <WalletCards size={21} color={colors.body} />
+                <Text style={styles.quickActionsLabel}>Crear cuenta</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Nuevo movimiento"
+                onPress={() => open('movement')}
+                style={styles.quickActionsItem}
+              >
+                <Plus size={21} color={colors.body} />
+                <Text style={styles.quickActionsLabel}>Nuevo movimiento</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Nueva transferencia"
+                onPress={() => open('transfer')}
+                style={styles.quickActionsItem}
+              >
+                <ArrowLeftRight size={21} color={colors.body} />
+                <Text style={styles.quickActionsLabel}>Nueva transferencia</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        ) : null}
         <Pressable
-          style={styles.quickActionsBackdrop}
           accessibilityRole="button"
-          accessibilityLabel="Cerrar menú de acciones"
-          onPress={close}
-        />
-      ) : null}
-      {mounted ? (
-        <Animated.View
-          accessibilityElementsHidden={!visible}
-          importantForAccessibility={visible ? 'yes' : 'no-hide-descendants'}
-          style={[
-            styles.quickActionsAnchor,
-            { right: gutter, bottom: process.env.EXPO_OS === 'web' ? 100 : 88 },
-            {
-              opacity: progress,
+          accessibilityLabel={visible ? 'Cerrar acciones' : 'Abrir acciones'}
+          accessibilityState={{ expanded: visible }}
+          onPress={() => setVisible((current) => !current)}
+          style={{ ...styles.floatingAdd, position: 'absolute', right: gutter }}
+        >
+          <Animated.View
+            style={{
               transform: [
                 {
-                  translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }),
+                  rotate: progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '45deg'],
+                  }),
                 },
               ],
-            },
-          ]}
-        >
-          <View style={styles.quickActionsPanel}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Crear cuenta"
-              onPress={() => open('account')}
-              style={styles.quickActionsItem}
-            >
-              <WalletCards size={21} color={colors.body} />
-              <Text style={styles.quickActionsLabel}>Crear cuenta</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Nuevo movimiento"
-              onPress={() => open('movement')}
-              style={styles.quickActionsItem}
-            >
-              <Plus size={21} color={colors.body} />
-              <Text style={styles.quickActionsLabel}>Nuevo movimiento</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Nueva transferencia"
-              onPress={() => open('transfer')}
-              style={styles.quickActionsItem}
-            >
-              <ArrowLeftRight size={21} color={colors.body} />
-              <Text style={styles.quickActionsLabel}>Nueva transferencia</Text>
-            </Pressable>
-          </View>
-        </Animated.View>
-      ) : null}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={visible ? 'Cerrar acciones' : 'Abrir acciones'}
-        accessibilityState={{ expanded: visible }}
-        onPress={() => setVisible((current) => !current)}
-        style={{ ...styles.floatingAdd, position: 'absolute', right: gutter }}
-      >
-        <Animated.View
-          style={{
-            transform: [
-              {
-                rotate: progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0deg', '45deg'],
-                }),
-              },
-            ],
-          }}
-        >
-          <Plus size={20} color={colors.surface} strokeWidth={2} />
-        </Animated.View>
-      </Pressable>
-    </>
+            }}
+          >
+            <Plus size={20} color={colors.surface} strokeWidth={2} />
+          </Animated.View>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }

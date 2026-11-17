@@ -8,6 +8,18 @@ const home = readFileSync(join(root, 'home', 'screens', 'dashboard-screen.tsx'),
 const menu = readFileSync(join(root, 'home', 'components', 'quick-actions-menu.tsx'), 'utf8');
 const movements = readFileSync(join(root, 'movements', 'screens', 'movements-screen.tsx'), 'utf8');
 
+test('quick actions stay inside the native tab safe area without intercepting underlying content', () => {
+  assert.match(menu, /import \{ SafeAreaView \} from 'react-native-screens\/experimental'/);
+  assert.match(
+    menu,
+    /<SafeAreaView\s+pointerEvents="box-none"\s+edges=\{\{ bottom: true \}\}\s+style=\{StyleSheet\.absoluteFill\}/,
+  );
+  assert.match(
+    menu,
+    /<View pointerEvents="box-none" style=\{\{ flex: 1 \}\}>[\s\S]*styles\.quickActionsAnchor[\s\S]*styles\.floatingAdd[\s\S]*<\/View>\s*<\/SafeAreaView>/,
+  );
+});
+
 test('home plus transforms into the close control while options rise without a dimming modal', () => {
   assert.match(home, /<QuickActionsMenu gutter=\{gutter\}/);
   assert.match(menu, /accessibilityState=\{\{ expanded: visible \}\}/);
