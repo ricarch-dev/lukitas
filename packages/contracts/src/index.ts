@@ -2,6 +2,15 @@
 // These are plain read-only interfaces — no implementations, no I/O, no dependencies.
 
 export type { CurrencyDto } from './money.ts';
+export type {
+  DebtCashRequest,
+  CreateDebtRequest,
+  RecordDebtPaymentRequest,
+  DebtEventDto,
+  DebtDto,
+  DebtSummaryDto,
+  DebtsOverviewDto,
+} from './debts.ts';
 export type { SupportedMonetaryUnitCode } from '@lukitas/domain';
 export type { MoneyDto } from './money.ts';
 export type { FxRateDto } from './fx.ts';
