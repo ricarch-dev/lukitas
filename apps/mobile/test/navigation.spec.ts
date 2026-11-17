@@ -2,10 +2,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { dashboardDisclosure, reportDisclosure } from '../src/shared/presentation/financial-disclosure.ts';
+import {
+  dashboardDisclosure,
+  reportDisclosure,
+} from '../src/shared/presentation/financial-disclosure.ts';
 import type { DashboardDto, FinancialReportDto } from '@lukitas/contracts';
 
-const source = (relative: string) => readFileSync(fileURLToPath(new URL(`../src/app/${relative}`, import.meta.url)), 'utf8');
+const source = (relative: string) =>
+  readFileSync(fileURLToPath(new URL(`../src/app/${relative}`, import.meta.url)), 'utf8');
 
 describe('native navigation routes', () => {
   it('declares exactly four reachable tab routes with platform icons and contextual reports', () => {
@@ -19,7 +23,10 @@ describe('native navigation routes', () => {
     assert.match(source('informes.tsx'), /ReportsScreen/);
     assert.match(source('cuentas.tsx'), /AccountsScreen/);
     assert.match(source('cuentas.tsx'), /<RootNavigator>/);
-    assert.match(source('_layout.tsx'), /<Stack\.Screen name="cuentas" options=\{\{ title: 'Cuentas' \}\} \/>/);
+    assert.match(
+      source('_layout.tsx'),
+      /<Stack\.Screen name="cuentas" options=\{\{ title: 'Cuentas' \}\} \/>/,
+    );
     assert.match(source('index.tsx'), /RootNavigator/);
     assert.match(tabs, /<RootNavigator>/);
   });
@@ -31,7 +38,9 @@ describe('session API configuration', () => {
       fileURLToPath(new URL('../src/session/SessionContext.tsx', import.meta.url)),
       'utf8',
     );
-    assert.match(session, /new ApiClient\(\{\s*baseUrl:\s*process\.env\.EXPO_PUBLIC_API_URL\s*,/);
+    assert.match(session, /new ApiClient\(\{\s*baseUrl:\s*resolveDevelopmentApiUrl\(\{/);
+    assert.match(session, /configuredUrl:\s*process\.env\.EXPO_PUBLIC_API_URL/);
+    assert.match(session, /metroHost:\s*Constants\.expoConfig\?\.hostUri/);
   });
 });
 
@@ -42,18 +51,29 @@ describe('web navigation routes', () => {
     const directLists: string[] = [];
     let directTriggers = 0;
     // JSX names end at whitespace, /, or >; generic type arguments are not JSX tags.
-    for (const [, closing, name, tail] of tabs.matchAll(/<(\/)?([A-Z][A-Za-z]*)(?=[\s/>])([^>]*?)>/g)) {
+    for (const [, closing, name, tail] of tabs.matchAll(
+      /<(\/)?([A-Z][A-Za-z]*)(?=[\s/>])([^>]*?)>/g,
+    )) {
       if (closing) {
         assert.equal(stack.pop(), name, `unexpected closing tag for ${name}`);
       } else {
         if (name === 'TabList' && stack.at(-1) === 'Tabs') directLists.push(name);
-        if (name === 'TabTrigger' && stack.at(-1) === 'TabList' && stack.at(-2) === 'Tabs') directTriggers++;
+        if (name === 'TabTrigger' && stack.at(-1) === 'TabList' && stack.at(-2) === 'Tabs')
+          directTriggers++;
         if (!tail.trimEnd().endsWith('/')) stack.push(name);
       }
     }
     assert.deepEqual(stack, [], 'JSX tags should be balanced');
-    assert.equal(directLists.length, 1, 'TabList must be an immediate child of Tabs for Expo Router route discovery');
-    assert.equal(directTriggers, 4, 'four destinations must be direct TabTriggers in the registered TabList');
+    assert.equal(
+      directLists.length,
+      1,
+      'TabList must be an immediate child of Tabs for Expo Router route discovery',
+    );
+    assert.equal(
+      directTriggers,
+      4,
+      'four destinations must be direct TabTriggers in the registered TabList',
+    );
   });
 
   it('uses a guarded headless tab shell with four real, named destinations', () => {
@@ -84,7 +104,9 @@ describe('web navigation routes', () => {
 describe('financial disclosures', () => {
   it('marks both partial dashboard aggregates independently without changing their values', () => {
     const dashboard: DashboardDto = {
-      baseCurrency: 'USD', accounts: [], recentActivity: [],
+      baseCurrency: 'USD',
+      accounts: [],
+      recentActivity: [],
       totals: { amount: '100', partial: true, warnings: [] },
       flow: { income: '20', expense: '5', partial: false, warnings: [] },
     };
@@ -94,8 +116,15 @@ describe('financial disclosures', () => {
   });
   it('does not present an incomplete report as a net total', () => {
     const report: FinancialReportDto = {
-      from: '2026-09-01', to: '2026-10-01', items: [], nativeTotals: {},
-      warnings: [], affectedIds: [], partial: true, baseCurrency: 'USD', baseTotal: '18',
+      from: '2026-09-01',
+      to: '2026-10-01',
+      items: [],
+      nativeTotals: {},
+      warnings: [],
+      affectedIds: [],
+      partial: true,
+      baseCurrency: 'USD',
+      baseTotal: '18',
     };
     assert.equal(reportDisclosure(report).total, null);
     assert.ok(reportDisclosure(report).warning);

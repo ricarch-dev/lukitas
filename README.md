@@ -29,28 +29,48 @@ Rendering the app does not start the backend. Login and data operations also
 require a running API reachable from the phone; `127.0.0.1` on an iPhone refers
 to the phone itself, not the development computer.
 
-### Configure the local API
+### Start the local API before Expo
 
-Set `EXPO_PUBLIC_API_URL` to your computer's Wi-Fi IPv4 address, including the
-API port and `/v1` prefix. For example, in PowerShell from the repository root:
+No saved Wi-Fi IP is required for the default local setup. In development,
+the iPhone app follows the host in the Expo manifest, and the web app follows
+the browser hostname, using API port `3000` and prefix `/v1`. Restart Expo and
+scan the new QR code after changing networks. The phone still needs access to
+the computer on the same network; an Expo tunnel does not tunnel the API.
 
-```powershell
-$env:EXPO_PUBLIC_API_URL = 'http://<computer-wifi-ip>:3000/v1'
-pnpm --dir apps/mobile start --clear
-```
-
-Replace `<computer-wifi-ip>` before running the command. Keep that terminal
-open while using the app. You can also create `apps/mobile/.env.local` yourself
-with `EXPO_PUBLIC_API_URL=http://<computer-wifi-ip>:3000/v1`, then restart Metro.
-Never store database credentials or other secrets in an `EXPO_PUBLIC_` variable.
-An explicit `ApiClient({ baseUrl })` takes precedence over this environment
-setting; the existing loopback fallback is retained when neither is supplied.
+Both `start` and `start:web` check `/health` (including database readiness)
+before opening Expo. The check times out after five seconds and stops with an
+actionable error instead of opening an app whose local backend is unavailable.
+It does not start the API, apply migrations, or change database files.
 
 The API stores data in a local SQLite file. No Docker database is needed:
 
 ```sh
 pnpm --dir apps/api start
 ```
+
+Keep that terminal running. In a second terminal, run either:
+
+```sh
+pnpm --dir apps/mobile start
+# or:
+pnpm --dir apps/mobile start:web
+```
+
+An explicit `EXPO_PUBLIC_API_URL` still overrides automatic discovery. For a
+non-default API port or a remote API, set the full URL in the Expo terminal
+(for example, `$env:EXPO_PUBLIC_API_URL = 'http://localhost:3217/v1'` in PowerShell).
+The startup check uses that URL's origin and `/health`; the endpoint must return
+`{"ok":true,"database":"up"}`. Never put secrets in this public variable.
+For local startup, the launcher sets the public URL to the reserved value `auto`
+unless your terminal supplies an explicit URL. This takes precedence over a
+saved `.env.local` IP without editing that file or disabling other dotenv
+settings. Custom API URLs must be supplied in the Expo terminal for these
+local commands. To clear an old terminal override in PowerShell, run
+`Remove-Item Env:EXPO_PUBLIC_API_URL -ErrorAction SilentlyContinue`, restart
+Expo with `--clear`, and reload the app.
+An explicit `ApiClient({ baseUrl })` still takes precedence. Production URL
+selection and the client's unconfigured loopback fallback are unchanged.
+Use `start --help` or `start:web --help` for forwarded Expo options.
 
 The start command applies the forward SQLite migration before starting the API.
 The default file is `apps/api/prisma/dev.db` (git-ignored). The database begins

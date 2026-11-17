@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import Constants from 'expo-constants';
 import { ApiClient, type SessionTokens } from '../api/client';
+import { resolveDevelopmentApiUrl } from '../api/development-api-url';
 import { sessionStorage } from './storage';
 
 interface SessionContextValue {
@@ -25,7 +27,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const client = useMemo(
     () =>
       new ApiClient({
-        baseUrl: process.env.EXPO_PUBLIC_API_URL,
+        baseUrl: resolveDevelopmentApiUrl({
+          configuredUrl: process.env.EXPO_PUBLIC_API_URL,
+          development: __DEV__,
+          metroHost: Constants.expoConfig?.hostUri,
+          browserHostname: typeof window !== 'undefined' ? window.location?.hostname : undefined,
+        }),
         getTokens: () => tokens,
         setTokens,
       }),

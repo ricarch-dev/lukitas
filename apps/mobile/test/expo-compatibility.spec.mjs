@@ -13,12 +13,12 @@ const run = (args) =>
   spawnSync(process.execPath, [require.resolve('expo/bin/cli'), ...args], {
     cwd: fileURLToPath(new URL('../', import.meta.url)),
     encoding: 'utf8',
-    env: { ...process.env, EXPO_OFFLINE: '1' },
+    env: { ...process.env, EXPO_OFFLINE: '1', EXPO_NO_DOTENV: '1' },
   });
 
 test('starts in Expo Go on LAN without the unsupported non-interactive option', () => {
-  assert.equal(manifest.scripts.start, 'expo start --go --lan --port 19006');
-  assert.equal(manifest.scripts['start:web'], 'expo start --web --port 19006');
+  assert.equal(manifest.scripts.start, 'node scripts/start-local.mjs native');
+  assert.equal(manifest.scripts['start:web'], 'node scripts/start-local.mjs web');
 });
 
 test('targets the iPhone Expo Go SDK 58 and its stable native tabs entrypoint', () => {

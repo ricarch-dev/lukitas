@@ -4,8 +4,8 @@
   "type": "module",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start --go --lan --port 19006",
-    "start:web": "expo start --web --port 19006",
+    "start": "node scripts/start-local.mjs native",
+    "start:web": "node scripts/start-local.mjs web",
     "smoke": "node test/smoke.mjs",
     "test": "node --test --experimental-strip-types test/*.spec.*",
     "typecheck": "tsc --noEmit"
