@@ -35,8 +35,10 @@ type FlowTransaction = {
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService,
-    private readonly bcv: BcvRateSync) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bcv: BcvRateSync,
+  ) {}
 
   private async flowAmount(transaction: FlowTransaction, baseCurrency: string) {
     const sourceCode = monetaryUnit(transaction.currencyCode).code;
@@ -115,7 +117,13 @@ export class DashboardService {
       },
     });
     const recentTransactions = await this.prisma.transaction.findMany({
-      where: { userId, ...accountScope, occurredAt: { gte: from, lte: to }, voidedAt: null },
+      where: {
+        userId,
+        ...accountScope,
+        occurredAt: { gte: from, lte: to },
+        voidedAt: null,
+        kind: { not: 'PRINCIPAL' },
+      },
       include: { fxSnapshot: true },
       orderBy: { occurredAt: 'desc' },
       take: 50,
@@ -126,7 +134,7 @@ export class DashboardService {
     let expense = '0';
     let flowPartial = false;
     for (const transaction of periodTransactions) {
-      if (transaction.transferId) continue;
+      if (transaction.transferId || transaction.kind === 'PRINCIPAL') continue;
       const converted = await this.flowAmount(transaction, baseUnit.code);
       if (converted === undefined) {
         flowPartial = true;

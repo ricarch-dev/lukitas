@@ -65,6 +65,7 @@ export class ReportsService {
     const where: Prisma.TransactionWhereInput = {
       userId,
       voidedAt: null,
+      kind: { not: 'PRINCIPAL' },
       ...(term ? { OR: matches } : {}),
       ...(query.kind ? { kind: query.kind } : {}),
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
@@ -125,6 +126,7 @@ export class ReportsService {
     const transactions = await this.prisma.transaction.findMany({
       where: {
         userId,
+        kind: { not: 'PRINCIPAL' },
         occurredAt: { gte: from, lt: to },
         voidedAt: null,
         ...(typeof query.accountId === 'string' ? { accountId: query.accountId } : {}),
