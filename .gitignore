@@ -35,3 +35,7 @@ mitm_mcp_traffic.db
 !.agents/skills/technology-documentation/SKILL.md
 !.agents/skills/format-changed-files/
 !.agents/skills/format-changed-files/SKILL.md
+!.agents/skills/liquid-glass-design/
+!.agents/skills/liquid-glass-design/SKILL.md
+!.agents/skills/liquid-glass-design/references/
+!.agents/skills/liquid-glass-design/references/*.md

@@ -59,6 +59,7 @@ Load the exact project skill that matches the change before implementation:
 - `refactorable-source` — `.agents/skills/refactorable-source/SKILL.md`
 - `technology-documentation` — `.agents/skills/technology-documentation/SKILL.md`
 - `format-changed-files` — `.agents/skills/format-changed-files/SKILL.md` (load whenever creating or modifying a file)
+- `liquid-glass-design` — `.agents/skills/liquid-glass-design/SKILL.md` (load for all mobile UI work; preserve existing patterns, native iOS glass, and first-class Android/web fallbacks)
 
 ## Mobile application organization
 
