@@ -24,6 +24,10 @@ export default function RootLayout() {
         />
         <Stack.Screen name="cuentas" options={{ title: 'Cuentas' }} />
         <Stack.Screen name="cuenta/[id]" options={{ title: 'Detalle de cuenta' }} />
+        <Stack.Screen name="deudas/index" options={{ title: 'Deudas y préstamos' }} />
+        <Stack.Screen name="deudas/crear" options={{ title: 'Nuevo registro' }} />
+        <Stack.Screen name="deudas/[id]" options={{ title: 'Detalle' }} />
+        <Stack.Screen name="deudas/[id]/abonar" options={{ title: 'Registrar abono' }} />
       </Stack>
       <StatusBar style="auto" />
     </SessionProvider>

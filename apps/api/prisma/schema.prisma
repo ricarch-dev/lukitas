@@ -10,6 +10,7 @@ enum TransactionKind {
   OPENING
   INCOME
   EXPENSE
+  PRINCIPAL
 }
 
 enum FxSource {
@@ -41,6 +42,7 @@ model User {
   categories      Category[]
   budgets         Budget[]
   recurringRules  RecurringRule[]
+  debts           Debt[]
 }
 
 model UserPreferences {
@@ -63,6 +65,7 @@ model Currency {
   ratesAsBase  FxRate[]          @relation("FxBase")
   ratesAsQuote FxRate[]          @relation("FxQuote")
   budgets      Budget[]
+  debts        Debt[]
 }
 
 model Account {
@@ -83,6 +86,7 @@ model Account {
   sourceTransfers      Transfer[]      @relation("TransferSource")
   destinationTransfers Transfer[]      @relation("TransferDestination")
   recurringRules       RecurringRule[]
+  debtEvents           DebtEvent[]
 
   @@index([userId, archivedAt])
 }
@@ -121,10 +125,49 @@ model Transaction {
   category     Category?              @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   fxSnapshot   TransactionFxSnapshot?
   recurrence   RecurringOccurrence?
+  debtEvent    DebtEvent?
 
   @@index([userId, occurredAt])
   @@index([accountId, occurredAt])
   @@index([userId, categoryId, occurredAt])
+}
+
+model Debt {
+  id           String      @id @default(uuid())
+  userId       String
+  direction    String
+  counterparty String
+  concept      String
+  principal    String
+  currencyCode String
+  occurredAt   DateTime
+  dueDate      String?
+  version      Int         @default(0)
+  createdAt    DateTime    @default(now())
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency     Currency    @relation(fields: [currencyCode], references: [code])
+  events       DebtEvent[]
+
+  @@index([userId, createdAt])
+}
+
+model DebtEvent {
+  id               String       @id @default(uuid())
+  debtId           String
+  kind             String
+  debtAmount       String
+  occurredAt       DateTime
+  accountId        String?
+  cashAmount       String?
+  cashCurrencyCode String?
+  rate             String?
+  transactionId    String?      @unique
+  createdAt        DateTime     @default(now())
+  debt             Debt         @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  account          Account?     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  transaction      Transaction? @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@index([debtId, occurredAt])
 }
 
 model Category {

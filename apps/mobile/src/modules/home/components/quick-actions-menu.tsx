@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { ArrowLeftRight, Plus, WalletCards } from 'lucide-react-native';
+import { ArrowLeftRight, HandCoins, Plus, WalletCards } from 'lucide-react-native';
 import {
   AccessibilityInfo,
   Animated,
@@ -63,8 +63,12 @@ export function QuickActionsMenu({ gutter }: { gutter: number }) {
     return () => subscription.remove();
   }, [visible, close]);
 
-  function open(destination: 'account' | 'movement' | 'transfer') {
+  function open(destination: 'account' | 'movement' | 'transfer' | 'debt') {
     close();
+    if (destination === 'debt') {
+      router.push('/deudas/crear');
+      return;
+    }
     if (destination === 'account') {
       router.push('/crear-cuenta');
       return;
@@ -104,6 +108,15 @@ export function QuickActionsMenu({ gutter }: { gutter: number }) {
             ]}
           >
             <View style={styles.quickActionsPanel}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Registrar deuda o préstamo"
+                onPress={() => open('debt')}
+                style={styles.quickActionsItem}
+              >
+                <HandCoins size={21} color={colors.body} />
+                <Text style={styles.quickActionsLabel}>Deuda o préstamo</Text>
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Crear cuenta"

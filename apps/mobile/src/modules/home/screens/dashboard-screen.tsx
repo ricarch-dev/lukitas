@@ -19,6 +19,7 @@ import { styles } from '../styles/home-dashboard-styles';
 import { ArrowUpDown, Clock4, Ellipsis, MoveDown, MoveUp, WalletCards } from 'lucide-react-native';
 import { BalanceSummary } from '../components/balance-summary';
 import { QuickActionsMenu } from '../components/quick-actions-menu';
+import { DebtSummary } from '../../debts/components/debt-summary';
 
 const dashboardShortcuts = [
   {
@@ -210,6 +211,7 @@ export function DashboardScreen() {
                   </Text>
                 )}
               </View>
+              <DebtSummary />
               <Link href="/informes" asChild>
                 <Pressable
                   accessibilityRole="link"

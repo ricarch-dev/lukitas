@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Headers,
-  Injectable,
-  Param,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Headers, Injectable, Param, Post, Req, UseGuards } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../../common/types.js';
 import { PrismaService } from '../../common/prisma.js';
 import { IdempotencyService } from '../../common/idempotency.js';
@@ -32,6 +23,8 @@ export class AuditService {
     const reason = input.reason.trim();
     const transaction = await this.prisma.transaction.findFirst({ where: { id, userId } });
     if (!transaction) notFound('Transaction not found');
+    if (transaction.kind === 'PRINCIPAL')
+      throw new AppError('CONFLICT', 'Debt principal events cannot be voided independently', 409);
     if (transaction.voidedAt) return transactionDto(transaction);
     const result = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.transaction.update({

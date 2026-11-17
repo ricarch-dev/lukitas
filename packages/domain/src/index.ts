@@ -2,6 +2,8 @@
 // Zero I/O, zero external dependencies.
 
 export { Currency } from './currency.ts';
+export { debtOutstanding, debtStatus, debtCashEffect, debtReduction } from './debts.ts';
+export type { DebtDirection, DebtStatus, DebtEventKind } from './debts.ts';
 export { normalizeAuthEmail, isValidRegistrationPassword } from './auth.ts';
 export {
   getSupportedMonetaryUnit,
@@ -11,7 +13,14 @@ export {
 } from './monetary-unit.ts';
 export { Money } from './money.ts';
 export { FxRate } from './fx-rate.ts';
-export { addDecimal, decimalToString, multiplyDecimal as multiplyExactDecimal, parseDecimal, scaleDown, scaleUp } from './decimal.ts';
+export {
+  addDecimal,
+  decimalToString,
+  multiplyDecimal as multiplyExactDecimal,
+  parseDecimal,
+  scaleDown,
+  scaleUp,
+} from './decimal.ts';
 export { FxSnapshot } from './fx-snapshot.ts';
 export { createLedgerFact, signedEffect, balanceFor } from './ledger.ts';
 export { selectHistoricalRate, requireHistoricalRate } from './fx-resolution.ts';

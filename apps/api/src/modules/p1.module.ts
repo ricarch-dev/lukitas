@@ -3,6 +3,7 @@ import { BudgetsController } from './planning/budgets-controller.js';
 import { BudgetsService } from './planning/budgets.js';
 import { RecurringRulesController, RecurringRulesService } from './planning/recurring-rules.js';
 import { ReportsController, ReportsService } from './reports/reports.js';
+import { DebtsController, DebtsService } from './debts/debts.js';
 
 export { CategoriesController, CategoriesService } from './planning/categories.js';
 export { BudgetsController } from './planning/budgets-controller.js';
@@ -12,6 +13,7 @@ export { ReportsController, ReportsService } from './reports/reports.js';
 export { validatedMonthBounds } from './planning/planning-time.js';
 
 export const p1Providers = [
+  DebtsService,
   CategoriesService,
   BudgetsService,
   RecurringRulesService,
@@ -19,6 +21,7 @@ export const p1Providers = [
 ];
 
 export const p1Controllers = [
+  DebtsController,
   CategoriesController,
   BudgetsController,
   RecurringRulesController,
