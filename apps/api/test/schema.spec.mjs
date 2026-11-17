@@ -15,6 +15,17 @@ const usdtMigration = readFileSync(
   ),
   'utf8',
 );
+const sqliteMigration = readFileSync(
+  join(
+    import.meta.dirname,
+    '..',
+    'prisma',
+    'migrations-sqlite',
+    '20261112180000_initial',
+    'migration.sql',
+  ),
+  'utf8',
+);
 
 const currencyColumns = [
   ['Currency', 'code'],
@@ -51,11 +62,19 @@ test('P0 schema contains ownership, immutable facts and exact numeric fields', (
   ]) {
     assert.match(schema, new RegExp(`model\\s+${model}\\s+`));
   }
-  assert.match(schema, /openingBalance\s+Decimal\s+@db\.Decimal\(20, 8\)/);
-  assert.match(schema, /signedAmount\s+Decimal\s+@db\.Decimal\(20, 8\)/);
-  assert.match(schema, /rate\s+Decimal\s+@db\.Decimal\(24, 12\)/);
+  assert.match(schema, /openingBalance\s+String\b/);
+  assert.match(schema, /signedAmount\s+String\b/);
+  assert.match(schema, /rate\s+String\b/);
+  assert.doesNotMatch(sqliteMigration, /\bDECIMAL\b/);
+  assert.match(sqliteMigration, /"openingBalance" TEXT NOT NULL/);
+  assert.match(sqliteMigration, /'USDT', 6, true/);
   assert.match(schema, /@@unique\(\[userId, key\]\)/);
   assert.match(schema, /voidedAt\s+DateTime\?/);
+});
+
+test('fresh local database uses SQLite without PostgreSQL native column types', () => {
+  assert.match(schema, /datasource db \{\s*provider = "sqlite"\s*\}/);
+  assert.doesNotMatch(schema, /@db\.(?:Uuid|VarChar|Decimal|Timestamptz)/);
 });
 
 test('all active currency-code schema fields admit four-character monetary-unit codes', () => {
@@ -66,8 +85,8 @@ test('all active currency-code schema fields admit four-character monetary-unit 
     assert.ok(modelBlock, `missing ${model} model`);
     assert.match(
       modelBlock[1],
-      new RegExp(`\\b${escapeRegExp(column)}\\s+String\\s+[^\\n]*@db\\.VarChar\\(4\\)`),
-      `${model}.${column} must use VARCHAR(4)`,
+      new RegExp(`\\b${escapeRegExp(column)}\\s+String\\b`),
+      `${model}.${column} must remain a string monetary-unit code`,
     );
   }
 

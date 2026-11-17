@@ -6,15 +6,21 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+test('API applies the SQLite migration before starting the server', () => {
+  assert.match(manifest.scripts.start, /migrate deploy && pnpm run build && node /);
+});
 const nodeCommand = manifest.scripts.start.split(' && node ')[1];
 const flags = nodeCommand.split(' ').slice(0, -1);
 const scratch = mkdtempSync(join(tmpdir(), 'lukitas-api-env-'));
 console.info(`Environment probe scratch: ${scratch}`);
 const env = { ...process.env };
 delete env.DATABASE_URL;
-const run = (environment = env) => spawnSync(process.execPath,
-  [...flags, '-p', "JSON.stringify(process.env.DATABASE_URL ?? null)"],
-  { cwd: scratch, env: environment, encoding: 'utf8' });
+const run = (environment = env) =>
+  spawnSync(
+    process.execPath,
+    [...flags, '-p', 'JSON.stringify(process.env.DATABASE_URL ?? null)'],
+    { cwd: scratch, env: environment, encoding: 'utf8' },
+  );
 
 test('API startup retains process environment when optional files are absent', () => {
   const result = run();
@@ -23,17 +29,17 @@ test('API startup retains process environment when optional files are absent', (
 });
 
 test('API startup loads local configuration while explicit process environment wins', () => {
-  writeFileSync(join(scratch, '.env'), 'DATABASE_URL=postgresql://example.invalid/base\n');
-  writeFileSync(join(scratch, '.env.local'), 'DATABASE_URL=postgresql://example.invalid/local\n');
+  writeFileSync(join(scratch, '.env'), 'DATABASE_URL=file:./base.db\n');
+  writeFileSync(join(scratch, '.env.local'), 'DATABASE_URL=file:./local.db\n');
   const local = run();
   assert.equal(local.status, 0, local.stderr);
-  assert.equal(JSON.parse(local.stdout), 'postgresql://example.invalid/local');
-  const supplied = run({ ...env, DATABASE_URL: 'postgresql://example.invalid/supplied' });
+  assert.equal(JSON.parse(local.stdout), 'file:./local.db');
+  const supplied = run({ ...env, DATABASE_URL: 'file:./supplied.db' });
   assert.equal(supplied.status, 0, supplied.stderr);
-  assert.equal(JSON.parse(supplied.stdout), 'postgresql://example.invalid/supplied');
+  assert.equal(JSON.parse(supplied.stdout), 'file:./supplied.db');
   const empty = run({ ...env, DATABASE_URL: '' });
   assert.equal(empty.status, 0, empty.stderr);
   assert.equal(JSON.parse(empty.stdout), '');
-  assert.equal(readFileSync(join(scratch, '.env'), 'utf8'), 'DATABASE_URL=postgresql://example.invalid/base\n');
-  assert.equal(readFileSync(join(scratch, '.env.local'), 'utf8'), 'DATABASE_URL=postgresql://example.invalid/local\n');
+  assert.equal(readFileSync(join(scratch, '.env'), 'utf8'), 'DATABASE_URL=file:./base.db\n');
+  assert.equal(readFileSync(join(scratch, '.env.local'), 'utf8'), 'DATABASE_URL=file:./local.db\n');
 });

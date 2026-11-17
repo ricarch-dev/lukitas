@@ -136,7 +136,7 @@ test('global search finds amounts as well as notes across months', async () => {
   };
   await new ReportsService(prisma).search('user-1', { search: '10.50' });
   assert.equal(
-    queried.where.OR.some((predicate) => predicate.amount === '10.50'),
+    queried.where.OR.some((predicate) => predicate.amount?.in?.includes('10.50')),
     true,
   );
   assert.equal(

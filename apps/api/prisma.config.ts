@@ -1,9 +1,9 @@
 import { defineConfig } from 'prisma/config';
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL ?? 'file:./prisma/dev.db';
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
-  migrations: { path: 'prisma/migrations' },
-  ...(databaseUrl ? { datasource: { url: databaseUrl } } : {}),
+  migrations: { path: 'prisma/migrations-sqlite' },
+  datasource: { url: databaseUrl },
 });

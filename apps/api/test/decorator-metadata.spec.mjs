@@ -8,9 +8,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const tsc = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'tsc.cmd' : 'tsc');
 
-test('start explicitly builds before executing the emitted entrypoint', () => {
+test('start migrates, builds, then executes the emitted entrypoint', () => {
   const { scripts } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  assert.equal(scripts.start, 'pnpm run build && node --env-file-if-exists=.env --env-file-if-exists=.env.local dist/apps/api/src/main.js');
+  assert.equal(
+    scripts.start,
+    'node --env-file-if-exists=.env --env-file-if-exists=.env.local node_modules/prisma/build/index.js migrate deploy && pnpm run build && node --env-file-if-exists=.env --env-file-if-exists=.env.local dist/apps/api/src/main.js',
+  );
 });
 
 test('TypeScript build emits the PrismaService constructor token for health', async () => {
@@ -23,8 +26,12 @@ test('TypeScript build emits the PrismaService constructor token for health', as
     });
     assert.equal(build.status, 0, build.stderr || build.stdout);
 
-    const { HealthController } = await import(pathToFileURL(join(buildDir, 'apps', 'api', 'src', 'common', 'health.js')).href);
-    const { PrismaService } = await import(pathToFileURL(join(buildDir, 'apps', 'api', 'src', 'common', 'prisma.js')).href);
+    const { HealthController } = await import(
+      pathToFileURL(join(buildDir, 'apps', 'api', 'src', 'common', 'health.js')).href
+    );
+    const { PrismaService } = await import(
+      pathToFileURL(join(buildDir, 'apps', 'api', 'src', 'common', 'prisma.js')).href
+    );
     assert.deepEqual(Reflect.getMetadata('design:paramtypes', HealthController), [PrismaService]);
   } finally {
     rmSync(buildDir, { force: true, recursive: true });
